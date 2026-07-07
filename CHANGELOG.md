@@ -1,5 +1,13 @@
 # Changelog
 
+## v7.9.3 — README and portfolio documentation cleanup
+
+- Rewrote README as a portfolio-grade technical overview instead of a version-note collage.
+- Added clear architecture and training-pipeline diagrams using Mermaid.
+- Documented target definition, leakage controls, feature groups, candidate models and metric rationale.
+- Added transparent discussion of Random Forest selection versus Logistic Regression held-out test performance.
+- Removed Europe from the main README narrative and focused the project on `P(ArrDel15 = 1)`.
+
 ## v7.9.2 — Model card visual fix
 
 - Replaced the prediction profile chart with a custom light horizontal probability split.
