@@ -1,4 +1,13 @@
+# ============================================================
+# FlightRisk .gitignore
+# Keep source code, docs, tests, reports and one demo model.
+# Do NOT commit raw BTS datasets or processed training data.
+# ============================================================
+
+
+# ------------------------------------------------------------
 # Python
+# ------------------------------------------------------------
 __pycache__/
 *.py[cod]
 *$py.class
@@ -6,51 +15,173 @@ __pycache__/
 .eggs/
 build/
 dist/
+
+
+# ------------------------------------------------------------
+# Virtual environments
+# ------------------------------------------------------------
 .venv/
 venv/
 env/
 
-# Environment
-.env
 
-# Data (never commit real BTS datasets)
+# ------------------------------------------------------------
+# Environment / secrets
+# ------------------------------------------------------------
+.env
+.env.*
+!.env.example
+.streamlit/secrets.toml
+
+
+# ------------------------------------------------------------
+# Raw and processed data
+# Never commit real BTS monthly CSVs or generated parquet files.
+# ------------------------------------------------------------
 data/raw/*.csv
 data/raw/*.zip
+data/raw/*.parquet
+data/raw/*.xlsx
+
 data/processed/*.parquet
 data/processed/*.csv
+data/processed/*.zip
+data/processed/*.xlsx
 
 # Keep folder placeholders
 !data/raw/.gitkeep
 !data/processed/.gitkeep
 
-# Models (regenerate via training, do not commit large binaries)
-models/*.joblib
-!models/.gitkeep
 
-# Reports are small and useful for portfolio review; keep them commit-able.
-# Ignore only obviously heavy report artifacts if you add them later.
+# ------------------------------------------------------------
+# Sample/demo data
+# Keep small sample files for portfolio demo.
+# ------------------------------------------------------------
+!data/sample/*.csv
+!data/sample/*.json
+!data/sample/.gitkeep
+
+
+# ------------------------------------------------------------
+# European / reference data
+# Keep curated small context files if they are lightweight.
+# Ignore raw downloaded archives or large raw source files.
+# ------------------------------------------------------------
+data/europe/uk_caa_raw/*.zip
+data/europe/uk_caa_raw/*.xlsx
+data/europe/uk_caa_raw/*.xls
+
+!data/europe/*.csv
+!data/europe/.gitkeep
+!data/europe/uk_caa_raw/.gitkeep
+
+
+# ------------------------------------------------------------
+# Models
+# Ignore all binary model artifacts by default,
+# but allow the main demo model used by the Streamlit app.
+# ------------------------------------------------------------
+models/*.joblib
+models/*.pkl
+models/*.pickle
+models/*.onnx
+
+!models/.gitkeep
+!models/flightrisk_model.joblib
+
+
+# ------------------------------------------------------------
+# Reports
+# Reports are useful for portfolio review, so keep small text/CSV/JSON reports.
+# Ignore only heavy binary/report artifacts.
+# ------------------------------------------------------------
 reports/*.parquet
 reports/*.joblib
-!reports/.gitkeep
+reports/*.pkl
+reports/*.pickle
+reports/*.html
+reports/*.pdf
 
+!reports/.gitkeep
+!reports/*.json
+!reports/*.csv
+!reports/*.txt
+!reports/*.md
+
+
+# ------------------------------------------------------------
 # Monitoring / experiment tracking
+# Local runtime artifacts only.
+# ------------------------------------------------------------
 monitoring/*.csv
 monitoring/*.db
+monitoring/*.sqlite
+monitoring/*.sqlite3
 mlruns/
+wandb/
 
+
+# ------------------------------------------------------------
 # Jupyter
+# ------------------------------------------------------------
 .ipynb_checkpoints/
 
-# Testing
+
+# ------------------------------------------------------------
+# Testing / coverage
+# ------------------------------------------------------------
 .pytest_cache/
 .coverage
+.coverage.*
 htmlcov/
+.tox/
+.nox/
 
+
+# ------------------------------------------------------------
+# Linters / type checkers / caches
+# ------------------------------------------------------------
+.mypy_cache/
+.ruff_cache/
+.pyre/
+.pytype/
+
+
+# ------------------------------------------------------------
+# Streamlit cache
+# ------------------------------------------------------------
+.streamlit/cache/
+
+
+# ------------------------------------------------------------
+# Logs
+# ------------------------------------------------------------
+*.log
+logs/
+
+
+# ------------------------------------------------------------
 # IDE / OS
+# ------------------------------------------------------------
 .vscode/
 .idea/
 .DS_Store
 Thumbs.db
 
-# Streamlit local secrets/cache
-.streamlit/secrets.toml
+
+# ------------------------------------------------------------
+# Docker / local runtime
+# ------------------------------------------------------------
+.docker/
+docker-data/
+
+
+# ------------------------------------------------------------
+# Temporary files
+# ------------------------------------------------------------
+tmp/
+temp/
+*.tmp
+*.bak
+*.swp
+*.swo
