@@ -1,0 +1,51 @@
+<svg width="1200" height="680" viewBox="0 0 1200 680" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="1200" height="680" rx="28" fill="#EFF6FF"/>
+  <rect x="48" y="42" width="1104" height="168" rx="26" fill="url(#g1)"/>
+  <text x="82" y="105" fill="white" font-family="Inter,Arial" font-size="44" font-weight="800">✈️ FlightRisk</text>
+  <text x="82" y="146" fill="#DBEAFE" font-family="Inter,Arial" font-size="21">End-to-end ML system for flight delay risk prediction</text>
+  <rect x="82" y="166" width="142" height="28" rx="14" fill="white" fill-opacity="0.16" stroke="white" stroke-opacity="0.35"/>
+  <text x="99" y="185" fill="white" font-family="Inter,Arial" font-size="13">Leakage-safe</text>
+  <rect x="236" y="166" width="138" height="28" rx="14" fill="white" fill-opacity="0.16" stroke="white" stroke-opacity="0.35"/>
+  <text x="253" y="185" fill="white" font-family="Inter,Arial" font-size="13">Real BTS data</text>
+  <rect x="386" y="166" width="118" height="28" rx="14" fill="white" fill-opacity="0.16" stroke="white" stroke-opacity="0.35"/>
+  <text x="403" y="185" fill="white" font-family="Inter,Arial" font-size="13">FastAPI</text>
+  <rect x="78" y="244" width="318" height="118" rx="20" fill="white" stroke="#BFDBFE"/>
+  <text x="104" y="282" fill="#0B1F4D" font-family="Inter,Arial" font-size="21" font-weight="750">1 · Real data</text>
+  <text x="104" y="318" fill="#475569" font-family="Inter,Arial" font-size="16">Official BTS monthly CSVs</text>
+  <rect x="442" y="244" width="318" height="118" rx="20" fill="white" stroke="#BFDBFE"/>
+  <text x="468" y="282" fill="#0B1F4D" font-family="Inter,Arial" font-size="21" font-weight="750">2 · ML pipeline</text>
+  <text x="468" y="318" fill="#475569" font-family="Inter,Arial" font-size="16">Features, train, evaluate</text>
+  <rect x="806" y="244" width="318" height="118" rx="20" fill="white" stroke="#BFDBFE"/>
+  <text x="832" y="282" fill="#0B1F4D" font-family="Inter,Arial" font-size="21" font-weight="750">3 · Serving demo</text>
+  <text x="832" y="318" fill="#475569" font-family="Inter,Arial" font-size="16">FastAPI + Streamlit UI</text>
+  <text x="78" y="415" fill="#0B1F4D" font-family="Inter,Arial" font-size="28" font-weight="800">Model performance</text>
+  <g>
+    <rect x="78" y="442" width="186" height="104" rx="18" fill="white" stroke="#BFDBFE"/>
+    <text x="102" y="478" fill="#64748B" font-family="Inter,Arial" font-size="15">ROC-AUC</text>
+    <text x="102" y="520" fill="#174EA6" font-family="Inter,Arial" font-size="38" font-weight="800">0.78</text>
+  </g>
+  <g>
+    <rect x="286" y="442" width="186" height="104" rx="18" fill="white" stroke="#BFDBFE"/>
+    <text x="310" y="478" fill="#64748B" font-family="Inter,Arial" font-size="15">PR-AUC</text>
+    <text x="310" y="520" fill="#174EA6" font-family="Inter,Arial" font-size="38" font-weight="800">0.42</text>
+  </g>
+  <g>
+    <rect x="494" y="442" width="186" height="104" rx="18" fill="white" stroke="#BFDBFE"/>
+    <text x="518" y="478" fill="#64748B" font-family="Inter,Arial" font-size="15">F1</text>
+    <text x="518" y="520" fill="#174EA6" font-family="Inter,Arial" font-size="38" font-weight="800">0.51</text>
+  </g>
+  <rect x="738" y="424" width="386" height="166" rx="22" fill="white" stroke="#BFDBFE"/>
+  <text x="770" y="465" fill="#0B1F4D" font-family="Inter,Arial" font-size="24" font-weight="800">Try a prediction</text>
+  <rect x="770" y="488" width="322" height="20" rx="10" fill="#DBEAFE"/>
+  <rect x="770" y="488" width="214" height="20" rx="10" fill="url(#g2)"/>
+  <text x="770" y="540" fill="#174EA6" font-family="Inter,Arial" font-size="29" font-weight="800">37% moderate risk</text>
+  <text x="770" y="568" fill="#475569" font-family="Inter,Arial" font-size="15">Route and carrier delay-rate drivers</text>
+  <defs>
+    <linearGradient id="g1" x1="48" y1="42" x2="1152" y2="210" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#0B1F4D"/><stop offset="0.48" stop-color="#174EA6"/><stop offset="1" stop-color="#38BDF8"/>
+    </linearGradient>
+    <linearGradient id="g2" x1="770" y1="488" x2="1092" y2="508" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#38BDF8"/><stop offset="1" stop-color="#2563EB"/>
+    </linearGradient>
+  </defs>
+</svg>

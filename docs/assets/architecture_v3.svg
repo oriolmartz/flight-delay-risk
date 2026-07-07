@@ -1,0 +1,74 @@
+<svg width="1200" height="520" viewBox="0 0 1200 520" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="1200" height="520" rx="28" fill="#eff6ff"/>
+  <rect x="36" y="34" width="1128" height="452" rx="26" fill="white" stroke="#bfdbfe" stroke-width="2"/>
+  <text x="60" y="82" font-family="Inter,Arial" font-size="30" font-weight="800" fill="#0b1f4d">FlightRisk v3 architecture</text>
+  <text x="60" y="112" font-family="Inter,Arial" font-size="16" fill="#475569">Real BTS data → leakage-safe ML pipeline → model selection + tuned threshold → API/dashboard deployment</text>
+
+  <defs>
+    <linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
+      <stop stop-color="#174ea6"/>
+      <stop offset="1" stop-color="#38bdf8"/>
+    </linearGradient>
+    <filter id="shadow" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="0" dy="8" stdDeviation="10" flood-color="#1e40af" flood-opacity="0.15"/>
+    </filter>
+  </defs>
+
+  <g font-family="Inter,Arial" filter="url(#shadow)">
+    <rect x="58" y="160" width="150" height="96" rx="18" fill="url(#g)"/>
+    <text x="82" y="198" font-size="18" font-weight="700" fill="white">BTS data</text>
+    <text x="82" y="225" font-size="13" fill="#e0f2fe">monthly CSVs</text>
+
+    <rect x="246" y="160" width="150" height="96" rx="18" fill="#dbeafe" stroke="#93c5fd"/>
+    <text x="273" y="195" font-size="18" font-weight="700" fill="#0b1f4d">Clean</text>
+    <text x="273" y="222" font-size="13" fill="#475569">validate + drop leakage</text>
+
+    <rect x="434" y="160" width="160" height="96" rx="18" fill="#dbeafe" stroke="#93c5fd"/>
+    <text x="461" y="195" font-size="18" font-weight="700" fill="#0b1f4d">Features</text>
+    <text x="461" y="222" font-size="13" fill="#475569">schedule + history</text>
+
+    <rect x="632" y="160" width="165" height="96" rx="18" fill="#dbeafe" stroke="#93c5fd"/>
+    <text x="660" y="195" font-size="18" font-weight="700" fill="#0b1f4d">Split</text>
+    <text x="660" y="222" font-size="13" fill="#475569">train / val / test</text>
+
+    <rect x="835" y="160" width="165" height="96" rx="18" fill="#dbeafe" stroke="#93c5fd"/>
+    <text x="858" y="195" font-size="18" font-weight="700" fill="#0b1f4d">Candidates</text>
+    <text x="858" y="222" font-size="13" fill="#475569">LR · RF · ExtraTrees</text>
+
+    <rect x="1010" y="160" width="100" height="96" rx="18" fill="url(#g)"/>
+    <text x="1031" y="195" font-size="18" font-weight="700" fill="white">Select</text>
+    <text x="1031" y="222" font-size="13" fill="#e0f2fe">PR-AUC</text>
+  </g>
+
+  <g stroke="#2563eb" stroke-width="3" stroke-linecap="round">
+    <path d="M208 208 H246"/><path d="M396 208 H434"/><path d="M594 208 H632"/>
+    <path d="M797 208 H835"/><path d="M1000 208 H1010"/>
+  </g>
+
+  <g font-family="Inter,Arial" filter="url(#shadow)">
+    <rect x="116" y="328" width="170" height="92" rx="18" fill="#eef2ff" stroke="#93c5fd"/>
+    <text x="141" y="362" font-size="18" font-weight="700" fill="#0b1f4d">Threshold</text>
+    <text x="141" y="389" font-size="13" fill="#475569">F1 tuned on validation</text>
+
+    <rect x="330" y="328" width="170" height="92" rx="18" fill="#eef2ff" stroke="#93c5fd"/>
+    <text x="361" y="362" font-size="18" font-weight="700" fill="#0b1f4d">Reports</text>
+    <text x="361" y="389" font-size="13" fill="#475569">metrics + calibration</text>
+
+    <rect x="544" y="328" width="170" height="92" rx="18" fill="#eef2ff" stroke="#93c5fd"/>
+    <text x="572" y="362" font-size="18" font-weight="700" fill="#0b1f4d">Artifact</text>
+    <text x="572" y="389" font-size="13" fill="#475569">joblib + metadata</text>
+
+    <rect x="758" y="328" width="170" height="92" rx="18" fill="#eef2ff" stroke="#93c5fd"/>
+    <text x="793" y="362" font-size="18" font-weight="700" fill="#0b1f4d">FastAPI</text>
+    <text x="793" y="389" font-size="13" fill="#475569">predict + model card</text>
+
+    <rect x="972" y="328" width="150" height="92" rx="18" fill="url(#g)"/>
+    <text x="1000" y="362" font-size="18" font-weight="700" fill="white">Streamlit</text>
+    <text x="1000" y="389" font-size="13" fill="#e0f2fe">blue demo UI</text>
+  </g>
+
+  <g stroke="#2563eb" stroke-width="3" stroke-linecap="round">
+    <path d="M1060 256 C1060 300 200 280 200 328"/>
+    <path d="M286 374 H330"/><path d="M500 374 H544"/><path d="M714 374 H758"/><path d="M928 374 H972"/>
+  </g>
+</svg>

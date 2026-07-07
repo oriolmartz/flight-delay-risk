@@ -1,0 +1,488 @@
+{
+  "threshold": 0.52,
+  "rows": 11845,
+  "false_positives": 3989,
+  "false_negatives": 946,
+  "false_positive_rate_in_predictions": 0.7732118627641016,
+  "false_negative_rate_in_actual_delays": 0.44706994328922495,
+  "segments": {
+    "airline": [
+      {
+        "segment": "AA",
+        "n": 6916,
+        "actual_delay_rate": 0.1737998843262001,
+        "predicted_delay_rate": 0.5519086176980914,
+        "precision": 0.21482839926643962,
+        "recall": 0.6821963394342762,
+        "f1": 0.32675831839011754
+      },
+      {
+        "segment": "9E",
+        "n": 1705,
+        "actual_delay_rate": 0.15718475073313784,
+        "predicted_delay_rate": 0.1249266862170088,
+        "precision": 0.1596244131455399,
+        "recall": 0.12686567164179105,
+        "f1": 0.14137214137214138
+      },
+      {
+        "segment": "AS",
+        "n": 1387,
+        "actual_delay_rate": 0.20043258832011535,
+        "predicted_delay_rate": 0.3330930064888248,
+        "precision": 0.23593073593073594,
+        "recall": 0.3920863309352518,
+        "f1": 0.2945945945945946
+      },
+      {
+        "segment": "B6",
+        "n": 1367,
+        "actual_delay_rate": 0.24725676664228238,
+        "predicted_delay_rate": 0.48719824433065106,
+        "precision": 0.3108108108108108,
+        "recall": 0.6124260355029586,
+        "f1": 0.4123505976095618
+      },
+      {
+        "segment": "DL",
+        "n": 470,
+        "actual_delay_rate": 0.06382978723404255,
+        "predicted_delay_rate": 0.002127659574468085,
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1": 0.0
+      }
+    ],
+    "origin": [
+      {
+        "segment": "DFW",
+        "n": 1338,
+        "actual_delay_rate": 0.21674140508221226,
+        "predicted_delay_rate": 0.6920777279521674,
+        "precision": 0.2580993520518359,
+        "recall": 0.8241379310344827,
+        "f1": 0.3930921052631579
+      },
+      {
+        "segment": "ATL",
+        "n": 799,
+        "actual_delay_rate": 0.10387984981226533,
+        "predicted_delay_rate": 0.03128911138923655,
+        "precision": 0.2,
+        "recall": 0.060240963855421686,
+        "f1": 0.09259259259259259
+      },
+      {
+        "segment": "CLT",
+        "n": 716,
+        "actual_delay_rate": 0.1871508379888268,
+        "predicted_delay_rate": 0.6745810055865922,
+        "precision": 0.2070393374741201,
+        "recall": 0.746268656716418,
+        "f1": 0.3241491085899514
+      },
+      {
+        "segment": "MIA",
+        "n": 502,
+        "actual_delay_rate": 0.23107569721115537,
+        "predicted_delay_rate": 0.7231075697211156,
+        "precision": 0.27548209366391185,
+        "recall": 0.8620689655172413,
+        "f1": 0.4175365344467641
+      },
+      {
+        "segment": "JFK",
+        "n": 489,
+        "actual_delay_rate": 0.2085889570552147,
+        "predicted_delay_rate": 0.38445807770961143,
+        "precision": 0.22872340425531915,
+        "recall": 0.4215686274509804,
+        "f1": 0.296551724137931
+      },
+      {
+        "segment": "ORD",
+        "n": 466,
+        "actual_delay_rate": 0.15450643776824036,
+        "predicted_delay_rate": 0.5987124463519313,
+        "precision": 0.2007168458781362,
+        "recall": 0.7777777777777778,
+        "f1": 0.3190883190883191
+      },
+      {
+        "segment": "SEA",
+        "n": 455,
+        "actual_delay_rate": 0.1956043956043956,
+        "predicted_delay_rate": 0.4043956043956044,
+        "precision": 0.24456521739130435,
+        "recall": 0.5056179775280899,
+        "f1": 0.32967032967032966
+      },
+      {
+        "segment": "LGA",
+        "n": 453,
+        "actual_delay_rate": 0.13024282560706402,
+        "predicted_delay_rate": 0.2913907284768212,
+        "precision": 0.17424242424242425,
+        "recall": 0.3898305084745763,
+        "f1": 0.24083769633507854
+      },
+      {
+        "segment": "PHX",
+        "n": 390,
+        "actual_delay_rate": 0.16153846153846155,
+        "predicted_delay_rate": 0.6358974358974359,
+        "precision": 0.2056451612903226,
+        "recall": 0.8095238095238095,
+        "f1": 0.3279742765273312
+      },
+      {
+        "segment": "LAX",
+        "n": 358,
+        "actual_delay_rate": 0.12849162011173185,
+        "predicted_delay_rate": 0.4692737430167598,
+        "precision": 0.1488095238095238,
+        "recall": 0.5434782608695652,
+        "f1": 0.2336448598130841
+      },
+      {
+        "segment": "BOS",
+        "n": 357,
+        "actual_delay_rate": 0.21008403361344538,
+        "predicted_delay_rate": 0.4061624649859944,
+        "precision": 0.27586206896551724,
+        "recall": 0.5333333333333333,
+        "f1": 0.36363636363636365
+      },
+      {
+        "segment": "PHL",
+        "n": 304,
+        "actual_delay_rate": 0.16776315789473684,
+        "predicted_delay_rate": 0.5986842105263158,
+        "precision": 0.23076923076923078,
+        "recall": 0.8235294117647058,
+        "f1": 0.3605150214592275
+      },
+      {
+        "segment": "MCO",
+        "n": 263,
+        "actual_delay_rate": 0.1596958174904943,
+        "predicted_delay_rate": 0.4600760456273764,
+        "precision": 0.2231404958677686,
+        "recall": 0.6428571428571429,
+        "f1": 0.3312883435582822
+      },
+      {
+        "segment": "DCA",
+        "n": 222,
+        "actual_delay_rate": 0.12612612612612611,
+        "predicted_delay_rate": 0.4189189189189189,
+        "precision": 0.13978494623655913,
+        "recall": 0.4642857142857143,
+        "f1": 0.21487603305785125
+      },
+      {
+        "segment": "LAS",
+        "n": 180,
+        "actual_delay_rate": 0.15555555555555556,
+        "predicted_delay_rate": 0.5333333333333333,
+        "precision": 0.1875,
+        "recall": 0.6428571428571429,
+        "f1": 0.2903225806451613
+      },
+      {
+        "segment": "FLL",
+        "n": 168,
+        "actual_delay_rate": 0.20833333333333334,
+        "predicted_delay_rate": 0.5654761904761905,
+        "precision": 0.25263157894736843,
+        "recall": 0.6857142857142857,
+        "f1": 0.36923076923076925
+      },
+      {
+        "segment": "SFO",
+        "n": 168,
+        "actual_delay_rate": 0.19642857142857142,
+        "predicted_delay_rate": 0.5297619047619048,
+        "precision": 0.19101123595505617,
+        "recall": 0.5151515151515151,
+        "f1": 0.2786885245901639
+      },
+      {
+        "segment": "PDX",
+        "n": 148,
+        "actual_delay_rate": 0.24324324324324326,
+        "predicted_delay_rate": 0.14864864864864866,
+        "precision": 0.18181818181818182,
+        "recall": 0.1111111111111111,
+        "f1": 0.13793103448275862
+      },
+      {
+        "segment": "DTW",
+        "n": 145,
+        "actual_delay_rate": 0.23448275862068965,
+        "predicted_delay_rate": 0.1310344827586207,
+        "precision": 0.3157894736842105,
+        "recall": 0.17647058823529413,
+        "f1": 0.22641509433962265
+      },
+      {
+        "segment": "RDU",
+        "n": 144,
+        "actual_delay_rate": 0.16666666666666666,
+        "predicted_delay_rate": 0.3194444444444444,
+        "precision": 0.21739130434782608,
+        "recall": 0.4166666666666667,
+        "f1": 0.2857142857142857
+      }
+    ],
+    "destination": [
+      {
+        "segment": "DFW",
+        "n": 1188,
+        "actual_delay_rate": 0.17087542087542087,
+        "predicted_delay_rate": 0.4452861952861953,
+        "precision": 0.2003780718336484,
+        "recall": 0.5221674876847291,
+        "f1": 0.2896174863387978
+      },
+      {
+        "segment": "CLT",
+        "n": 882,
+        "actual_delay_rate": 0.14512471655328799,
+        "predicted_delay_rate": 0.3843537414965986,
+        "precision": 0.18584070796460178,
+        "recall": 0.4921875,
+        "f1": 0.2698072805139186
+      },
+      {
+        "segment": "JFK",
+        "n": 476,
+        "actual_delay_rate": 0.19957983193277312,
+        "predicted_delay_rate": 0.3697478991596639,
+        "precision": 0.22727272727272727,
+        "recall": 0.42105263157894735,
+        "f1": 0.2952029520295203
+      },
+      {
+        "segment": "PHX",
+        "n": 472,
+        "actual_delay_rate": 0.17584745762711865,
+        "predicted_delay_rate": 0.4555084745762712,
+        "precision": 0.2,
+        "recall": 0.5180722891566265,
+        "f1": 0.28859060402684567
+      },
+      {
+        "segment": "SEA",
+        "n": 462,
+        "actual_delay_rate": 0.17532467532467533,
+        "predicted_delay_rate": 0.2987012987012987,
+        "precision": 0.21739130434782608,
+        "recall": 0.37037037037037035,
+        "f1": 0.273972602739726
+      },
+      {
+        "segment": "LGA",
+        "n": 450,
+        "actual_delay_rate": 0.14,
+        "predicted_delay_rate": 0.3288888888888889,
+        "precision": 0.23648648648648649,
+        "recall": 0.5555555555555556,
+        "f1": 0.33175355450236965
+      },
+      {
+        "segment": "MIA",
+        "n": 445,
+        "actual_delay_rate": 0.17303370786516853,
+        "predicted_delay_rate": 0.39775280898876403,
+        "precision": 0.2598870056497175,
+        "recall": 0.5974025974025974,
+        "f1": 0.36220472440944884
+      },
+      {
+        "segment": "ORD",
+        "n": 399,
+        "actual_delay_rate": 0.13533834586466165,
+        "predicted_delay_rate": 0.45363408521303256,
+        "precision": 0.15469613259668508,
+        "recall": 0.5185185185185185,
+        "f1": 0.23829787234042554
+      },
+      {
+        "segment": "BOS",
+        "n": 388,
+        "actual_delay_rate": 0.19072164948453607,
+        "predicted_delay_rate": 0.5309278350515464,
+        "precision": 0.24757281553398058,
+        "recall": 0.6891891891891891,
+        "f1": 0.36428571428571427
+      },
+      {
+        "segment": "PHL",
+        "n": 345,
+        "actual_delay_rate": 0.17971014492753623,
+        "predicted_delay_rate": 0.4579710144927536,
+        "precision": 0.2088607594936709,
+        "recall": 0.532258064516129,
+        "f1": 0.3
+      },
+      {
+        "segment": "LAX",
+        "n": 337,
+        "actual_delay_rate": 0.13353115727002968,
+        "predicted_delay_rate": 0.5281899109792285,
+        "precision": 0.14606741573033707,
+        "recall": 0.5777777777777777,
+        "f1": 0.23318385650224216
+      },
+      {
+        "segment": "ATL",
+        "n": 335,
+        "actual_delay_rate": 0.18208955223880596,
+        "predicted_delay_rate": 0.14925373134328357,
+        "precision": 0.16,
+        "recall": 0.13114754098360656,
+        "f1": 0.14414414414414414
+      },
+      {
+        "segment": "DCA",
+        "n": 273,
+        "actual_delay_rate": 0.16483516483516483,
+        "predicted_delay_rate": 0.5018315018315018,
+        "precision": 0.20437956204379562,
+        "recall": 0.6222222222222222,
+        "f1": 0.3076923076923077
+      },
+      {
+        "segment": "MCO",
+        "n": 255,
+        "actual_delay_rate": 0.19607843137254902,
+        "predicted_delay_rate": 0.5137254901960784,
+        "precision": 0.3053435114503817,
+        "recall": 0.8,
+        "f1": 0.4419889502762431
+      },
+      {
+        "segment": "SFO",
+        "n": 185,
+        "actual_delay_rate": 0.23243243243243245,
+        "predicted_delay_rate": 0.7081081081081081,
+        "precision": 0.2900763358778626,
+        "recall": 0.8837209302325582,
+        "f1": 0.4367816091954023
+      },
+      {
+        "segment": "FLL",
+        "n": 172,
+        "actual_delay_rate": 0.22093023255813954,
+        "predicted_delay_rate": 0.4941860465116279,
+        "precision": 0.27058823529411763,
+        "recall": 0.6052631578947368,
+        "f1": 0.37398373983739835
+      },
+      {
+        "segment": "LAS",
+        "n": 172,
+        "actual_delay_rate": 0.20930232558139536,
+        "predicted_delay_rate": 0.6046511627906976,
+        "precision": 0.25,
+        "recall": 0.7222222222222222,
+        "f1": 0.37142857142857144
+      },
+      {
+        "segment": "RDU",
+        "n": 165,
+        "actual_delay_rate": 0.18787878787878787,
+        "predicted_delay_rate": 0.4484848484848485,
+        "precision": 0.20270270270270271,
+        "recall": 0.4838709677419355,
+        "f1": 0.2857142857142857
+      },
+      {
+        "segment": "DTW",
+        "n": 150,
+        "actual_delay_rate": 0.14,
+        "predicted_delay_rate": 0.23333333333333334,
+        "precision": 0.34285714285714286,
+        "recall": 0.5714285714285714,
+        "f1": 0.42857142857142855
+      },
+      {
+        "segment": "PDX",
+        "n": 148,
+        "actual_delay_rate": 0.21621621621621623,
+        "predicted_delay_rate": 0.4797297297297297,
+        "precision": 0.2112676056338028,
+        "recall": 0.46875,
+        "f1": 0.2912621359223301
+      }
+    ],
+    "departure_period": [
+      {
+        "segment": "morning",
+        "n": 4942,
+        "actual_delay_rate": 0.141643059490085,
+        "predicted_delay_rate": 0.060906515580736544,
+        "precision": 0.19933554817275748,
+        "recall": 0.08571428571428572,
+        "f1": 0.11988011988011989
+      },
+      {
+        "segment": "afternoon",
+        "n": 3298,
+        "actual_delay_rate": 0.19436021831412978,
+        "predicted_delay_rate": 0.6331109763493026,
+        "precision": 0.21886973180076627,
+        "recall": 0.7129485179407177,
+        "f1": 0.3349212165628435
+      },
+      {
+        "segment": "evening",
+        "n": 3116,
+        "actual_delay_rate": 0.22400513478818998,
+        "predicted_delay_rate": 0.8225288831835686,
+        "precision": 0.23605150214592274,
+        "recall": 0.8667621776504298,
+        "f1": 0.3710518245936829
+      },
+      {
+        "segment": "night",
+        "n": 489,
+        "actual_delay_rate": 0.1574642126789366,
+        "predicted_delay_rate": 0.4233128834355828,
+        "precision": 0.2318840579710145,
+        "recall": 0.6233766233766234,
+        "f1": 0.3380281690140845
+      }
+    ],
+    "distance_band": [
+      {
+        "segment": "medium_500_1499mi",
+        "n": 6738,
+        "actual_delay_rate": 0.18477292965271594,
+        "predicted_delay_rate": 0.45814781834372215,
+        "precision": 0.2400388726919339,
+        "recall": 0.5951807228915663,
+        "f1": 0.34210526315789475
+      },
+      {
+        "segment": "short_<500mi",
+        "n": 3102,
+        "actual_delay_rate": 0.16956802063185042,
+        "predicted_delay_rate": 0.35589941972920697,
+        "precision": 0.21920289855072464,
+        "recall": 0.4600760456273764,
+        "f1": 0.2969325153374233
+      },
+      {
+        "segment": "long_1500mi_plus",
+        "n": 2005,
+        "actual_delay_rate": 0.17206982543640897,
+        "predicted_delay_rate": 0.4827930174563591,
+        "precision": 0.19318181818181818,
+        "recall": 0.5420289855072464,
+        "f1": 0.28484386900228487
+      }
+    ]
+  }
+}

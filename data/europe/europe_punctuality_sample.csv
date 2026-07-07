@@ -1,0 +1,11 @@
+year,month,airline,origin,destination,airport_pair,avg_arrival_delay_min,pct_flights_15min_late,cancelled_pct,source
+2024,7,VY,BCN,AMS,BCN-AMS,14.2,0.31,0.012,sample_european_punctuality_context
+2024,9,IB,MAD,LHR,MAD-LHR,12.8,0.27,0.010,sample_european_punctuality_context
+2024,6,LH,FRA,FCO,FRA-FCO,10.4,0.22,0.008,sample_european_punctuality_context
+2024,8,BA,LHR,MAD,LHR-MAD,13.9,0.29,0.011,sample_european_punctuality_context
+2024,7,KL,AMS,BCN,AMS-BCN,11.7,0.25,0.009,sample_european_punctuality_context
+2024,10,AF,CDG,BCN,CDG-BCN,15.1,0.34,0.014,sample_european_punctuality_context
+2024,5,TP,LIS,AMS,LIS-AMS,9.8,0.20,0.007,sample_european_punctuality_context
+2024,11,LX,ZRH,LHR,ZRH-LHR,8.9,0.18,0.006,sample_european_punctuality_context
+2024,12,FR,DUB,BCN,DUB-BCN,16.4,0.37,0.016,sample_european_punctuality_context
+2024,4,SK,CPH,AMS,CPH-AMS,7.9,0.16,0.005,sample_european_punctuality_context

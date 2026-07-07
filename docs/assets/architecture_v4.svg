@@ -1,0 +1,66 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1180" height="520" viewBox="0 0 1180 520">
+  <defs>
+    <linearGradient id="bg" x1="0" x2="1" y1="0" y2="1">
+      <stop offset="0" stop-color="#0b1f4d"/>
+      <stop offset="0.55" stop-color="#1d4ed8"/>
+      <stop offset="1" stop-color="#38bdf8"/>
+    </linearGradient>
+    <style>
+      .title{font-family:Inter,Arial,sans-serif;font-size:30px;font-weight:800;fill:white}
+      .subtitle{font-family:Inter,Arial,sans-serif;font-size:15px;fill:#dbeafe}
+      .box{fill:white;stroke:#bfdbfe;stroke-width:2;rx:18;filter:url(#shadow)}
+      .boxTitle{font-family:Inter,Arial,sans-serif;font-size:17px;font-weight:800;fill:#0b1f4d}
+      .boxText{font-family:Inter,Arial,sans-serif;font-size:13px;fill:#1e3a8a}
+      .arrow{stroke:#dbeafe;stroke-width:4;marker-end:url(#arrow)}
+    </style>
+    <filter id="shadow" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="0" dy="8" stdDeviation="8" flood-color="#0f172a" flood-opacity="0.22"/>
+    </filter>
+    <marker id="arrow" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto" markerUnits="strokeWidth">
+      <path d="M0,0 L0,6 L9,3 z" fill="#dbeafe"/>
+    </marker>
+  </defs>
+  <rect width="1180" height="520" fill="url(#bg)"/>
+  <text x="42" y="52" class="title">FlightRisk v4 — End-to-End Deployed ML System</text>
+  <text x="42" y="82" class="subtitle">Real BTS data pipeline · leakage-safe features · model selection · threshold tuning · monitoring · drift checks · AWS-ready deployment</text>
+
+  <rect class="box" x="42" y="130" width="180" height="120"/>
+  <text x="62" y="165" class="boxTitle">BTS Data</text>
+  <text x="62" y="193" class="boxText">Monthly DOT CSVs</text>
+  <text x="62" y="215" class="boxText">clean + validate</text>
+
+  <line class="arrow" x1="225" y1="190" x2="285" y2="190"/>
+  <rect class="box" x="292" y="130" width="210" height="120"/>
+  <text x="312" y="165" class="boxTitle">Feature Pipeline</text>
+  <text x="312" y="193" class="boxText">schedule-time only</text>
+  <text x="312" y="215" class="boxText">historical aggregates</text>
+
+  <line class="arrow" x1="505" y1="190" x2="565" y2="190"/>
+  <rect class="box" x="572" y="130" width="220" height="120"/>
+  <text x="592" y="165" class="boxTitle">Model Training</text>
+  <text x="592" y="193" class="boxText">LR · RF · ExtraTrees</text>
+  <text x="592" y="215" class="boxText">GradientBoosting</text>
+
+  <line class="arrow" x1="795" y1="190" x2="855" y2="190"/>
+  <rect class="box" x="862" y="130" width="250" height="120"/>
+  <text x="882" y="165" class="boxTitle">Evaluation Layer</text>
+  <text x="882" y="193" class="boxText">PR-AUC selection</text>
+  <text x="882" y="215" class="boxText">threshold + error analysis</text>
+
+  <rect class="box" x="142" y="325" width="220" height="120"/>
+  <text x="162" y="360" class="boxTitle">Serving</text>
+  <text x="162" y="388" class="boxText">FastAPI + Streamlit</text>
+  <text x="162" y="410" class="boxText">Docker compose</text>
+
+  <line class="arrow" x1="365" y1="385" x2="455" y2="385"/>
+  <rect class="box" x="462" y="325" width="230" height="120"/>
+  <text x="482" y="360" class="boxTitle">Monitoring</text>
+  <text x="482" y="388" class="boxText">prediction logs</text>
+  <text x="482" y="410" class="boxText">summary endpoint</text>
+
+  <line class="arrow" x1="695" y1="385" x2="785" y2="385"/>
+  <rect class="box" x="792" y="325" width="245" height="120"/>
+  <text x="812" y="360" class="boxTitle">Drift / Deployment</text>
+  <text x="812" y="388" class="boxText">PSI drift reference</text>
+  <text x="812" y="410" class="boxText">AWS ECS/Fargate skeleton</text>
+</svg>

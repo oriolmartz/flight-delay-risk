@@ -1,0 +1,28 @@
+<svg width="1200" height="420" viewBox="0 0 1200 420" xmlns="http://www.w3.org/2000/svg">
+  <rect width="1200" height="420" rx="26" fill="#F8FAFC"/>
+  <text x="56" y="64" font-family="Inter,Arial" font-size="31" font-weight="800" fill="#0B1F4D">FlightRisk v2 architecture</text>
+  <g font-family="Inter,Arial" font-size="17" font-weight="700">
+    <rect x="58" y="112" width="155" height="76" rx="16" fill="#DBEAFE" stroke="#2563EB"/>
+    <text x="86" y="158" fill="#0B1F4D">BTS CSVs</text>
+    <rect x="260" y="112" width="155" height="76" rx="16" fill="#DBEAFE" stroke="#2563EB"/>
+    <text x="282" y="144" fill="#0B1F4D">Cleaning +</text><text x="282" y="168" fill="#0B1F4D">validation</text>
+    <rect x="462" y="112" width="155" height="76" rx="16" fill="#DBEAFE" stroke="#2563EB"/>
+    <text x="485" y="144" fill="#0B1F4D">Leakage-safe</text><text x="498" y="168" fill="#0B1F4D">features</text>
+    <rect x="664" y="112" width="155" height="76" rx="16" fill="#DBEAFE" stroke="#2563EB"/>
+    <text x="700" y="144" fill="#0B1F4D">Model</text><text x="690" y="168" fill="#0B1F4D">training</text>
+    <rect x="866" y="112" width="155" height="76" rx="16" fill="#DBEAFE" stroke="#2563EB"/>
+    <text x="900" y="144" fill="#0B1F4D">FastAPI</text><text x="892" y="168" fill="#0B1F4D">serving</text>
+    <rect x="664" y="260" width="155" height="76" rx="16" fill="#DBEAFE" stroke="#2563EB"/>
+    <text x="689" y="292" fill="#0B1F4D">Evaluation</text><text x="699" y="316" fill="#0B1F4D">reports</text>
+    <rect x="866" y="260" width="155" height="76" rx="16" fill="#DBEAFE" stroke="#2563EB"/>
+    <text x="900" y="292" fill="#0B1F4D">Blue UI</text><text x="896" y="316" fill="#0B1F4D">demo</text>
+  </g>
+  <g stroke="#174EA6" stroke-width="4" fill="none" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M213 150H260"/><path d="M415 150H462"/><path d="M617 150H664"/><path d="M819 150H866"/>
+    <path d="M742 188V260"/><path d="M944 188V260"/>
+  </g>
+  <g fill="#174EA6">
+    <path d="M255 143L269 150L255 157Z"/><path d="M457 143L471 150L457 157Z"/><path d="M659 143L673 150L659 157Z"/><path d="M861 143L875 150L861 157Z"/>
+    <path d="M735 255L742 269L749 255Z"/><path d="M937 255L944 269L951 255Z"/>
+  </g>
+</svg>

@@ -1,0 +1,34 @@
+# Core data / ML
+pandas>=2.1,<3.0
+numpy>=2.1,<2.4
+scikit-learn==1.6.0
+joblib>=1.3,<2.0
+pyarrow>=14.0
+
+# Data download
+requests>=2.31,<3.0
+
+# API
+fastapi>=0.110,<1.0
+uvicorn[standard]>=0.27,<1.0
+pydantic>=2.6,<3.0
+
+# Dashboard
+streamlit>=1.59,<2.0
+
+# Testing
+pytest>=8.0,<9.0
+httpx>=0.27,<1.0
+
+# Optional MLOps tracking (v4)
+# Enable with FLIGHTRISK_ENABLE_MLFLOW=1 after installing.
+# mlflow>=2.12,<3.0
+
+# Notebook (optional, only needed to run notebooks/01_exploration.ipynb)
+jupyter>=1.0,<2.0
+matplotlib>=3.8,<4.0
+
+# Optional external gradient boosting libraries. v4 already includes
+# scikit-learn GradientBoosting without extra dependencies.
+# xgboost>=2.0,<3.0
+# lightgbm>=4.3,<5.0

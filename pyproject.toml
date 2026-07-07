@@ -1,0 +1,35 @@
+[project]
+name = "flightrisk"
+version = "3.0.0"
+description = "End-to-end ML system that predicts flight delay risk from public U.S. aviation data."
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "MIT" }
+authors = [
+    { name = "FlightRisk Contributors" }
+]
+keywords = ["machine-learning", "flight-delay", "fastapi", "scikit-learn", "portfolio"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]
+addopts = "-v"
+
+[tool.black]
+line-length = 100
+target-version = ["py310", "py311", "py312"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py310"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "W"]
+
+[build-system]
+requires = ["setuptools>=68.0"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["src*", "app*", "scripts*"]

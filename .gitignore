@@ -1,0 +1,56 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+.eggs/
+build/
+dist/
+.venv/
+venv/
+env/
+
+# Environment
+.env
+
+# Data (never commit real BTS datasets)
+data/raw/*.csv
+data/raw/*.zip
+data/processed/*.parquet
+data/processed/*.csv
+
+# Keep folder placeholders
+!data/raw/.gitkeep
+!data/processed/.gitkeep
+
+# Models (regenerate via training, do not commit large binaries)
+models/*.joblib
+!models/.gitkeep
+
+# Reports are small and useful for portfolio review; keep them commit-able.
+# Ignore only obviously heavy report artifacts if you add them later.
+reports/*.parquet
+reports/*.joblib
+!reports/.gitkeep
+
+# Monitoring / experiment tracking
+monitoring/*.csv
+monitoring/*.db
+mlruns/
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/
+
+# IDE / OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# Streamlit local secrets/cache
+.streamlit/secrets.toml
