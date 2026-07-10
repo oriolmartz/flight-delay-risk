@@ -2,168 +2,201 @@
 
 # FlightRisk
 
-### Pre-departure flight-delay risk workbench for schedule triage
+### Pre-departure flight-delay risk workbench · English / Español
 
 Built by **Oriol Martínez**
 
-FlightRisk ranks scheduled flights by estimated arrival-delay exposure, compares each result with its historical schedule cohort and exposes the validation evidence behind the model.
+FlightRisk ranks scheduled flights by estimated arrival-delay exposure, validates every uploaded row, explains the selected linear model, and exposes the temporal evidence behind the public artifact.
 
-`FastAPI` · `Streamlit` · `scikit-learn` · `BTS 2024` · `temporal holdout` · `batch ranking` · `CI` · `Docker`
+`English / Español` · `FastAPI` · `Streamlit` · `scikit-learn` · `BTS 2024` · `temporal validation` · `calibration` · `PDF reports` · `monitoring` · `Docker`
 
 ![FlightRisk product preview](docs/assets/product_preview.svg)
 
+**[English](README.md) · [Español](README_ES.md)**
+
 </div>
 
-> **Core idea.** Most flight-delay demos return a score. FlightRisk turns that score into a review workflow: analyze one flight, rank a schedule, inspect historical context and verify where the current model is reliable—or not.
+> **Core idea.** Most flight-delay demos return a score. FlightRisk turns that score into a review workflow: enter or upload a schedule, rank risk, inspect evidence, verify temporal stability and export a bilingual brief.
 
-## Why FlightRisk exists
+## Public release status
 
-Predicting delays before departure is intrinsically noisy. The most powerful operational signals—live weather, aircraft rotation, airport congestion and ATC state—are not included in a schedule-only public-data model.
+FlightRisk v1.0.0 is the stable portfolio release. The archive includes the trained artifact, committed validation evidence, bilingual UI, PDF exports, API, monitoring and deployment configuration.
 
-FlightRisk therefore does not pretend to be a dispatch system. It answers a narrower and more defensible question:
-
-> Given only information available before departure, which scheduled flights deserve more attention than others?
-
-The product is designed to demonstrate end-to-end ML engineering rather than a single notebook metric:
-
-- reproducible data preparation and model training;
-- explicit leakage controls;
-- temporal train/validation/test separation;
-- candidate-model comparison;
-- ranking metrics for schedule triage;
-- FastAPI and Streamlit delivery surfaces;
-- prediction logging and drift monitoring;
-- Docker and continuous integration.
-
----
+A hosted URL is intentionally not hard-coded in this archive. After deployment, add the public dashboard and API links here and in `docs/PUBLIC_RELEASE.md`.
 
 ## Product tour
-
-FlightRisk v0.8.0 is organised around four real product surfaces.
 
 ### 1. Analyze flight
 
 Enter natural schedule fields:
 
-- carrier, origin and destination;
+- carrier and optional flight number;
+- origin and destination;
 - flight date;
-- scheduled departure and arrival time;
+- scheduled departure and arrival;
 - scheduled duration and distance.
 
-The UI derives month, weekday and HHMM model inputs automatically. The result combines:
+The application derives all model features and returns:
 
-- current model probability;
-- historical route cohort rate;
+- calibrated probability of a 15+ minute arrival delay;
+- raw model score for traceability;
+- historical route rate and exact support;
 - relative exposure against the route cohort;
-- estimated historical support;
 - route and carrier-route coverage;
-- non-causal schedule context signals.
+- signed local model contributions;
+- bilingual PDF risk brief.
 
-The interface labels the current probability honestly: the committed artifact is **not yet post-calibrated**, so it should be interpreted mainly as a ranking signal.
+The local explanation is native to the selected L1 Logistic Regression pipeline. Contributions are measured in log-odds before calibration. They explain model behaviour, not real-world causes.
 
 ### 2. Rank schedule
 
-Upload a CSV or load the bundled sample schedule. FlightRisk:
+Upload the natural CSV template or load the bundled sample:
 
-1. validates the required schema;
-2. scores the batch in one vectorised model call;
-3. sorts flights from highest to lowest model probability;
-4. assigns `Priority`, `Watch` and `Routine` review queues;
-5. exports the ranked schedule as CSV.
+```csv
+flight_number,airline,origin,destination,flight_date,scheduled_departure,scheduled_arrival,scheduled_duration_minutes,distance_miles
+418,DL,JFK,LAX,2026-07-18,18:30,21:45,375,2475
+```
 
-This workflow reflects the strongest current use case of the model: **relative prioritisation**, not exact operational forecasting.
+FlightRisk then:
+
+1. normalizes supported column aliases;
+2. validates schema and values row by row;
+3. excludes malformed rows without discarding the valid schedule;
+4. reports unseen and low-support routes before ranking;
+5. transforms the valid batch once;
+6. produces calibrated probabilities and historical context;
+7. ranks flights into `Priority`, `Watch` and `Routine` queues;
+8. exports CSV and bilingual PDF briefs.
+
+Priority tiers are relative to the uploaded schedule. Calibrated probability remains the model's absolute estimate.
 
 ### 3. Validation
 
-The UI surfaces committed evaluation evidence instead of hiding it in documentation:
+The validation surface reads committed reports and exposes:
 
-- held-out PR-AUC;
-- Precision@Top10%;
-- Lift@Top10%;
-- model comparison;
-- calibration diagnostic;
-- validation-candidate comparison;
-- explicit next experimental gates.
+- held-out PR-AUC and Lift@10%;
+- Brier score and expected calibration error;
+- reliability curve on the untouched test period;
+- four expanding temporal folds;
+- fold-level model and calibration selection;
+- development benchmark across four model families;
+- the ordered historical-encoding contract.
 
 ### 4. Model & operations
 
-The final surface exposes:
+The operations surface exposes:
 
-- model card and artifact lineage;
-- training-row and feature counts;
-- the pre-departure leakage contract;
-- API endpoints;
-- repository architecture;
-- intended and prohibited uses.
-
----
-
-## Current artifact and honest result
-
-The committed artifact was trained from official U.S. BTS Reporting Carrier On-Time Performance data covering 2024.
-
-| Split | Rows |
-|---|---:|
-| Model training | 1,511,025 |
-| Validation | 377,757 |
-| Held-out test | 472,196 |
-
-The validation-selected model is a Random Forest. On the final held-out period:
-
-| Metric | Random Forest |
-|---|---:|
-| ROC-AUC | 0.602 |
-| PR-AUC | 0.213 |
-| F1 | 0.301 |
-| Precision@Top10% | 0.242 |
-| Lift@Top10% | 1.512× |
-
-### Honest result: the baseline generalized better
-
-The Logistic Regression baseline slightly outperformed the selected Random Forest on the final test period:
-
-| Model | ROC-AUC | PR-AUC | F1 | Precision@Top10% | Lift@Top10% |
-|---|---:|---:|---:|---:|---:|
-| Logistic Regression | **0.611** | **0.219** | **0.306** | **0.253** | **1.578×** |
-| Random Forest | 0.602 | 0.213 | 0.301 | 0.242 | 1.512× |
-
-This result is not hidden or reframed as a win. It indicates that the original single validation split did not produce a fully stable model-selection decision. The next model iteration will use expanding temporal backtesting, ordered historical encoding and post-hoc calibration before freezing a new artifact.
-
-All committed values come from `reports/metrics.json`.
+- artifact and feature lineage;
+- training, validation and test periods;
+- live demo prediction counts;
+- average logged probability;
+- PSI drift status;
+- measured local inference latency;
+- model card, leakage contract and API surface;
+- Docker and public-deployment instructions.
 
 ---
 
-## What the model predicts
+## Honest result
 
-**Target:** `ArrDel15`
+### Held-out test
+
+| Metric | v1.0.0 artifact |
+|---|---:|
+| ROC-AUC | 0.6023 |
+| PR-AUC | 0.2124 |
+| Precision@Top10% | 0.2505 |
+| Lift@Top10% | 1.557× |
+| Brier score | 0.1336 |
+| Expected calibration error | 0.0229 |
+
+The discrimination is useful but modest. FlightRisk is not presented as a solved delay-prediction system. Its value is the combination of temporal rigor, calibrated probabilities, auditable cohort context and production-shaped delivery.
+
+### Calibration impact
+
+| Metric | Raw score | Calibrated probability |
+|---|---:|---:|
+| Brier score | 0.3036 | **0.1336** |
+| Expected calibration error | 0.3947 | **0.0229** |
+| Log loss | 0.8178 | **0.4378** |
+| Mean prediction | 0.5556 | **0.1786** |
+| Observed positive rate | 0.1609 | 0.1609 |
+
+Calibration is selected and fitted only on the validation period. Test outcomes never participate in calibration.
+
+### Temporal stability
+
+Across four expanding temporal folds:
+
+| Metric | Mean | Std | Range |
+|---|---:|---:|---:|
+| ROC-AUC | 0.6317 | 0.0307 | 0.5912-0.6655 |
+| PR-AUC | 0.2659 | 0.0811 | 0.1975-0.3798 |
+| Precision@Top10% | 0.3116 | 0.0970 | 0.2377-0.4471 |
+| Lift@Top10% | 1.6569× | 0.1719 | 1.4010-1.7645× |
+| Brier score | 0.1498 | 0.0234 | 0.1221-0.1785 |
+| ECE | 0.0550 | 0.0350 | 0.0128-0.0842 |
 
 ```text
-ArrDel15 = 1  → arrival delay is 15 minutes or more
-ArrDel15 = 0  → arrival delay is below 15 minutes
+L1 Logistic Regression selected: 4 / 4 folds
+Isotonic calibration selected:    4 / 4 folds
 ```
 
-The classifier returns:
+Extra Trees won one isolated validation block by a small margin. L1 Logistic is deployed because it was selected in all four temporal folds, is inspectable, and provides the more stable release decision. The disagreement is documented rather than hidden.
+
+See:
+
+- [`reports/temporal_backtest.md`](reports/temporal_backtest.md)
+- [`reports/calibration_report.md`](reports/calibration_report.md)
+- [`reports/candidate_benchmark.md`](reports/candidate_benchmark.md)
+
+---
+
+## Current artifact
+
+The source parquet contains **2,360,978** cleaned BTS 2024 flight records. The public artifact was trained from a deterministic **300,000-row chronological sample** spanning the complete available date range.
+
+| Partition | Date range | Rows |
+|---|---|---:|
+| Model training | 2024-01-01 - 2024-08-06 | 189,897 |
+| Calibration / validation | 2024-08-07 - 2024-10-06 | 49,622 |
+| Held-out test | 2024-10-07 - 2024-12-11 | 60,481 |
+
+The artifact contains:
+
+- L1 Logistic Regression pipeline;
+- ordered and smoothed historical aggregate maps;
+- exact cohort-support maps;
+- isotonic calibrator;
+- validation-selected decision threshold;
+- model metadata and evaluation evidence.
+
+### Target
 
 ```text
-P(ArrDel15 = 1 | pre-departure schedule information)
+ArrDel15 = 1  -> arrival delay is 15 minutes or more
+ArrDel15 = 0  -> arrival delay is below 15 minutes
 ```
 
-The current UI describes this as a **model probability**, but also exposes the calibration limitation. It is not a passenger guarantee or an operational dispatch probability.
+The displayed probability is:
+
+```text
+calibrated P(ArrDel15 = 1 | pre-departure schedule information)
+```
+
+It is not a live flight status, passenger guarantee or dispatch probability.
 
 ---
 
 ## Leakage contract
 
-The project treats feature availability as a first-class engineering constraint.
-
 ### Allowed before departure
 
 - reporting carrier;
-- origin and destination airport;
-- calendar fields;
-- scheduled departure and arrival times;
+- origin and destination;
+- calendar and scheduled times;
 - scheduled duration and distance;
-- historical aggregates fitted from training data.
+- historical rates and frequency maps built from prior dates.
 
 ### Explicitly blocked
 
@@ -177,103 +210,49 @@ CarrierDelay, WeatherDelay, NASDelay, LateAircraftDelay,
 Cancelled, Diverted
 ```
 
-`Cancelled` and `Diverted` may be used as cleaning filters, but never as inference features.
-
-### Temporal split boundary
-
-From v0.8.0, the core time-aware split cuts on complete `FlightDate` values. The same date can no longer appear in both training and test partitions.
+Training-row historical features use targets from strictly earlier `FlightDate` values. Rows from the same date are transformed together, preventing same-day target leakage.
 
 ```python
-assert train.FlightDate.max() < test.FlightDate.min()
+assert train.FlightDate.max() < validation.FlightDate.min()
+assert validation.FlightDate.max() < test.FlightDate.min()
 ```
 
 ---
 
-## Features
+## Architecture
 
-### Raw schedule inputs
+![FlightRisk architecture](docs/assets/architecture.svg)
 
-| Input | Meaning |
-|---|---|
-| `Airline` | Reporting carrier code |
-| `Origin` | Origin airport IATA code |
-| `Dest` | Destination airport IATA code |
-| `Month` | Scheduled month |
-| `DayOfWeek` | ISO weekday, 1–7 |
-| `CRSDepTime` | Scheduled departure in HHMM format |
-| `CRSArrTime` | Scheduled arrival in HHMM format |
-| `CRSElapsedTime` | Scheduled duration in minutes |
-| `Distance` | Route distance in miles |
-
-### Derived schedule features
-
-- departure and arrival hour;
-- cyclical hour encoding;
-- morning/evening peak flags;
-- red-eye and weekend flags;
-- route and carrier-route keys;
-- distance band and long-haul flag;
-- scheduled speed and log distance.
-
-### Historical aggregate features
-
-- carrier delay rate;
-- route delay rate;
-- origin and destination rates;
-- carrier-route rate;
-- carrier-origin and carrier-destination rates;
-- origin-hour and destination-hour rates;
-- frequency/share features for the same cohorts.
-
-The current aggregate encoder is fitted on the training partition and uses fallbacks for unseen groups. A stricter ordered temporal encoding is deliberately listed as the next major model iteration.
-
----
-
-## Model candidates
-
-| Candidate | Role |
-|---|---|
-| Logistic Regression | Fast, interpretable sparse baseline |
-| L1 Logistic Regression | Sparse linear candidate; v0.8.0 fixes the explicit `penalty="l1"` configuration |
-| Random Forest | Non-linear validation-selected artifact |
-| Extra Trees | More randomised tree ensemble |
-| Gradient Boosting | Optional slower experiment |
-
-The project does not assume that the most complex model should win. The committed test evidence currently favours the linear baseline.
-
----
-
-## System architecture
-
-```mermaid
-flowchart LR
-    U[Streamlit product UI] --> S[Prediction service]
-    A[FastAPI] --> S
-    S --> F[Schedule feature builder]
-    F --> H[Historical aggregate transformer]
-    H --> M[Serialized sklearn pipeline]
-    S --> L[Prediction log]
-    R[Committed reports] --> U
-    L --> D[PSI drift summary]
+```text
+BTS data
+  -> normalization and leakage removal
+  -> complete-date temporal split
+  -> strictly prior-date historical encoding
+  -> candidate model comparison
+  -> validation-only calibration
+  -> versioned artifact
+  -> inference + model-native explanations
+  -> bilingual Streamlit / FastAPI / PDF delivery
+  -> prediction logging + PSI monitoring
 ```
 
-| Layer | Path | Responsibility |
-|---|---|---|
-| Product UI | `app/dashboard/` | Analyze, rank, validate and inspect operations |
-| API | `app/api/` | Typed HTTP transport and OpenAPI documentation |
-| Service | `app/services/` | Artifact loading, inference and historical context |
-| Data | `src/data/` | Loading, normalization, cleaning and temporal splitting |
-| Features | `src/features/` | Schedule features and train-fitted aggregates |
-| Models | `src/models/` | Training, evaluation, inference and registry |
-| Monitoring | `src/monitoring/` | Prediction logging and PSI checks |
-| Workflows | `scripts/` | Training, evaluation, backtesting and quality gate |
-| Evidence | `reports/` | Metrics, calibration bins and error analysis |
+Repository map:
+
+```text
+app/api/           FastAPI transport and report endpoints
+app/dashboard/     bilingual Streamlit product surface
+app/services/      prediction, cohort-context and PDF services
+src/data/          loading, cleaning and temporal splitting
+src/features/      schedule features and historical aggregates
+src/models/        training, calibration, explanation and inference
+src/monitoring/    prediction logs and PSI drift checks
+scripts/           training, backtest, quality and benchmark workflows
+reports/           committed model and performance evidence
+```
 
 ---
 
-## API surface
-
-Run the API and open `/docs` for interactive OpenAPI documentation.
+## API
 
 ```text
 GET  /health
@@ -282,59 +261,98 @@ GET  /model/card
 POST /predict
 POST /predict/batch
 POST /rank
+POST /reports/flight
+POST /reports/schedule
 GET  /monitoring/summary
 GET  /monitoring/drift
 ```
 
-Example request:
+Interactive OpenAPI documentation is available at `/docs` when the API is running.
+
+Example prediction response:
 
 ```json
 {
-  "airline": "DL",
-  "origin": "JFK",
-  "destination": "LAX",
-  "month": 7,
-  "day_of_week": 5,
-  "crs_dep_time": 1830,
-  "crs_arr_time": 2145,
-  "crs_elapsed_time": 375,
-  "distance": 2475
+  "delay_probability": 0.1691,
+  "raw_model_score": 0.5874,
+  "calibration_method": "isotonic",
+  "risk_level": "moderate",
+  "local_contributions": [
+    {
+      "feature": "RouteDelayRate",
+      "contribution": 0.184,
+      "direction": "increase"
+    }
+  ],
+  "explanation_scale": "log_odds_before_calibration"
 }
 ```
 
 ---
 
+## Measured performance
+
+Committed local release measurements after warm-up:
+
+| Operation | Median |
+|---|---:|
+| Artifact load | 1,894.2 ms |
+| Single prediction | 49.9 ms |
+| 100-flight batch | 177.2 ms |
+| 1,000-flight batch | 1,344.5 ms |
+
+These figures were measured in the release environment. Hosted latency also depends on network overhead and cold starts. Full environment metadata is in [`reports/performance_benchmark.json`](reports/performance_benchmark.json).
+
+---
+
 ## Run locally
 
-### 1. Create an environment
+### Python
 
 ```bash
 python -m venv .venv
-```
-
-Activate it and install dependencies:
-
-```bash
+source .venv/bin/activate      # Windows: .venv\Scripts\activate
 pip install -r requirements.txt
-```
 
-### 2. Start the dashboard
-
-```bash
 streamlit run app/dashboard/streamlit_app.py
-```
-
-### 3. Start the API
-
-```bash
 uvicorn app.api.main:app --reload
 ```
 
-### Docker Compose
+### Docker
 
 ```bash
 docker compose up --build
 ```
+
+- Dashboard: `http://localhost:8501`
+- API: `http://localhost:8000`
+- OpenAPI: `http://localhost:8000/docs`
+
+### Make targets
+
+```bash
+make setup
+make test
+make quality
+make benchmark
+make dashboard
+make api
+```
+
+---
+
+## Reproduce the model evidence
+
+```bash
+python -m scripts.prepare_data
+python -m scripts.train_model --max-rows 300000 --candidate-profile linear
+python -m scripts.run_temporal_backtest --max-rows 300000 --candidate-profile linear
+python -m scripts.evaluate_model
+python -m scripts.benchmark_inference
+python -m scripts.quality_gate
+```
+
+Raw BTS data is not included in the public archive. Download and preparation commands are documented in [`docs/DATA.md`](docs/DATA.md).
 
 ---
 
@@ -344,95 +362,63 @@ docker compose up --build
 python -m scripts.quality_gate
 ```
 
-The gate checks:
+The v1.0.0 gate verifies:
 
-- Python compilation;
-- Ruff linting when installed;
-- full pytest suite;
-- artifact load;
-- single-flight inference;
-- vectorised batch inference;
-- report availability.
-
-The GitHub Actions workflow also runs the test suite, a training smoke test and an API Docker build.
-
----
-
-## Known limitations
-
-- The current artifact uses schedule information only.
-- It has no live weather, ATC, aircraft-rotation or airport-state feed.
-- The committed probability output is not post-calibrated.
-- Current historical aggregates are train-fitted but not yet ordered/out-of-fold for training rows.
-- A single validation split selected the Random Forest, while the linear baseline generalized better on test.
-- The European context layer is experimental and is not a Europe-calibrated flight-level model.
-- The system is not intended for dispatch, safety, legal or compensation decisions.
-
-These limitations are part of the product and model card, not buried in fine print.
+- compilation and Ruff;
+- complete test suite;
+- artifact version and loadability;
+- calibrated single and vectorized batch inference;
+- model-native explanation output;
+- bilingual PDF generation;
+- committed temporal, calibration and performance reports;
+- release manifest integrity.
 
 ---
 
-## v0.8.0 — Product Foundation
+## Deployment
 
-This release establishes the product and repository standard that future iterations build on:
+The repository contains:
 
-- new warm operational visual identity;
-- personal byline and single public release version;
-- four real dashboard surfaces;
-- natural date/time inputs;
-- historical cohort and support context;
-- schedule-ranking review queue;
-- validation evidence in the UI;
-- complete-date temporal split boundary;
-- real L1 configuration;
-- vectorised batch inference;
-- recruiter-first README;
-- stale visual assets and brittle UI tests removed.
+- `Dockerfile.api`;
+- `Dockerfile.dashboard`;
+- `docker-compose.yml`;
+- `render.yaml`;
+- Streamlit configuration;
+- health endpoint and release checks.
 
-### Next major iteration
-
-The next model release will focus on:
-
-1. ordered temporal historical encoding;
-2. expanding-window model selection;
-3. sigmoid/isotonic calibration comparison;
-4. Brier score and Expected Calibration Error;
-5. stable percentile-based priority tiers;
-6. a newly trained and frozen artifact.
+Deployment steps and the places where public URLs should be inserted are documented in [`docs/PUBLIC_RELEASE.md`](docs/PUBLIC_RELEASE.md).
 
 ---
 
-## Repository structure
+## Limitations
 
-```text
-app/
-  api/                 FastAPI application
-  dashboard/           Streamlit product UI and visual system
-  services/            Inference and context service
-src/
-  data/                Loading, cleaning and temporal splitting
-  features/            Schedule and historical features
-  models/              Training, evaluation, inference and artifact registry
-  monitoring/          Logging and drift monitoring
-scripts/                Reproducible command-line workflows
-tests/                  Unit, integration and product-contract tests
-reports/                Committed evaluation evidence
-models/                 Serialized model artifact
-docs/                   Architecture, model card and deployment notes
-```
+- No live weather, aircraft rotation, crew, ATC or airport-operations state.
+- BTS-trained artifact; the European context layer remains experimental and is not Europe-calibrated.
+- Moderate ranking performance reflects a noisy schedule-only problem.
+- Historical cohort rates can be weak for unseen or low-support combinations; the UI surfaces both conditions.
+- Local contributions explain the linear classifier, not causal mechanisms.
+- Monitoring is intentionally lightweight and file-based for a portfolio release.
+
+See [`docs/LIMITATIONS.md`](docs/LIMITATIONS.md) and [`docs/MODEL_CARD.md`](docs/MODEL_CARD.md).
 
 ---
 
-## Intended portfolio signal
+## What this project demonstrates
 
-FlightRisk is designed to demonstrate that the author can:
+- supervised tabular ML on real public records;
+- temporal data splitting and leakage prevention;
+- ordered target-rate features with smoothing and support;
+- honest model selection across time;
+- probability calibration;
+- ranking metrics for an operational queue;
+- model-native local explanation;
+- bilingual product design;
+- robust CSV onboarding and row-level validation;
+- vectorized inference;
+- PDF report generation;
+- FastAPI, Streamlit, Docker, CI and monitoring;
+- the ability to finish and publish an end-to-end ML product.
 
-- reason about leakage and temporal validation;
-- choose metrics for an imbalanced ranking problem;
-- report disappointing or unstable results honestly;
-- package a complete scikit-learn pipeline;
-- expose the model through an API and a product UI;
-- add monitoring, tests, Docker and CI;
-- communicate model limitations without weakening the product story.
+## License
 
-**FlightRisk is a portfolio ML system, not an operational aviation product.**
+MIT. Built by **Oriol Martínez**.

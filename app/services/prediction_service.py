@@ -55,12 +55,15 @@ def model_card() -> dict:
         'selected_model': metadata.get('model_name', 'unknown'),
         'candidate_models': metadata.get('candidate_models', []),
         'decision_threshold': artifact.decision_threshold,
+        'calibration_method': metadata.get('calibration_method', 'identity'),
+        'historical_encoding': metadata.get('historical_encoding', 'train-fitted aggregates'),
         'main_metrics': metrics.get('main_model', {}),
         'baseline_metrics': metrics.get('baseline_model', {}),
         'leakage_controls': [
             'Only scheduled/pre-flight fields are used at inference time.',
             'Post-flight delay, taxi, wheels, actual-time and cancellation columns are forbidden as features.',
-            'Historical aggregate features are fit on training data only and use fallback values for unseen entities.',
+            'Training-row historical rates use targets from strictly earlier FlightDate values only.',
+            'Validation, test and inference use smoothed maps fitted on the model-training period, with explicit unseen fallbacks.',
             'Model selection and threshold tuning are performed on validation data, then reported on a held-out test split.',
             'The European layer is a transfer layer over the same model and should be treated as experimental.',
         ],
@@ -87,19 +90,17 @@ def prediction_context(payload: PredictionInput) -> dict:
     frame = add_schedule_features(payload.to_raw_frame())
     transformed = aggregates.transform(frame)
     row = transformed.iloc[0]
-    n_train = int(artifact.metadata.get("n_train_rows") or 0)
-
     route_key = str(row["Route"])
     carrier_route_key = str(row["CarrierRoute"])
-    route_share = float(row.get("RouteFlightShare", 0.0))
-    carrier_route_share = float(row.get("CarrierRouteFlightShare", 0.0))
+    route_support = int(row.get("RouteHistoryCount", 0) or 0)
+    carrier_route_support = int(row.get("CarrierRouteHistoryCount", 0) or 0)
 
     signals = [
         {
             "label": "Route historical delay rate",
             "value": float(row["RouteDelayRate"]),
             "baseline": float(aggregates.global_fallback),
-            "support": int(round(route_share * n_train)) if n_train else None,
+            "support": route_support,
         },
         {
             "label": "Carrier historical delay rate",
@@ -111,13 +112,13 @@ def prediction_context(payload: PredictionInput) -> dict:
             "label": "Origin-hour historical rate",
             "value": float(row["OriginHourDelayRate"]),
             "baseline": float(aggregates.global_fallback),
-            "support": int(round(float(row.get("OriginHourFlightShare", 0.0)) * n_train)) if n_train else None,
+            "support": int(row.get("OriginHourHistoryCount", 0) or 0),
         },
         {
             "label": "Destination-hour historical rate",
             "value": float(row["DestHourDelayRate"]),
             "baseline": float(aggregates.global_fallback),
-            "support": int(round(float(row.get("DestHourFlightShare", 0.0)) * n_train)) if n_train else None,
+            "support": int(row.get("DestHourHistoryCount", 0) or 0),
         },
     ]
     signals.sort(key=lambda item: abs(item["value"] - item["baseline"]), reverse=True)
@@ -129,12 +130,49 @@ def prediction_context(payload: PredictionInput) -> dict:
         "carrier_rate": float(row["CarrierDelayRate"]),
         "origin_rate": float(row["OriginDelayRate"]),
         "destination_rate": float(row["DestDelayRate"]),
-        "route_support_estimate": int(round(route_share * n_train)) if n_train else None,
-        "carrier_route_support_estimate": int(round(carrier_route_share * n_train)) if n_train else None,
+        "route_support": route_support,
+        "carrier_route_support": carrier_route_support,
+        # Backwards-compatible aliases retained for the existing API/UI contract.
+        "route_support_estimate": route_support,
+        "carrier_route_support_estimate": carrier_route_support,
+        "smoothing_strength": float(aggregates.smoothing_strength),
         "route_seen": route_key in aggregates.route_rates,
         "carrier_route_seen": carrier_route_key in aggregates.carrier_route_rates,
         "signals": signals,
     }
+
+
+
+def prediction_contexts(payloads: list[PredictionInput]) -> list[dict]:
+    """Vectorized historical cohort context for a batch of flights."""
+    if not payloads:
+        return []
+    artifact = get_artifact()
+    aggregates = artifact.historical_aggregates
+    import pandas as pd
+
+    raw = pd.concat([payload.to_raw_frame() for payload in payloads], ignore_index=True)
+    frame = add_schedule_features(raw)
+    transformed = aggregates.transform(frame)
+    contexts: list[dict] = []
+    for _, row in transformed.iterrows():
+        route_key = str(row["Route"])
+        carrier_route_key = str(row["CarrierRoute"])
+        contexts.append(
+            {
+                "route": route_key.replace("_", " → "),
+                "global_rate": float(aggregates.global_fallback),
+                "route_rate": float(row["RouteDelayRate"]),
+                "carrier_rate": float(row["CarrierDelayRate"]),
+                "origin_rate": float(row["OriginDelayRate"]),
+                "destination_rate": float(row["DestDelayRate"]),
+                "route_support": int(row.get("RouteHistoryCount", 0) or 0),
+                "carrier_route_support": int(row.get("CarrierRouteHistoryCount", 0) or 0),
+                "route_seen": route_key in aggregates.route_rates,
+                "carrier_route_seen": carrier_route_key in aggregates.carrier_route_rates,
+            }
+        )
+    return contexts
 
 def predict_flight(payload: PredictionInput, threshold: float | None = None) -> dict:
     artifact = get_artifact()

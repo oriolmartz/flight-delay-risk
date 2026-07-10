@@ -28,7 +28,7 @@ def time_aware_split(
         raise ValueError("test_size must be between 0 and 1")
 
     df_sorted = df.copy()
-    df_sorted["FlightDate"] = pd.to_datetime(df_sorted["FlightDate"], errors="raise")
+    df_sorted["FlightDate"] = pd.to_datetime(df_sorted["FlightDate"], errors="raise", format="mixed")
     df_sorted = df_sorted.sort_values("FlightDate").reset_index(drop=True)
     unique_dates = pd.Index(df_sorted["FlightDate"].drop_duplicates())
     if len(unique_dates) < 2:
@@ -81,7 +81,7 @@ def split_train_test(
     if "FlightDate" in df.columns and df["FlightDate"].notna().any():
         try:
             df = df.copy()
-            df["FlightDate"] = pd.to_datetime(df["FlightDate"], errors="coerce")
+            df["FlightDate"] = pd.to_datetime(df["FlightDate"], errors="coerce", format="mixed")
             if df["FlightDate"].notna().sum() > 0:
                 return time_aware_split(df.dropna(subset=["FlightDate"]), test_size)
         except Exception as exc:  # pragma: no cover - defensive fallback

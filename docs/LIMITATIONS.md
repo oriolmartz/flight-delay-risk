@@ -1,63 +1,55 @@
 # FlightRisk limitations
 
-FlightRisk is designed as an ML engineering portfolio project, not as an operational aviation product. These limitations are intentionally documented because they are exactly the questions a technical interviewer should ask.
+FlightRisk is an ML engineering portfolio product, not an operational aviation system.
 
-## 1. U.S. training window
+## 1. Missing real-time causes
 
-The baseline run can be trained on a single BTS month for reproducibility and speed. That is real data, but it does not capture full seasonality.
+The model does not include live weather, ATC restrictions, aircraft rotation, crew status or airport queues.
 
-**Impact**
-- Weak coverage of summer/winter effects.
-- No explicit holiday season modeling.
-- Lower robustness to regime shifts across months.
+**Impact:** discrimination is moderate and individual-flight errors are unavoidable.
 
-**Mitigation**
-- The pipeline already supports multiple monthly BTS CSVs in `data/raw/`.
-- Use `scripts.run_temporal_backtest` to evaluate expanding-window performance.
-- A stronger production run should use 6-24 months of BTS data.
+## 2. One data year
 
-## 2. Hyperparameters
+The current evidence is limited to BTS 2024.
 
-The main training script uses fixed candidate models first. That is intentional for fast, reproducible end-to-end validation.
+**Impact:** multi-year structural shifts, unusual seasons and long-term carrier/network changes are not tested.
 
-**Impact**
-- Model performance may be below what a tuned model can achieve.
-- Interviewers can reasonably ask why these hyperparameters were chosen.
+## 3. Public-size release artifact
 
-**Mitigation**
-- The repository includes `scripts.tune_hyperparameters` with time-aware randomized search.
-- Search results are saved to `reports/hyperparameter_search.json`.
+The full processed source contains 2.36 million rows, while the release artifact uses a deterministic 300,000-row sample across the complete date range.
 
-## 3. Evaluation design
+**Impact:** rare cohort coverage is lower than in a full-data production run.
 
-The main run uses a time-aware train/validation/test split, not random k-fold. That is appropriate for temporal data, but one split is still just one split.
+## 4. Temporal instability
 
-**Impact**
-- Metrics may depend on the chosen time period.
-- One month can make performance look better or worse than a longer horizon.
+PR-AUC and calibration vary across the four backtest periods.
 
-**Mitigation**
-- The repository includes rolling expanding-window backtesting via `scripts.run_temporal_backtest`.
-- The repository includes bootstrap confidence intervals for held-out ROC-AUC, PR-AUC and F1.
+**Impact:** one headline metric cannot describe all operating conditions.
 
-## 4. European data
+## 5. Calibration drift
 
-The U.S. path is flight-level delay-risk ranking using BTS. The European path uses real UK CAA aggregate punctuality data.
+Isotonic calibration is fitted on one validation period. A later change in delay prevalence can make probabilities less reliable.
 
-**Impact**
-- Europe is not the same target granularity as U.S. BTS.
-- It models route/airline punctuality patterns, not individual European flight delay probability.
+**Required production control:** monitor outcomes, Brier score and ECE over time and recalibrate when necessary.
 
-**Mitigation**
-- The UI and README separate the U.S. and European modeling paths.
-- A true European flight-level v7 would require an official flight-level source such as EUROCONTROL-style data, with scheduled and actual times aligned.
+## 6. Historical association is not causation
 
-## 5. Deployment
+Carrier, route and airport rates capture historical association and potentially unobserved confounding.
 
-The repository includes Docker, CI and AWS/ECS-oriented examples, but the clean release does not ship a live public endpoint.
+**Impact:** context signals must not be interpreted as causal blame.
 
-**Impact**
-- Deployment is demonstrated as infrastructure readiness, not as a hosted production service.
+## 7. Sparse cohorts
 
-**Mitigation**
-- The next deployment step is a hosted FastAPI + Streamlit service with persistent monitoring storage.
+Rare or unseen groups are smoothed toward the global prior.
+
+**Impact:** predictions for low-support routes rely more on broad schedule features than route-specific history.
+
+## 8. Regional transfer
+
+The experimental European layer overlays aggregate context on a U.S.-trained model.
+
+**Impact:** it is not a calibrated individual-flight model for Europe.
+
+## 9. Deployment scope
+
+Docker, CI and monitoring hooks are included, but the release does not include a durable production outcome-join pipeline, authentication, autoscaling or persistent telemetry.

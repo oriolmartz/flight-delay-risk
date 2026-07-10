@@ -1,80 +1,75 @@
 # Model evaluation
 
-FlightRisk evaluates two related but different modeling paths.
+FlightRisk evaluates discrimination, ranking and probability quality separately.
 
-## U.S. BTS flight-level model
+## Metrics
 
-The U.S. model predicts whether a scheduled flight will arrive 15+ minutes late (`ArrDel15`).
+### Discrimination and ranking
 
-Primary metrics:
+- ROC-AUC;
+- PR-AUC;
+- F1 at a validation-selected threshold;
+- Precision@TopK and Recall@TopK;
+- Lift@TopK against the period-specific positive rate.
 
-- **ROC-AUC**: broad ranking quality across thresholds.
-- **PR-AUC**: more useful than accuracy when the positive class is relatively sparse.
-- **F1**: thresholded classification balance.
-- **Precision@Top10%**: observed delay rate among the highest-risk decile.
-- **Lift@Top10%**: how much better the top-risk decile is than random selection.
+### Probability quality
 
-For a flight-risk product, Lift@10 is especially useful: it answers whether the model concentrates real delays in the set of flights it marks as highest risk.
+- Brier score;
+- log loss;
+- expected calibration error;
+- quantile reliability curve.
 
-## Temporal validation
-
-The main training script uses:
+## Main chronological protocol
 
 ```text
-train/validation/test split ordered by FlightDate
+model training: 2024-01-01 → 2024-08-06
+validation:     2024-08-07 → 2024-10-06
+test:           2024-10-07 → 2024-12-11
 ```
 
-The evaluation layer includes:
+1. Fit ordered historical features and candidate pipelines on model-training data.
+2. Compare candidates on validation PR-AUC.
+3. Compare identity, sigmoid and isotonic calibration on validation Brier score.
+4. Tune the classification threshold on calibrated validation probabilities.
+5. Freeze the complete artifact.
+6. Report once on the held-out test block.
+
+## Candidate benchmark
+
+`reports/candidate_benchmark.json` keeps the four-family single-split benchmark. It is development evidence, not the sole deployment rule.
+
+## Expanding temporal backtest
 
 ```bash
-python -m scripts.run_temporal_backtest --n-splits 3
+python -m scripts.run_temporal_backtest \
+  --data-path data/processed/flights_processed.parquet \
+  --max-rows 200000 \
+  --n-splits 4 \
+  --candidate-profile linear
 ```
 
-This performs expanding-window evaluation:
+Each fold contains an earlier training window, a later validation/calibration block and a subsequent unseen test block. All cohort features are fit inside the fold.
 
-```text
-fold 1: train early period -> test next period
-fold 2: train larger early period -> test next period
-fold 3: train even larger early period -> test final period
-```
+The committed report is in `reports/temporal_backtest.json` and `.md`.
+
+## Calibration report
+
+`reports/calibration_report.json` compares the raw selected-model score with the post-calibrated probability on the held-out test block.
 
 ## Confidence intervals
 
-The evaluation layer includes bootstrap intervals for the final held-out evaluation:
+The training command supports optional bootstrap intervals:
 
 ```bash
-python -m scripts.run_real_data_demo --bootstrap-samples 200
+python -m scripts.train_model --bootstrap-samples 200
 ```
 
-The report is saved in:
+They are intentionally optional because repeated scoring can increase runtime substantially.
 
-```text
-reports/metrics.json
-```
+## Interpreting the result
 
-Look for:
+FlightRisk does not optimize for accuracy. A naive majority classifier could achieve high accuracy while failing to identify delayed flights. The central questions are:
 
-```json
-"confidence_intervals": {
-  "roc_auc": {"lower": ..., "upper": ...},
-  "pr_auc": {"lower": ..., "upper": ...},
-  "f1": {"lower": ..., "upper": ...}
-}
-```
-
-## Hyperparameter search
-
-The evaluation layer includes a modest time-aware search:
-
-```bash
-python -m scripts.tune_hyperparameters --model logistic_regression --n-iter 12
-python -m scripts.tune_hyperparameters --model extra_trees --n-iter 12
-```
-
-Results are saved in:
-
-```text
-reports/hyperparameter_search.json
-```
-
-The main pipeline remains fixed by default for reproducibility. The tuning script is meant to show how the fixed candidates can be improved.
+- Are delayed flights concentrated near the top of the queue?
+- Are displayed probabilities aligned with observed frequencies?
+- Does the result survive later temporal blocks?

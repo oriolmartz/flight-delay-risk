@@ -31,6 +31,7 @@ class FlightRiskArtifact:
     metadata: dict[str, Any] = field(default_factory=dict)
     metrics: dict[str, Any] = field(default_factory=dict)
     decision_threshold: float = DEFAULT_DECISION_THRESHOLD
+    probability_calibrator: Any | None = None
 
     def save(self, path: Path = DEFAULT_MODEL_PATH) -> Path:
         path = Path(path)
@@ -42,6 +43,7 @@ class FlightRiskArtifact:
             "metadata": self.metadata,
             "metrics": self.metrics,
             "decision_threshold": self.decision_threshold,
+            "probability_calibrator": self.probability_calibrator,
         }
         joblib.dump(payload, path)
         logger.info("Saved model artifact to %s", path)
@@ -63,6 +65,7 @@ class FlightRiskArtifact:
             metadata=payload.get("metadata", {}),
             metrics=payload.get("metrics", {}),
             decision_threshold=float(payload.get("decision_threshold", DEFAULT_DECISION_THRESHOLD)),
+            probability_calibrator=payload.get("probability_calibrator"),
         )
 
 

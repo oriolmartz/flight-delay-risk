@@ -16,6 +16,7 @@ from src.config import (
     RISK_MODERATE_MAX,
 )
 from src.features.build_features import add_schedule_features
+from src.models.explain import local_linear_contributions
 from src.models.registry import FlightRiskArtifact
 
 
@@ -58,7 +59,7 @@ def risk_level_from_probability(probability: float) -> str:
 
 
 def top_factors_for_input(row: pd.Series, aggregates_fallback: float) -> list[str]:
-    """Produce a small, human-readable list of the most notable risk drivers.
+    """Produce a small, human-readable list of notable schedule context.
 
     This is a lightweight, transparent heuristic (not SHAP) intended for a
     recruiter-friendly explanation in the API/dashboard: it surfaces which
@@ -85,7 +86,7 @@ def top_factors_for_input(row: pd.Series, aggregates_fallback: float) -> list[st
     top = [name for name, _ in factors[:3]]
 
     if not top:
-        top = ["no strong risk drivers identified; near-average flight profile"]
+        top = ["no strong schedule-context signals; near-average flight profile"]
 
     return top
 
@@ -96,13 +97,25 @@ def predict_single(artifact: FlightRiskArtifact, payload: PredictionInput, thres
     df = artifact.historical_aggregates.transform(df)
 
     X = df[artifact.feature_columns]
-    probability = float(artifact.pipeline.predict_proba(X)[:, 1][0])
+    raw_probability = float(artifact.pipeline.predict_proba(X)[:, 1][0])
+    if artifact.probability_calibrator is not None:
+        probability = float(artifact.probability_calibrator.transform([raw_probability])[0])
+        calibration_method = artifact.probability_calibrator.method
+    else:
+        probability = raw_probability
+        calibration_method = "identity"
+
+    contributions = local_linear_contributions(artifact, X, top_n=6)[0]
 
     return {
         "delay_probability": round(probability, 4),
+        "raw_model_score": round(raw_probability, 4),
+        "calibration_method": calibration_method,
         "risk_level": risk_level_from_probability(probability),
         "decision_threshold": threshold,
         "top_factors": top_factors_for_input(df.iloc[0], artifact.historical_aggregates.global_fallback),
+        "local_contributions": contributions,
+        "explanation_scale": "log_odds_before_calibration",
     }
 
 
@@ -116,18 +129,32 @@ def predict_batch(
     raw_df = pd.concat([payload.to_raw_frame() for payload in payloads], ignore_index=True)
     df = add_schedule_features(raw_df)
     df = artifact.historical_aggregates.transform(df)
-    probabilities = artifact.pipeline.predict_proba(df[artifact.feature_columns])[:, 1]
+    raw_probabilities = artifact.pipeline.predict_proba(df[artifact.feature_columns])[:, 1]
+    if artifact.probability_calibrator is not None:
+        probabilities = artifact.probability_calibrator.transform(raw_probabilities)
+        calibration_method = artifact.probability_calibrator.method
+    else:
+        probabilities = raw_probabilities
+        calibration_method = "identity"
+
+    explanations = local_linear_contributions(artifact, df[artifact.feature_columns], top_n=6)
 
     return [
         {
             "delay_probability": round(float(probability), 4),
+            "raw_model_score": round(float(raw_probability), 4),
+            "calibration_method": calibration_method,
             "risk_level": risk_level_from_probability(float(probability)),
             "decision_threshold": threshold,
             "top_factors": top_factors_for_input(
                 row, artifact.historical_aggregates.global_fallback
             ),
+            "local_contributions": contributions,
+            "explanation_scale": "log_odds_before_calibration",
         }
-        for probability, (_, row) in zip(probabilities, df.iterrows())
+        for raw_probability, probability, (_, row), contributions in zip(
+            raw_probabilities, probabilities, df.iterrows(), explanations
+        )
     ]
 
 

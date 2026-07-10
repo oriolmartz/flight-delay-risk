@@ -1,32 +1,29 @@
 # FlightRisk architecture
 
-FlightRisk v3 is organized as a production-shaped ML system rather than a notebook-only experiment.
+FlightRisk v1.0.0 is a production-shaped ML workbench built around one principle: every risk estimate should carry temporal, calibration and historical-support evidence.
 
 ![FlightRisk architecture](assets/architecture.svg)
 
-## High-level flow
+## End-to-end flow
 
 ```text
-Official BTS monthly CSVs
-  → schema normalization
-  → cleaning + validation
-  → leakage column removal
-  → time-aware train / validation / test split
-  → pre-flight feature engineering
-  → historical aggregate features fit on model-training data only
-  → candidate model training
-  → validation-based model selection
-  → validation-based decision-threshold tuning
-  → held-out test evaluation reports
-  → model artifact with metadata + threshold
-  → FastAPI and Streamlit serving
+Official BTS flight records
+  → schema normalization and cleaning
+  → forbidden post-flight columns removed
+  → complete-date train / validation / test split
+  → schedule feature engineering
+  → strictly prior-date historical encoding for training rows
+  → smoothed frozen cohort maps for validation/test/inference
+  → candidate training and validation selection
+  → validation-only calibrator and threshold fitting
+  → held-out test reporting
+  → expanding temporal backtest
+  → versioned artifact
+  → shared prediction service
+  → Streamlit, FastAPI and monitoring
 ```
 
-## Layers
-
-### Data layer
-
-Files:
+## Data layer
 
 ```text
 scripts/download_bts_data.py
@@ -39,18 +36,14 @@ src/data/split.py
 
 Responsibilities:
 
-- Download/accept real BTS monthly CSVs
-- Normalize inconsistent BTS column names
-- Validate required fields
-- Filter rows with missing target
-- Filter cancelled/diverted rows
-- Remove leakage columns
-- Write processed data as Parquet or CSV fallback
-- Split chronologically when `FlightDate` exists
+- download and normalize BTS monthly data;
+- filter cancelled, diverted and target-missing rows;
+- remove post-flight leakage columns;
+- validate required schema;
+- persist processed data;
+- create chronological partitions without shared dates.
 
-### Feature layer
-
-Files:
+## Feature layer
 
 ```text
 src/features/build_features.py
@@ -59,18 +52,27 @@ src/features/historical_aggregates.py
 
 Responsibilities:
 
-- Convert scheduled HHMM times to hours
-- Build route identifiers
-- Add weekend flag
-- Fit historical carrier/route/origin/destination delay rates on model-training rows only
-- Apply aggregate fallbacks to unseen inference values
+- derive route, time, peak, cyclic and distance features;
+- build cohort keys;
+- create training-row rates from strictly earlier dates;
+- fit smoothed rate maps and exact count maps;
+- apply explicit global fallbacks to unseen groups.
 
-### Model layer
+### Ordered encoding contract
 
-Files:
+For each date:
+
+1. transform all rows using accumulated prior history;
+2. do not expose any same-day targets;
+3. update rate/count maps only after transformation.
+
+This is stricter than fitting one aggregate map over the complete training partition.
+
+## Model layer
 
 ```text
 src/models/train.py
+src/models/calibration.py
 src/models/evaluate.py
 src/models/thresholding.py
 src/models/registry.py
@@ -79,51 +81,60 @@ src/models/predict.py
 
 Responsibilities:
 
-- Build preprocessing pipelines
-- Train Logistic Regression baseline
-- Train tree-based candidates: Random Forest and Extra Trees
-- Select the deployed candidate using validation PR-AUC by default
-- Tune the decision threshold on validation predictions for F1
-- Evaluate ROC-AUC, PR-AUC, F1, precision, recall and calibration on the held-out test split
-- Save model artifact with pipeline + aggregates + metrics + metadata + decision threshold
-- Run single/batch predictions without train/serve skew
+- build sparse preprocessing pipelines;
+- train linear and optional tree candidates;
+- select candidates using later validation data;
+- fit sigmoid and isotonic calibration candidates;
+- tune a threshold on calibrated validation probabilities;
+- report discrimination, ranking and calibration metrics;
+- package the pipeline, cohort maps, calibrator, threshold and lineage;
+- guarantee identical single and vectorized batch inference paths.
 
-### Serving layer
-
-Files:
+## Validation layer
 
 ```text
-app/api/main.py
-app/dashboard/streamlit_app.py
-app/services/prediction_service.py
-app/schemas.py
+scripts/train_model.py
+scripts/run_temporal_backtest.py
+reports/metrics.json
+reports/calibration_report.json
+reports/candidate_benchmark.json
+reports/temporal_backtest.json
 ```
 
-Responsibilities:
+The release contains two complementary forms of evidence:
 
-- Load model artifact once
-- Expose `/health`, `/model/info`, `/model/card`, `/predict`, `/predict/batch`
-- Provide a blue recruiter-friendly dashboard
-- Display model metrics, selected model, tuned threshold, prediction probability, risk level and risk drivers
+- a four-family benchmark on one validation block;
+- a four-fold expanding backtest that repeats selection and calibration.
 
-## Key design choice: leakage-safe historical aggregates
+The final model is selected using stability evidence rather than only the best single-split score.
 
-Historical route/carrier/airport delay rates can be powerful features, but they are unsafe if computed from all data before splitting. FlightRisk avoids this by:
+## Serving layer
 
-1. splitting data first,
-2. fitting aggregate lookup tables on model-training rows only,
-3. applying those lookups to validation/test/inference rows,
-4. using a global fallback for unseen keys.
+```text
+app/services/prediction_service.py
+app/api/main.py
+app/schemas.py
+app/dashboard/streamlit_app.py
+```
 
-This mirrors how risk features are usually built in real tabular ML systems.
+The service layer owns artifact loading and all prediction logic. The API and dashboard consume the same functions, preventing duplicated inference behavior.
 
-## Key design choice: validation selection before test reporting
+Outputs include:
 
-FlightRisk v3 separates model selection from final test reporting:
+- calibrated probability;
+- raw model score;
+- calibration method;
+- thresholded risk label;
+- cohort context and exact support;
+- schedule-context heuristics clearly labeled as non-causal.
 
-1. train candidate models on the model-training split,
-2. compare candidates on the validation split,
-3. tune the decision threshold on validation predictions,
-4. report final metrics once on the held-out test split.
+## Monitoring and release controls
 
-This avoids tuning directly on the test set and makes the reported metrics more credible.
+```text
+src/monitoring/
+monitoring/prediction_log.csv
+scripts/quality_gate.py
+.github/workflows/
+```
+
+The quality gate compiles the package, runs Ruff and all tests, loads the release artifact, executes calibrated single/batch inference and validates the committed experimental reports.

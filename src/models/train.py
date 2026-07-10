@@ -189,6 +189,9 @@ def train_models(
     train_df: pd.DataFrame,
     *,
     include_gradient_boosting: bool = False,
+    ordered_historical_encoding: bool = True,
+    smoothing_strength: float = HistoricalAggregates.DEFAULT_SMOOTHING_STRENGTH,
+    candidate_profile: str = "full",
 ) -> tuple[dict[str, TrainedModel], HistoricalAggregates, pd.DataFrame, pd.Series]:
     """Fit historical aggregates + schedule features, then train baseline and main models.
 
@@ -200,13 +203,22 @@ def train_models(
             on real BTS monthly data.
         aggregates: fitted HistoricalAggregates (fit on train_df only)
         X_train, y_train: the training feature matrix / target actually used
+
+    By default, historical target-rate features for training rows are built
+    from dates strictly earlier than each row. The fitted aggregate maps stored
+    in the artifact use the complete model-training period and are applied only
+    to later validation, test and inference rows.
     """
     # Historical aggregates must first be built from the raw train_df
     # (before schedule features are added) so Route/Airline/Origin/Dest exist.
     train_df = add_schedule_features(train_df)
 
-    aggregates = HistoricalAggregates().fit(train_df)
-    train_df = aggregates.transform(train_df)
+    aggregates = HistoricalAggregates(smoothing_strength=smoothing_strength)
+    if ordered_historical_encoding:
+        train_df = aggregates.fit_transform_ordered(train_df)
+    else:
+        aggregates.fit(train_df)
+        train_df = aggregates.transform(train_df)
 
     assert_no_leakage_columns(list(train_df.columns))
 
@@ -220,20 +232,25 @@ def train_models(
     baseline_pipeline.fit(X_train, y_train)
     models["baseline"] = TrainedModel(name="logistic_regression", pipeline=baseline_pipeline)
 
-    logger.info("Training candidate model (L1 Logistic Regression)...")
-    l1_pipeline = build_l1_logistic_pipeline()
-    l1_pipeline.fit(X_train, y_train)
-    models["logistic_l1"] = TrainedModel(name="logistic_l1", pipeline=l1_pipeline)
+    if candidate_profile not in {"baseline", "linear", "full"}:
+        raise ValueError("candidate_profile must be one of: baseline, linear, full")
 
-    logger.info("Training candidate model (RandomForestClassifier)...")
-    rf_pipeline = build_random_forest_pipeline()
-    rf_pipeline.fit(X_train, y_train)
-    models["random_forest"] = TrainedModel(name="random_forest", pipeline=rf_pipeline)
+    if candidate_profile in {"linear", "full"}:
+        logger.info("Training candidate model (L1 Logistic Regression)...")
+        l1_pipeline = build_l1_logistic_pipeline()
+        l1_pipeline.fit(X_train, y_train)
+        models["logistic_l1"] = TrainedModel(name="logistic_l1", pipeline=l1_pipeline)
 
-    logger.info("Training candidate model (ExtraTreesClassifier)...")
-    extra_trees_pipeline = build_extra_trees_pipeline()
-    extra_trees_pipeline.fit(X_train, y_train)
-    models["extra_trees"] = TrainedModel(name="extra_trees", pipeline=extra_trees_pipeline)
+    if candidate_profile == "full":
+        logger.info("Training candidate model (RandomForestClassifier)...")
+        rf_pipeline = build_random_forest_pipeline()
+        rf_pipeline.fit(X_train, y_train)
+        models["random_forest"] = TrainedModel(name="random_forest", pipeline=rf_pipeline)
+
+        logger.info("Training candidate model (ExtraTreesClassifier)...")
+        extra_trees_pipeline = build_extra_trees_pipeline()
+        extra_trees_pipeline.fit(X_train, y_train)
+        models["extra_trees"] = TrainedModel(name="extra_trees", pipeline=extra_trees_pipeline)
 
     if include_gradient_boosting:
         logger.warning(
@@ -249,8 +266,8 @@ def train_models(
             "Use include_gradient_boosting=True or --include-gradient-boosting for slow full experiments."
         )
 
-    # Backwards-compatible alias used by the existing tests and simple demos.
-    models["main"] = models["random_forest"]
+    # Backwards-compatible alias used by tests and simple demos.
+    models["main"] = models.get("random_forest", models["baseline"])
 
     return models, aggregates, X_train, y_train
 

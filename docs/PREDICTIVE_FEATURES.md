@@ -1,82 +1,85 @@
-# FlightRisk Predictive Feature Set
+# FlightRisk predictive feature system
 
-The current feature set focuses on improving the **USA BTS predictive layer** without adding leakage.
+FlightRisk v1.0.0 uses only schedule-time information and historical evidence available before the prediction date.
 
-The initial USA model was useful as an ML engineering demo, but its PR-AUC/F1 were modest because it only used basic schedule fields and coarse historical aggregates. The feature layer adds stronger pre-flight features and ranking/product metrics.
+## Raw inputs
 
-## New leakage-safe features
+- airline;
+- origin and destination;
+- month and day of week;
+- scheduled departure and arrival time;
+- scheduled elapsed time;
+- route distance.
 
-All features are known before departure or computed from the training split only.
+## Derived schedule features
 
-### Schedule features
+- `Route`, `DepPeriod`, `ArrPeriod`, `DistanceBand`;
+- `IsMorningPeak`, `IsEveningPeak`, `IsPeakHour`;
+- `IsRedEye`, `IsWeekend`, `IsLongHaul`;
+- `ScheduledSpeedMph`, `LogDistance`;
+- cyclic departure and arrival hour encodings.
 
-- `DepPeriod`, `ArrPeriod`
-- `DistanceBand`
-- `IsMorningPeak`, `IsEveningPeak`, `IsPeakHour`
-- `IsRedEye`
-- `IsLongHaul`
-- `ScheduledSpeedMph`
-- `LogDistance`
-- cyclic hour features:
-  - `DepHourSin`, `DepHourCos`
-  - `ArrHourSin`, `ArrHourCos`
+## Historical rate features
 
-### Historical aggregate features
+- carrier;
+- route;
+- origin and destination;
+- carrier-route;
+- airline-origin and airline-destination;
+- origin-hour and destination-hour;
+- carrier-departure-hour.
 
-Computed on the training split only:
+## Historical frequency features
 
-- `CarrierRouteDelayRate`
-- `AirlineOriginDelayRate`
-- `AirlineDestDelayRate`
-- `OriginHourDelayRate`
-- `DestHourDelayRate`
-- `CarrierDepHourDelayRate`
+- route share;
+- carrier-route share;
+- airline-origin share;
+- origin-hour and destination-hour shares;
+- carrier-departure-hour share.
 
-### Schedule-density features
+## Ordered training behavior
 
-Also computed on the training split only:
+Target-derived features for a training row use only outcomes from strictly earlier `FlightDate` values. Same-day observations are transformed before their targets enter the state.
 
-- `RouteFlightShare`
-- `CarrierRouteFlightShare`
-- `AirlineOriginFlightShare`
-- `OriginHourFlightShare`
-- `DestHourFlightShare`
-- `CarrierDepHourFlightShare`
+This prevents:
 
-## Model candidates
+- self-target leakage;
+- same-day cross-row leakage;
+- future-date leakage inside the model-training partition.
 
-Default candidates:
+## Smoothing and support
 
-- Logistic Regression baseline
-- L1 Logistic Regression
-- Random Forest
-- Extra Trees
+Every historical rate uses empirical-Bayes smoothing toward the global model-training rate. The release smoothing strength is 50 rows.
 
-Dense `GradientBoostingClassifier` remains opt-in with `--include-gradient-boosting` because it can be very slow on BTS one-hot features.
+Rate maps and exact count maps are both serialized. Count features are used as product evidence rather than direct classifier inputs, allowing the UI to say whether a route rate is based on 20 or 2,000 observations.
 
-## New metrics
+## Unseen categories
 
-The feature layer adds ranking metrics to `reports/metrics.json`:
+Unseen rate keys receive the global smoothed fallback and zero support. Frequency-share keys receive zero. Categorical one-hot features use unknown-category-safe preprocessing.
 
-- `precision_at_top_5pct`
-- `precision_at_top_10pct`
-- `precision_at_top_20pct`
-- `recall_at_top_10pct`
-- `lift_at_top_10pct`
-- `baseline_positive_rate`
+## Models
 
-These are more product-relevant than F1 for a delay-risk system. The key question becomes:
+The release supports these candidate families:
 
-> Among the flights ranked highest-risk by the model, how much more delayed are they than the average flight?
+- Logistic Regression;
+- L1 Logistic Regression;
+- Random Forest;
+- Extra Trees;
+- optional Gradient Boosting.
 
-## Recommended command
+The committed artifact uses L1 Logistic Regression because it was selected in all four expanding temporal folds.
 
-```bash
-python -m scripts.run_real_data_demo --selection-metric pr_auc
-```
+## Product metrics
 
-For faster iteration:
+FlightRisk reports:
 
-```bash
-python -m scripts.run_real_data_demo --max-rows 200000 --selection-metric pr_auc
-```
+- ROC-AUC and PR-AUC;
+- Precision, Recall and F1;
+- Precision@Top5/10/20%;
+- Lift@Top5/10/20%;
+- Brier score;
+- log loss;
+- expected calibration error;
+- calibration-curve bins.
+
+Ranking metrics answer whether the model concentrates real delays in the flights it places at the top of the review queue. Calibration metrics answer whether the displayed probabilities are numerically credible.

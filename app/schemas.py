@@ -98,11 +98,35 @@ class BatchFlightInput(BaseModel):
     flights: list[FlightInput] = Field(..., min_length=1, max_length=500)
 
 
+class LocalContributionOutput(BaseModel):
+    feature: str
+    contribution: float
+    direction: str
+    magnitude: float
+    active_category: str | None = None
+    raw_value: str | int | float | bool | None = None
+
+
+class FlightReportInput(FlightInput):
+    language: str = Field(default="en", pattern="^(en|es)$")
+    flight_number: str | None = Field(default=None, max_length=12)
+    flight_date: str | None = None
+
+
+class ScheduleReportInput(BatchFlightInput):
+    language: str = Field(default="en", pattern="^(en|es)$")
+
+
+
 class PredictionOutput(BaseModel):
-    delay_probability: float = Field(..., description="Probability the flight arrives 15+ minutes late.")
+    delay_probability: float = Field(..., description="Post-hoc calibrated estimate of a 15+ minute arrival delay.")
+    raw_model_score: float = Field(..., description="Uncalibrated score emitted by the selected classifier.")
+    calibration_method: str = Field(..., description="Post-hoc calibration method applied to the raw score.")
     risk_level: str = Field(..., description="'low', 'moderate', or 'high'.")
     decision_threshold: float = Field(..., description="Probability threshold used for binary risk decisions.")
-    top_factors: list[str] = Field(..., description="Top human-readable risk drivers for this flight.")
+    top_factors: list[str] = Field(..., description="Non-causal schedule-context signals for this flight.")
+    local_contributions: list[LocalContributionOutput] = Field(default_factory=list, description="Signed local log-odds contributions from the selected linear model.")
+    explanation_scale: str = Field(default="log_odds_before_calibration", description="Scale used by local model contributions.")
 
 
 class EuropeanPredictionOutput(PredictionOutput):
@@ -143,6 +167,11 @@ class HealthResponse(BaseModel):
 class ModelInfoResponse(BaseModel):
     model_name: str
     trained_at_utc: str | None = None
+    version: str | None = None
+    release_name: str | None = None
+    artifact_schema_version: str | None = None
+    calibration_method: str | None = None
+    historical_encoding: str | None = None
     n_train_rows: int | None = None
     n_test_rows: int | None = None
     validation_rows: int | None = None
@@ -154,6 +183,8 @@ class ModelInfoResponse(BaseModel):
 class ModelCardResponse(BaseModel):
     name: str
     version: str
+    calibration_method: str
+    historical_encoding: str
     task: str
     target: str
     intended_use: str

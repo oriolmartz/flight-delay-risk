@@ -1,7 +1,7 @@
 [project]
 name = "flightrisk"
-version = "0.8.0"
-description = "Pre-departure flight-delay risk workbench for schedule triage and ML validation."
+version = "1.0.0"
+description = "Bilingual pre-departure flight-delay risk workbench for schedule triage, explanation and ML validation."
 readme = "README.md"
 requires-python = ">=3.10"
 license = { text = "MIT" }

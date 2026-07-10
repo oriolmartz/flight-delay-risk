@@ -28,7 +28,7 @@ def test_dashboard_uses_personal_visual_system():
     assert "--fr-bg: #f3efe6" in theme
     assert "--fr-navy: #17304f" in theme
     assert "--fr-amber: #bb7a24" in theme
-    assert "Built by Oriol Martínez" in dashboard
+    assert "Oriol Martínez" in dashboard or "Oriol Martínez" in Path("app/dashboard/i18n.py").read_text(encoding="utf-8")
     assert "fr-flight-card" in dashboard
 
 

@@ -1,0 +1,17 @@
+services:
+  - type: web
+    name: flightrisk-api
+    runtime: docker
+    dockerfilePath: ./Dockerfile.api
+    healthCheckPath: /health
+    envVars:
+      - key: FLIGHTRISK_ENABLE_MLFLOW
+        value: "0"
+
+  - type: web
+    name: flightrisk-dashboard
+    runtime: docker
+    dockerfilePath: ./Dockerfile.dashboard
+    envVars:
+      - key: FLIGHTRISK_ENABLE_MLFLOW
+        value: "0"

@@ -1,0 +1,54 @@
+{
+  "release": "1.0.0",
+  "model": "logistic_l1",
+  "method": "isotonic",
+  "fit_period": "validation_only",
+  "held_out_test": {
+    "start": "2024-10-07",
+    "end": "2024-12-11",
+    "rows": 60481
+  },
+  "raw": {
+    "brier_score": 0.3035615117837014,
+    "log_loss": 0.8178356765713174,
+    "expected_calibration_error": 0.3947027880518314,
+    "mean_predicted_probability": 0.5555632235605036,
+    "observed_positive_rate": 0.16086043550867216
+  },
+  "calibrated": {
+    "brier_score": 0.13363095444087983,
+    "log_loss": 0.4377765445994094,
+    "expected_calibration_error": 0.02292772555406328,
+    "mean_predicted_probability": 0.1785677574900312,
+    "observed_positive_rate": 0.16086043550867216
+  },
+  "improvement": {
+    "brier_score_reduction": 0.16993055734282156,
+    "expected_calibration_error_reduction": 0.3717750624977681,
+    "log_loss_reduction": 0.380059131971908
+  },
+  "validation_candidates": {
+    "identity": {
+      "brier_score": 0.2785982668000358,
+      "log_loss": 0.7604641478401226,
+      "expected_calibration_error": 0.36440333418016,
+      "mean_predicted_probability": 0.5332397373884143,
+      "observed_positive_rate": 0.1688364032082544
+    },
+    "sigmoid": {
+      "brier_score": 0.13557765478822228,
+      "log_loss": 0.43683499010875654,
+      "expected_calibration_error": 0.004187723518936508,
+      "mean_predicted_probability": 0.16883227662110117,
+      "observed_positive_rate": 0.1688364032082544
+    },
+    "isotonic": {
+      "brier_score": 0.1353411374309825,
+      "log_loss": 0.43596102112771823,
+      "expected_calibration_error": 1.7129498992387682e-09,
+      "mean_predicted_probability": 0.16883640484059495,
+      "observed_positive_rate": 0.1688364032082544
+    }
+  },
+  "note": "The calibrator is fitted on the validation period only. All values above are evaluated on the later held-out test period."
+}

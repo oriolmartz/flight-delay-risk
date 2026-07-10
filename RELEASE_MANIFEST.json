@@ -1,26 +1,60 @@
 {
-  "project": "FlightRisk",
-  "version": "0.8.0",
-  "release_name": "Product Foundation",
-  "author": "Oriol Martínez",
-  "quality_gate": {
-    "tests": 70,
-    "status": "passed",
-    "lint": "ruff passed",
-    "artifact_load": "passed",
-    "single_inference": "passed",
-    "batch_inference": "passed"
+  "name": "FlightRisk",
+  "version": "1.0.0",
+  "release_name": "Public Release",
+  "status": "stable_public_portfolio_release",
+  "generated_at_utc": "2026-07-10T02:18:06.950174+00:00",
+  "artifact_schema_version": "2",
+  "interfaces": [
+    "streamlit_en_es",
+    "fastapi",
+    "pdf_reports_en_es"
+  ],
+  "quality": {
+    "temporal_backtest_folds": 4,
+    "calibration": "isotonic",
+    "historical_encoding": "strictly_prior_flight_date"
   },
-  "model_artifact": {
-    "path": "models/flightrisk_model.joblib",
-    "sha256": "4f4aff7f0f4fc8af059c9ab4894512d58542a00b85c65d4e77df6ef1d5166eb0",
-    "training_rows": 1511025,
-    "validation_rows": 377757,
-    "test_rows": 472196
-  },
-  "distribution_notes": [
-    "Raw BTS monthly CSV files are intentionally excluded.",
-    "The full processed training parquet is intentionally excluded.",
-    "The trained model, reports, sample data and demo parquet are included."
-  ]
+  "files": {
+    "models/flightrisk_model.joblib": {
+      "sha256": "53f13d78d69ab19fd7ff4a14f04fdcd4f9e8dab1d2cb2f704eff83eb55c72ad7",
+      "size_bytes": 1295699
+    },
+    "reports/metrics.json": {
+      "sha256": "67faa59ee9a3aba4401ca9c4d2c7f7e98a4f01adc27bdd1ea6e16b9a55bed9d6",
+      "size_bytes": 9853
+    },
+    "reports/temporal_backtest.json": {
+      "sha256": "0d4b00ffa9c059084b6dfc706057fa8043ee3122a036687aa60b0f8cc0288976",
+      "size_bytes": 13306
+    },
+    "reports/calibration_report.json": {
+      "sha256": "a418a011a1f64c3f727d58db893591ec0ce00d0cf4bf078cc0b88b25b461c59e",
+      "size_bytes": 1872
+    },
+    "reports/candidate_benchmark.json": {
+      "sha256": "f715dd26f5cb9e9cbb5dfc76c1faccf54e11a5bbbc70aac2e7905a1d63828209",
+      "size_bytes": 5356
+    },
+    "reports/performance_benchmark.json": {
+      "sha256": "514d1d637591e1a64cecb08225a480331b10370064dba886f5e04d51a3e55c34",
+      "size_bytes": 652
+    },
+    "reports/ui_smoke.json": {
+      "sha256": "0cbcf6509398e45c6bbd4a2d2917b76578ec0a083b6c83dacb8f5a55ac49918e",
+      "size_bytes": 200
+    },
+    "README.md": {
+      "sha256": "9b0ee4c61dac31ab1a8afae5958c5d75c5129073294cbf644d6df831d3f33031",
+      "size_bytes": 12348
+    },
+    "README_ES.md": {
+      "sha256": "e717b33592e295e98a69685faa7c3d5cfd4d23b9ecfa91edb530bf7414f08c74",
+      "size_bytes": 5758
+    },
+    "requirements.txt": {
+      "sha256": "f4466e2b26768a759446db8630a7c46cdf877d819f8e60c3c3a29b80d6f47964",
+      "size_bytes": 744
+    }
+  }
 }

@@ -1,6 +1,4 @@
-"""
-Model evaluation: metrics, reports, calibration data, feature importance.
-"""
+"""Model evaluation: ranking, classification, calibration and feature evidence."""
 from __future__ import annotations
 
 import json
@@ -21,19 +19,18 @@ from sklearn.metrics import (
 )
 
 from src.config import CATEGORICAL_FEATURES, NUMERIC_FEATURES, REPORTS_DIR
+from src.models.calibration import probability_metrics
 from src.models.uncertainty import compute_metric_confidence_intervals
 from src.utils.logging import get_logger
 
 logger = get_logger(__name__)
 
 
-def ranking_metrics(y_true: pd.Series, y_proba: np.ndarray, fractions: tuple[float, ...] = (0.05, 0.10, 0.20)) -> dict[str, Any]:
-    """Ranking/product metrics for delay risk.
-
-    In flight-delay products, the most useful question is often not only
-    "what is the binary F1?" but "how concentrated are real delays among the
-    top-risk flights?" Lift@K and precision@top-K answer that directly.
-    """
+def ranking_metrics(
+    y_true: pd.Series | np.ndarray,
+    y_proba: np.ndarray,
+    fractions: tuple[float, ...] = (0.05, 0.10, 0.20),
+) -> dict[str, Any]:
     y = np.asarray(y_true).astype(int)
     p = np.asarray(y_proba).astype(float)
     n = len(y)
@@ -54,7 +51,11 @@ def ranking_metrics(y_true: pd.Series, y_proba: np.ndarray, fractions: tuple[flo
     return out
 
 
-def compute_metrics(y_true: pd.Series, y_pred: np.ndarray, y_proba: np.ndarray) -> dict[str, Any]:
+def compute_metrics(
+    y_true: pd.Series | np.ndarray,
+    y_pred: np.ndarray,
+    y_proba: np.ndarray,
+) -> dict[str, Any]:
     metrics = {
         "roc_auc": float(roc_auc_score(y_true, y_proba)),
         "pr_auc": float(average_precision_score(y_true, y_proba)),
@@ -66,11 +67,11 @@ def compute_metrics(y_true: pd.Series, y_pred: np.ndarray, y_proba: np.ndarray) 
         "n_samples": int(len(y_true)),
     }
     metrics.update(ranking_metrics(y_true, y_proba))
+    metrics.update(probability_metrics(y_true, y_proba))
     return metrics
 
 
 def get_feature_names(pipeline) -> list[str]:
-    """Recover human-readable feature names after preprocessing."""
     preprocessing = pipeline.named_steps["preprocessing"]
     names: list[str] = []
     if "cat" in preprocessing.named_transformers_:
@@ -82,10 +83,8 @@ def get_feature_names(pipeline) -> list[str]:
 
 
 def get_feature_importance(pipeline, model_name: str) -> pd.DataFrame | None:
-    """Return a feature importance dataframe if the model supports it, else None."""
     model = pipeline.named_steps["model"]
     feature_names = get_feature_names(pipeline)
-
     if hasattr(model, "feature_importances_"):
         importances = model.feature_importances_
     elif hasattr(model, "coef_"):
@@ -93,7 +92,6 @@ def get_feature_importance(pipeline, model_name: str) -> pd.DataFrame | None:
     else:
         logger.warning("Model %s has no feature_importances_ or coef_; skipping.", model_name)
         return None
-
     if len(importances) != len(feature_names):
         logger.warning(
             "Feature importance length mismatch (%d importances vs %d names); skipping.",
@@ -101,50 +99,42 @@ def get_feature_importance(pipeline, model_name: str) -> pd.DataFrame | None:
             len(feature_names),
         )
         return None
+    return (
+        pd.DataFrame({"feature": feature_names, "importance": importances})
+        .sort_values("importance", ascending=False)
+        .reset_index(drop=True)
+    )
 
-    df = pd.DataFrame({"feature": feature_names, "importance": importances})
-    return df.sort_values("importance", ascending=False).reset_index(drop=True)
 
-
-def evaluate_model(
-    pipeline,
-    model_name: str,
-    X_test: pd.DataFrame,
-    y_test: pd.Series,
-    threshold: float = 0.5,
+def evaluate_probabilities(
+    y_true: pd.Series | np.ndarray,
+    y_proba: np.ndarray,
     *,
+    model_name: str,
+    threshold: float = 0.5,
+    pipeline=None,
     bootstrap_samples: int = 0,
 ) -> dict[str, Any]:
-    """Run full evaluation for one fitted pipeline and return a results dict.
-
-    Set ``bootstrap_samples`` > 0 to include bootstrap confidence intervals for
-    ROC-AUC, PR-AUC and F1. Validation-loop calls should usually leave this at
-    zero for speed; final held-out evaluation can enable it.
-    """
-    y_proba = pipeline.predict_proba(X_test)[:, 1]
-    y_pred = (y_proba >= threshold).astype(int)
-
-    metrics = compute_metrics(y_test, y_pred, y_proba)
+    """Evaluate explicit probability outputs, calibrated or raw."""
+    probabilities = np.asarray(y_proba, dtype=float)
+    y_pred = (probabilities >= threshold).astype(int)
+    metrics = compute_metrics(y_true, y_pred, probabilities)
     confidence_intervals = None
     if bootstrap_samples and bootstrap_samples > 0:
         confidence_intervals = compute_metric_confidence_intervals(
-            y_test,
-            y_proba,
-            threshold,
-            n_bootstrap=bootstrap_samples,
+            y_true, probabilities, threshold, n_bootstrap=bootstrap_samples
         )
-
-    report_text = classification_report(y_test, y_pred, zero_division=0)
-    cm = confusion_matrix(y_test, y_pred)
-
-    frac_pos, mean_pred = calibration_curve(y_test, y_proba, n_bins=10, strategy="uniform")
+    report_text = classification_report(y_true, y_pred, zero_division=0)
+    cm = confusion_matrix(y_true, y_pred)
+    frac_pos, mean_pred = calibration_curve(
+        y_true, probabilities, n_bins=10, strategy="quantile"
+    )
     calibration = {
         "fraction_of_positives": frac_pos.tolist(),
         "mean_predicted_probability": mean_pred.tolist(),
+        "strategy": "quantile",
     }
-
-    importance_df = get_feature_importance(pipeline, model_name)
-
+    importance_df = get_feature_importance(pipeline, model_name) if pipeline is not None else None
     return {
         "model_name": model_name,
         "metrics": metrics,
@@ -156,57 +146,85 @@ def evaluate_model(
     }
 
 
+def evaluate_model(
+    pipeline,
+    model_name: str,
+    X_test: pd.DataFrame,
+    y_test: pd.Series,
+    threshold: float = 0.5,
+    *,
+    calibrator=None,
+    bootstrap_samples: int = 0,
+) -> dict[str, Any]:
+    raw_proba = pipeline.predict_proba(X_test)[:, 1]
+    y_proba = calibrator.transform(raw_proba) if calibrator is not None else raw_proba
+    result = evaluate_probabilities(
+        y_test,
+        y_proba,
+        model_name=model_name,
+        threshold=threshold,
+        pipeline=pipeline,
+        bootstrap_samples=bootstrap_samples,
+    )
+    result["raw_probability_metrics"] = probability_metrics(y_test, raw_proba)
+    return result
+
+
 def save_reports(
     main_results: dict,
     baseline_results: dict,
     out_dir: Path = REPORTS_DIR,
     selection_summary: dict | None = None,
+    calibration_summary: dict | None = None,
 ) -> None:
-    """Persist metrics.json, classification_report.txt, confusion_matrix.csv, feature_importance.csv."""
     out_dir = Path(out_dir)
     out_dir.mkdir(parents=True, exist_ok=True)
-
     combined_metrics = {
         "main_model": {
             "model_name": main_results["model_name"],
             "metrics": main_results["metrics"],
+            "raw_probability_metrics": main_results.get("raw_probability_metrics"),
             "calibration": main_results["calibration"],
             "confidence_intervals": main_results.get("confidence_intervals"),
         },
         "baseline_model": {
             "model_name": baseline_results["model_name"],
             "metrics": baseline_results["metrics"],
+            "raw_probability_metrics": baseline_results.get("raw_probability_metrics"),
             "calibration": baseline_results["calibration"],
             "confidence_intervals": baseline_results.get("confidence_intervals"),
         },
         "comparison": {
-            "roc_auc_improvement": (
-                main_results["metrics"]["roc_auc"] - baseline_results["metrics"]["roc_auc"]
-            ),
-            "pr_auc_improvement": (
-                main_results["metrics"]["pr_auc"] - baseline_results["metrics"]["pr_auc"]
-            ),
+            "roc_auc_improvement": main_results["metrics"]["roc_auc"]
+            - baseline_results["metrics"]["roc_auc"],
+            "pr_auc_improvement": main_results["metrics"]["pr_auc"]
+            - baseline_results["metrics"]["pr_auc"],
+            "brier_improvement": baseline_results["metrics"]["brier_score"]
+            - main_results["metrics"]["brier_score"],
         },
     }
     if selection_summary is not None:
         combined_metrics["selection"] = selection_summary
-    with open(out_dir / "metrics.json", "w") as f:
-        json.dump(combined_metrics, f, indent=2)
+    if calibration_summary is not None:
+        combined_metrics["calibration_selection"] = calibration_summary
+    (out_dir / "metrics.json").write_text(
+        json.dumps(combined_metrics, indent=2), encoding="utf-8"
+    )
 
-    with open(out_dir / "classification_report.txt", "w") as f:
-        f.write("=== MAIN MODEL (%s) ===\n" % main_results["model_name"])
-        f.write(main_results["classification_report"])
-        f.write("\n\n=== BASELINE MODEL (%s) ===\n" % baseline_results["model_name"])
-        f.write(baseline_results["classification_report"])
+    with (out_dir / "classification_report.txt").open("w", encoding="utf-8") as handle:
+        handle.write("=== MAIN MODEL (%s) ===\n" % main_results["model_name"])
+        handle.write(main_results["classification_report"])
+        handle.write("\n\n=== BASELINE MODEL (%s) ===\n" % baseline_results["model_name"])
+        handle.write(baseline_results["classification_report"])
 
-    cm_df = pd.DataFrame(
+    pd.DataFrame(
         main_results["confusion_matrix"],
         index=["Actual_OnTime", "Actual_Delayed"],
         columns=["Predicted_OnTime", "Predicted_Delayed"],
-    )
-    cm_df.to_csv(out_dir / "confusion_matrix.csv")
+    ).to_csv(out_dir / "confusion_matrix.csv")
 
     if main_results["feature_importance"] is not None:
-        main_results["feature_importance"].to_csv(out_dir / "feature_importance.csv", index=False)
-
+        main_results["feature_importance"].to_csv(
+            out_dir / "feature_importance.csv", index=False
+        )
     logger.info("Saved evaluation reports to %s", out_dir)

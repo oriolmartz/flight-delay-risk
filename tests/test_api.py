@@ -195,6 +195,21 @@ class TestPredictEndpoint:
         body = response.json()
         assert len(body["predictions"]) == 2
 
+    def test_flight_report_endpoint_returns_pdf(self, client: TestClient):
+        payload = {**self.SAMPLE_PAYLOAD, "language": "es", "flight_number": "418"}
+        response = client.post("/reports/flight", json=payload)
+        assert response.status_code == 200
+        assert response.headers["content-type"].startswith("application/pdf")
+        assert response.content.startswith(b"%PDF")
+
+    def test_schedule_report_endpoint_returns_pdf(self, client: TestClient):
+        response = client.post(
+            "/reports/schedule",
+            json={"flights": [self.SAMPLE_PAYLOAD, self.SAMPLE_PAYLOAD], "language": "en"},
+        )
+        assert response.status_code == 200
+        assert response.content.startswith(b"%PDF")
+
     def test_rank_endpoint_returns_sorted_predictions(self, client: TestClient):
         payload_2 = {**self.SAMPLE_PAYLOAD, "origin": "ATL", "destination": "BOS", "distance": 946, "crs_elapsed_time": 150}
         response = client.post("/rank", json={"flights": [self.SAMPLE_PAYLOAD, payload_2]})

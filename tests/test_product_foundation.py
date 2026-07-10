@@ -6,8 +6,8 @@ from src.version import APP_VERSION, RELEASE_NAME
 
 
 def test_public_release_version_is_single_source_of_truth():
-    assert APP_VERSION == "0.8.0"
-    assert RELEASE_NAME == "Product Foundation"
+    assert APP_VERSION == "1.0.0"
+    assert RELEASE_NAME == "Public Release"
 
 
 def test_l1_candidate_really_uses_l1_penalty():

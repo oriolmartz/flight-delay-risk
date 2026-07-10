@@ -100,10 +100,13 @@ class TestHistoricalAggregatesFallback:
             }
         )
 
-    def test_fit_computes_rates(self):
-        agg = HistoricalAggregates().fit(self._train_df())
-        assert agg.carrier_rates["DL"] == pytest.approx(0.5)
-        assert agg.carrier_rates["AA"] == pytest.approx(0.0)
+    def test_fit_computes_smoothed_rates_and_exact_counts(self):
+        agg = HistoricalAggregates(smoothing_strength=2.0).fit(self._train_df())
+        # Global rate is 0.25. Small cohorts are intentionally contracted toward it.
+        assert agg.carrier_rates["DL"] == pytest.approx((1 + 2 * 0.25) / 4)
+        assert agg.carrier_rates["AA"] == pytest.approx((0 + 2 * 0.25) / 4)
+        assert agg.carrier_counts["DL"] == 2
+        assert agg.carrier_counts["AA"] == 2
 
     def test_fallback_for_unseen_carrier(self):
         agg = HistoricalAggregates().fit(self._train_df())

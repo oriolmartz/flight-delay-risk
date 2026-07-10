@@ -1,0 +1,29 @@
+{
+  "release": "1.0.0",
+  "artifact_load_ms": 1894.23,
+  "single_prediction_ms": {
+    "median": 49.871,
+    "min": 48.079,
+    "max": 53.638,
+    "repeats": 15
+  },
+  "batch_100_ms": {
+    "median": 177.159,
+    "min": 172.321,
+    "max": 183.549,
+    "repeats": 7
+  },
+  "batch_1000_ms": {
+    "median": 1344.521,
+    "min": 1323.112,
+    "max": 1455.111,
+    "repeats": 5
+  },
+  "environment": {
+    "python": "3.13.5",
+    "platform": "Linux-4.4.0-x86_64-with-glibc2.41",
+    "processor": "unknown",
+    "implementation": "CPython"
+  },
+  "note": "Steady-state local measurements after warm-up; cloud hosting adds network and cold-start latency."
+}
