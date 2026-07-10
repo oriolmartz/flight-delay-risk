@@ -1,6 +1,6 @@
-# FlightRisk v4 MLOps Notes
+# FlightRisk MLOps Notes
 
-FlightRisk v4 adds production-oriented ML engineering around the core model:
+FlightRisk includes production-oriented ML engineering around the core model:
 
 - optional MLflow experiment tracking
 - validation-based model selection

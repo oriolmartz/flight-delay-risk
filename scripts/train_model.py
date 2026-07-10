@@ -1,7 +1,7 @@
 """
 CLI: train, select, evaluate, and save the FlightRisk inference artifact.
 
-v4 uses explicit ML Engineering stages:
+The training workflow uses explicit ML engineering stages:
     1. model_train: fit preprocessing, historical aggregates and candidate models
     2. validation: select candidate model + tune decision threshold
     3. test: report final metrics once, using the selected threshold
@@ -27,6 +27,7 @@ from src.models.thresholding import tune_threshold_for_f1
 from src.models.train import prepare_eval_frame, train_models
 from src.monitoring.monitoring import build_drift_reference, save_drift_reference
 from src.utils.logging import get_logger
+from src.version import APP_VERSION
 
 logger = get_logger(__name__)
 
@@ -63,7 +64,7 @@ def main() -> None:
     )
     args = parser.parse_args()
 
-    with MLflowRun("train-flightrisk-v6.1", tags={"project": "FlightRisk", "version": "6.1.0"}) as run:
+    with MLflowRun("train-flightrisk", tags={"project": "FlightRisk", "version": APP_VERSION}) as run:
         run.log_params(
             {
                 "test_size": args.test_size,
@@ -160,7 +161,7 @@ def main() -> None:
             n_train=len(model_train_df),
             n_test=len(test_df),
             extra={
-                "version": "6.1.0",
+                "version": APP_VERSION,
                 "baseline_model_name": models["baseline"].name,
                 "candidate_models": [models[key].name for key in candidate_keys],
                 "selected_model_key": selected_key,

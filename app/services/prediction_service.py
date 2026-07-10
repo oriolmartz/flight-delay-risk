@@ -4,16 +4,23 @@ from __future__ import annotations
 from functools import lru_cache
 
 from src.config import DEFAULT_MODEL_PATH
+from src.features.build_features import add_schedule_features
 from src.models.predict import PredictionInput, predict_batch, predict_single, rank_batch
-from src.monitoring.prediction_logger import log_prediction
-from src.monitoring.monitoring import drift_summary as _drift_summary, prediction_summary as _prediction_summary
 from src.models.registry import FlightRiskArtifact
+from src.monitoring.monitoring import drift_summary as _drift_summary
+from src.monitoring.monitoring import prediction_summary as _prediction_summary
+from src.monitoring.prediction_logger import log_prediction
+from src.reference.european_context import (
+    has_real_european_context,
+    lookup_european_context,
+    summarize_european_context,
+)
 from src.reference.european_layer import (
     build_european_context,
     european_airlines_catalog,
     european_airports_catalog,
 )
-from src.reference.european_context import lookup_european_context, summarize_european_context, has_real_european_context
+from src.version import APP_VERSION
 
 
 @lru_cache(maxsize=1)
@@ -40,7 +47,7 @@ def model_card() -> dict:
     metadata = artifact.metadata or {}
     return {
         'name': 'FlightRisk',
-        'version': metadata.get('version', '6.1.0'),
+        'version': APP_VERSION,
         'task': 'Binary classification: arrival delay of 15+ minutes',
         'target': 'ArrDel15',
         'intended_use': 'Educational portfolio ML system for schedule-time flight delay risk estimation.',
@@ -59,6 +66,75 @@ def model_card() -> dict:
         ],
     }
 
+
+
+def input_catalog() -> dict:
+    """Return carrier and airport choices encoded in the current artifact."""
+    artifact = get_artifact()
+    aggregates = artifact.historical_aggregates
+    carriers = sorted(str(value) for value in aggregates.carrier_rates)
+    airports = sorted(
+        {str(value) for value in aggregates.origin_rates}
+        | {str(value) for value in aggregates.dest_rates}
+    )
+    return {"carriers": carriers, "airports": airports}
+
+
+def prediction_context(payload: PredictionInput) -> dict:
+    """Expose historical cohort context without claiming causal attribution."""
+    artifact = get_artifact()
+    aggregates = artifact.historical_aggregates
+    frame = add_schedule_features(payload.to_raw_frame())
+    transformed = aggregates.transform(frame)
+    row = transformed.iloc[0]
+    n_train = int(artifact.metadata.get("n_train_rows") or 0)
+
+    route_key = str(row["Route"])
+    carrier_route_key = str(row["CarrierRoute"])
+    route_share = float(row.get("RouteFlightShare", 0.0))
+    carrier_route_share = float(row.get("CarrierRouteFlightShare", 0.0))
+
+    signals = [
+        {
+            "label": "Route historical delay rate",
+            "value": float(row["RouteDelayRate"]),
+            "baseline": float(aggregates.global_fallback),
+            "support": int(round(route_share * n_train)) if n_train else None,
+        },
+        {
+            "label": "Carrier historical delay rate",
+            "value": float(row["CarrierDelayRate"]),
+            "baseline": float(aggregates.global_fallback),
+            "support": None,
+        },
+        {
+            "label": "Origin-hour historical rate",
+            "value": float(row["OriginHourDelayRate"]),
+            "baseline": float(aggregates.global_fallback),
+            "support": int(round(float(row.get("OriginHourFlightShare", 0.0)) * n_train)) if n_train else None,
+        },
+        {
+            "label": "Destination-hour historical rate",
+            "value": float(row["DestHourDelayRate"]),
+            "baseline": float(aggregates.global_fallback),
+            "support": int(round(float(row.get("DestHourFlightShare", 0.0)) * n_train)) if n_train else None,
+        },
+    ]
+    signals.sort(key=lambda item: abs(item["value"] - item["baseline"]), reverse=True)
+
+    return {
+        "route": route_key.replace("_", " → "),
+        "global_rate": float(aggregates.global_fallback),
+        "route_rate": float(row["RouteDelayRate"]),
+        "carrier_rate": float(row["CarrierDelayRate"]),
+        "origin_rate": float(row["OriginDelayRate"]),
+        "destination_rate": float(row["DestDelayRate"]),
+        "route_support_estimate": int(round(route_share * n_train)) if n_train else None,
+        "carrier_route_support_estimate": int(round(carrier_route_share * n_train)) if n_train else None,
+        "route_seen": route_key in aggregates.route_rates,
+        "carrier_route_seen": carrier_route_key in aggregates.carrier_route_rates,
+        "signals": signals,
+    }
 
 def predict_flight(payload: PredictionInput, threshold: float | None = None) -> dict:
     artifact = get_artifact()

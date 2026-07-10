@@ -1,14 +1,18 @@
-"""FlightRisk Streamlit UI.
+"""FlightRisk product dashboard.
 
-English is the default language. The page is intentionally simple:
-1) predict the probability of ArrDel15 for one scheduled flight,
-2) optionally rank a batch of flights,
-3) expose the ML details in clear expanders.
+The interface is organised around four real product surfaces:
+1. analyze one scheduled flight,
+2. rank a schedule,
+3. inspect validation evidence,
+4. inspect model lineage and operating boundaries.
 """
 from __future__ import annotations
 
 import io
+import json
+import math
 import sys
+from datetime import date, time
 from pathlib import Path
 from typing import Any
 
@@ -17,316 +21,43 @@ import streamlit as st
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent.parent))
 
+from app.dashboard.i18n import TEXT
+from app.dashboard.theme import CSS
 from app.services import prediction_service
 from src.models.predict import PredictionInput
+from src.version import APP_VERSION, RELEASE_NAME
 
 st.set_page_config(
-    page_title="FlightRisk — Delay Probability Model",
-    page_icon="✈️",
+    page_title="FlightRisk — Schedule Risk Workbench",
+    page_icon="🛫",
     layout="wide",
     initial_sidebar_state="collapsed",
 )
 
-CSS = """
-<style>
-:root {
-  --ink: #0d2944;
-  --ink-2: #183d61;
-  --blue: #268bd2;
-  --blue-2: #62b6e8;
-  --sky: #e7f5ff;
-  --paper: #f7fbff;
-  --panel: rgba(255,255,255,.82);
-  --line: rgba(13,41,68,.12);
-  --muted: #607892;
-  --green: #2fa876;
-  --amber: #d99a35;
-  --red: #d85b65;
-}
-html, body, [class*="css"] {
-  font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-}
-.stApp {
-  color: var(--ink);
-  background:
-    radial-gradient(circle at 18% 0%, rgba(98,182,232,.30), transparent 24%),
-    radial-gradient(circle at 82% 12%, rgba(38,139,210,.15), transparent 30%),
-    linear-gradient(180deg, #dcecf7 0%, #edf6fc 44%, #f8fbff 100%);
-}
-[data-testid="stHeader"], [data-testid="stToolbar"], [data-testid="stDecoration"], #MainMenu, footer { display:none !important; }
-[data-testid="stSidebar"] { display:none !important; }
-.main .block-container { max-width: 1180px; padding-top: .25rem; padding-bottom: 2.5rem; }
-h1, h2, h3, h4, p, div, span, label { color: var(--ink); }
-.stSelectbox label, .stFileUploader label, .stTextInput label, .stNumberInput label { color: var(--ink) !important; font-weight: 800; }
-[data-testid="stSelectbox"] div[data-baseweb="select"] > div,
-[data-testid="stNumberInput"] input,
-[data-testid="stTextInput"] input {
-  background: rgba(255,255,255,.92);
-  border: 1px solid var(--line);
-  color: var(--ink);
-  border-radius: 10px;
-}
-.stButton>button, .stFormSubmitButton>button, .stDownloadButton>button {
-  background: linear-gradient(180deg, #38a6e8, #257bc2) !important;
-  color: #ffffff !important;
-  border: 1px solid rgba(38,139,210,.25) !important;
-  border-radius: 11px !important;
-  font-weight: 850 !important;
-  box-shadow: 0 8px 18px rgba(32,105,164,.16);
-  min-height: 2.35rem;
-}
-[data-testid="stMetric"] {
-  background: rgba(255,255,255,.86);
-  border: 1px solid var(--line);
-  border-radius: 16px;
-  padding: .78rem;
-  box-shadow: 0 8px 22px rgba(22,55,84,.07);
-}
-[data-testid="stMetric"] label, [data-testid="stMetric"] div { color: var(--ink) !important; }
-[data-testid="stFileUploaderDropzone"] {
-  background: rgba(255,255,255,.82) !important;
-  border: 1px dashed rgba(38,139,210,.35) !important;
-  border-radius: 16px !important;
-  min-height: 92px !important;
-}
-[data-testid="stFileUploaderDropzone"] * { color: var(--ink) !important; }
-[data-testid="stFileUploaderDropzone"] button {
-  background: rgba(38,139,210,.10) !important;
-  color: var(--ink) !important;
-  border: 1px solid rgba(38,139,210,.20) !important;
-  border-radius: 10px !important;
-}
-[data-testid="stDataFrame"] { border-radius:16px; overflow:hidden; border:1px solid var(--line); }
-[data-testid="stForm"] {
-  background:rgba(255,255,255,.80);
-  border:1px solid var(--line);
-  border-radius:18px;
-  padding:1rem;
-  box-shadow:0 14px 32px rgba(20,65,101,.07);
-}
-.fr-topbar {
-  display:flex; align-items:center; justify-content:space-between; gap:1rem;
-  padding:.72rem .95rem; margin-top:.15rem;
-  background:rgba(255,255,255,.76); border:1px solid var(--line);
-  border-radius:16px; box-shadow:0 10px 24px rgba(19,55,85,.08); backdrop-filter: blur(12px);
-  min-height:52px;
-}
-.fr-logo { display:flex; align-items:center; gap:.65rem; font-size:1.05rem; font-weight:950; letter-spacing:.13em; color:var(--ink); }
-.fr-logo-mark { color:var(--blue); font-size:1.35rem; }
-.fr-nav { display:flex; flex-wrap:wrap; gap:1rem; align-items:center; color:#355d7c; font-size:.86rem; font-weight:750; }
-.fr-nav span { color:#355d7c; }
-.fr-hero {
-  position:relative; overflow:hidden; margin:.5rem 0 .85rem 0; padding:1.1rem 1.15rem;
-  border-radius:22px; border:1px solid rgba(38,139,210,.18);
-  background:
-    linear-gradient(rgba(38,139,210,.055) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(38,139,210,.045) 1px, transparent 1px),
-    radial-gradient(circle at 82% 18%, rgba(98,182,232,.24), transparent 27%),
-    linear-gradient(112deg, #f9fcff 0%, #eaf5fc 54%, #d4e8f7 100%);
-  background-size: 48px 48px, 48px 48px, auto, auto;
-  box-shadow:0 24px 54px rgba(19,55,85,.14);
-}
-.fr-pill { display:inline-flex; align-items:center; padding:.38rem .68rem; border-radius:999px; background:rgba(38,139,210,.10); border:1px solid rgba(38,139,210,.20); color:#176599; font-size:.72rem; font-weight:900; letter-spacing:.08em; text-transform:uppercase; }
-.fr-title { margin:.48rem 0 .38rem 0; font-size:clamp(1.75rem,2.8vw,3.05rem); line-height:1.04; font-weight:950; letter-spacing:-.052em; color:var(--ink); max-width:760px; }
-.fr-title span { color:#1986c8; }
-.fr-subtitle { max-width:720px; font-size:.96rem; line-height:1.55; color:#3f5e78; }
-.fr-truth { margin-top:.75rem; padding:.76rem .9rem; border-radius:15px; border:1px solid var(--line); background:rgba(255,255,255,.64); }
-.fr-muted { color:var(--muted); }
-.fr-card {
-  background:rgba(255,255,255,.84);
-  border:1px solid var(--line); border-radius:20px; padding:.95rem; box-shadow:0 14px 34px rgba(20,65,101,.10);
-}
-.fr-card h3 { margin:.15rem 0 .6rem 0; font-size:1rem; letter-spacing:.02em; color:var(--ink); }
-.fr-aircraft-card {
-  position:relative; overflow:hidden; min-height:88px; border-radius:16px; margin-bottom:.68rem;
-  background:linear-gradient(180deg, rgba(255,255,255,.76), rgba(234,246,255,.74));
-  border:1px solid rgba(38,139,210,.18);
-}
-.fr-aircraft-card:before { content:""; position:absolute; left:-8%; right:-8%; bottom:28px; height:36px; background:linear-gradient(90deg, transparent, rgba(15,54,88,.12), transparent); transform:rotate(-2deg); }
-.fr-aircraft { position:absolute; right:8%; top:14%; font-size:2.65rem; color:var(--blue); transform:rotate(-8deg); text-shadow:0 12px 28px rgba(22,89,146,.16); }
-.fr-aircraft-copy { position:absolute; left:.85rem; bottom:.62rem; right:5.4rem; color:#355d7c; font-size:.76rem; line-height:1.34; }
-.fr-aircraft-copy b { color:var(--ink); }
-.fr-mini { color:var(--muted); font-size:.9rem; line-height:1.48; }
-.fr-strip { display:grid; grid-template-columns:repeat(3,1fr); gap:.72rem; margin:.7rem 0 .95rem 0; }
-.fr-step { background:rgba(255,255,255,.84); border:1px solid var(--line); border-radius:16px; padding:.85rem; box-shadow:0 8px 22px rgba(20,65,101,.055); }
-.fr-step b { color:var(--ink); }
-.fr-section-title { margin:1.05rem 0 .5rem 0; font-size:1.22rem; font-weight:950; letter-spacing:-.02em; color:var(--ink); }
-.fr-form-heading {
-  display:flex; align-items:flex-start; justify-content:space-between; gap:1rem;
-  padding:.9rem 1rem; border-radius:18px; background:rgba(255,255,255,.72);
-  border:1px solid var(--line); box-shadow:0 12px 26px rgba(20,65,101,.06); margin:.35rem 0 .75rem 0;
-}
-.fr-form-heading h3 { margin:0; font-size:1.05rem; color:var(--ink); letter-spacing:-.01em; }
-.fr-form-heading p { margin:.25rem 0 0 0; color:var(--muted); font-size:.9rem; line-height:1.45; }
-.fr-form-badges { display:flex; gap:.4rem; flex-wrap:wrap; justify-content:flex-end; min-width:250px; }
-.fr-badge { display:inline-flex; align-items:center; padding:.35rem .55rem; border-radius:999px; background:rgba(38,139,210,.09); border:1px solid rgba(38,139,210,.16); color:#176599; font-size:.72rem; font-weight:850; }
-.fr-chart-note { margin-top:.5rem; padding:.7rem .85rem; border-radius:14px; background:rgba(38,139,210,.08); border:1px solid rgba(38,139,210,.14); color:#355d7c; }
-.fr-uploader-card { padding:.95rem; border-radius:18px; background:rgba(255,255,255,.74); border:1px solid var(--line); box-shadow:0 12px 26px rgba(20,65,101,.06); }
-.fr-tech-intro { padding:.9rem 1rem; border-radius:18px; background:rgba(255,255,255,.72); border:1px solid var(--line); color:#355d7c; }
-
-[data-testid="stExpander"] {
-  background: rgba(255,255,255,.76) !important;
-  border: 1px solid var(--line) !important;
-  border-radius: 16px !important;
-  box-shadow: 0 8px 22px rgba(20,65,101,.055) !important;
-  overflow: hidden !important;
-  margin-bottom: .55rem !important;
-}
-[data-testid="stExpander"] details summary {
-  background: rgba(255,255,255,.90) !important;
-  border-bottom: 1px solid rgba(13,41,68,.08) !important;
-  min-height: 2.6rem !important;
-}
-[data-testid="stExpander"] details summary p,
-[data-testid="stExpander"] details summary span,
-[data-testid="stExpander"] details summary div {
-  color: var(--ink) !important;
-  font-weight: 850 !important;
-}
-.fr-prob-card {
-  background: rgba(255,255,255,.82);
-  border: 1px solid var(--line);
-  border-radius: 18px;
-  padding: 1rem;
-  box-shadow: 0 12px 26px rgba(20,65,101,.06);
-  margin-top: .55rem;
-}
-.fr-prob-head { display:flex; align-items:flex-end; justify-content:space-between; gap:1rem; margin-bottom:.72rem; }
-.fr-prob-head h3 { margin:0; font-size:1.08rem; color:var(--ink); }
-.fr-prob-head span { color:var(--muted); font-size:.86rem; }
-.fr-prob-row { display:grid; grid-template-columns: 190px 1fr 64px; align-items:center; gap:.75rem; margin:.65rem 0; }
-.fr-prob-label { font-weight:850; color:var(--ink); font-size:.9rem; }
-.fr-prob-track { height:15px; border-radius:999px; background:rgba(13,41,68,.08); overflow:hidden; border:1px solid rgba(13,41,68,.06); }
-.fr-prob-fill { height:100%; border-radius:999px; background:linear-gradient(90deg, #62b6e8, #268bd2); }
-.fr-prob-fill.delay { background:linear-gradient(90deg, #ffd38a, #d99a35); }
-.fr-prob-value { font-weight:950; color:var(--ink); text-align:right; }
-.fr-detail-grid { display:grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap:.65rem; margin:.7rem 0; }
-.fr-detail-card { background:rgba(255,255,255,.76); border:1px solid var(--line); border-radius:14px; padding:.78rem; }
-.fr-detail-card b { color:var(--ink); }
-.fr-detail-card span { color:var(--muted); font-size:.9rem; line-height:1.45; }
-.fr-flow { display:flex; align-items:stretch; gap:.45rem; flex-wrap:wrap; margin:.75rem 0; }
-.fr-flow-step { flex:1 1 150px; min-width:145px; background:rgba(255,255,255,.78); border:1px solid var(--line); border-radius:14px; padding:.72rem; }
-.fr-flow-step b { display:block; color:var(--ink); font-size:.9rem; margin-bottom:.15rem; }
-.fr-flow-step span { color:var(--muted); font-size:.82rem; line-height:1.35; }
-.fr-flow-arrow { display:flex; align-items:center; color:#268bd2; font-weight:950; }
-.fr-command {
-  background: rgba(13,41,68,.055);
-  border: 1px solid rgba(13,41,68,.10);
-  border-radius: 12px;
-  padding: .65rem .75rem;
-  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-  color: var(--ink);
-  font-size: .86rem;
-  overflow-x: auto;
-}
-@media (max-width: 900px) { .fr-prob-row { grid-template-columns:1fr; gap:.25rem; } .fr-prob-value { text-align:left; } .fr-detail-grid { grid-template-columns:1fr; } .fr-flow-arrow { display:none; } }
-
-.fr-footer { margin-top:1.2rem; color:var(--muted); font-size:.86rem; text-align:center; }
-@media (max-width: 900px) { .fr-strip { grid-template-columns:1fr; } .fr-form-heading { flex-direction:column; } .fr-form-badges { justify-content:flex-start; min-width:0; } }
-</style>
-"""
-
-TEXT = {
-    "en": {
-        "nav": ["Predict", "Batch", "Model details"],
-        "status_loaded": "Model loaded",
-        "status_missing": "Model missing",
-        "hero_pill": "Flight delay probability model",
-        "hero_title": "Will this flight arrive <span>15+ minutes late?</span>",
-        "hero_sub": "FlightRisk estimates, before departure, the probability that a scheduled flight arrives 15+ minutes late. Batch mode can then sort many flights by predicted delay probability.",
-        "truth_title": "What the model predicts",
-        "truth_body": "Target: P(ArrDel15 = 1). ArrDel15 means the arrival delay is 15 minutes or more.",
-        "visual_title": "Pre-departure delay risk",
-        "visual_body": "A schedule-time model for estimating arrival delay probability before departure.",
-        "example_title": "Example prediction",
-        "prob": "Delay probability",
-        "bucket": "Risk level",
-        "target": "Target",
-        "input_title": "Predict one scheduled flight",
-        "input_help": "Only pre-flight schedule fields are used. No actual delay, taxi, wheels, cancellation or post-flight data.",
-        "airline": "Airline",
-        "origin": "Origin",
-        "dest": "Destination",
-        "month": "Month",
-        "dow": "Day of week",
-        "dep": "Scheduled departure time",
-        "arr": "Scheduled arrival time",
-        "elapsed": "Scheduled duration",
-        "distance": "Distance",
-        "predict": "Estimate delay probability",
-        "drivers": "Main signals",
-        "chart_title": "Prediction profile",
-        "chart_note": "This chart shows the model output as a probability split, not a guarantee.",
-        "steps": [
-            ("1. Enter scheduled flight data", "Airline, route, date, scheduled times, duration and distance."),
-            ("2. Model estimates delay probability", "The output is P(ArrDel15 = 1), not a guarantee."),
-            ("3. Batch mode sorts by risk", "For many flights, highest probability appears first."),
-        ],
-        "batch_title": "Batch mode",
-        "batch_body": "Upload a CSV with scheduled flights. FlightRisk adds delay probability, risk level and rank.",
-        "csv_cols": "Required columns: airline, origin, destination, month, day_of_week, crs_dep_time, crs_arr_time, crs_elapsed_time, distance.",
-        "sample": "Use sample batch",
-        "upload": "Upload flight CSV",
-        "download": "Download ranked CSV",
-        "tech_title": "Technical model details",
-        "tech_intro": "Expandable portfolio documentation: model card, variables, cleaning, model candidates, architecture and pipeline.",
-        "footer": "Portfolio ML project. Not for safety-critical dispatch, legal, compensation or operational aviation decisions.",
-    },
-    "es": {
-        "nav": ["Predecir", "Batch", "Detalles del modelo"],
-        "status_loaded": "Modelo cargado",
-        "status_missing": "Modelo no disponible",
-        "hero_pill": "Modelo de probabilidad de retraso",
-        "hero_title": "¿Llegará este vuelo con <span>15+ minutos de retraso?</span>",
-        "hero_sub": "FlightRisk estima, antes de la salida, la probabilidad de que un vuelo programado llegue con 15 minutos o más de retraso. El modo batch ordena muchos vuelos por probabilidad estimada.",
-        "truth_title": "Qué predice el modelo",
-        "truth_body": "Target: P(ArrDel15 = 1). ArrDel15 significa que el retraso de llegada es de 15 minutos o más.",
-        "visual_title": "Riesgo antes de salida",
-        "visual_body": "Modelo basado en horarios programados para estimar retraso antes de la salida.",
-        "example_title": "Ejemplo de predicción",
-        "prob": "Probabilidad de retraso",
-        "bucket": "Nivel de riesgo",
-        "target": "Target",
-        "input_title": "Predecir un vuelo programado",
-        "input_help": "Solo usa campos conocidos antes del vuelo. No usa retraso real, taxi, wheels, cancelación ni datos posteriores al vuelo.",
-        "airline": "Aerolínea",
-        "origin": "Origen",
-        "dest": "Destino",
-        "month": "Mes",
-        "dow": "Día de la semana",
-        "dep": "Hora salida programada",
-        "arr": "Hora llegada programada",
-        "elapsed": "Duración programada",
-        "distance": "Distancia",
-        "predict": "Estimar probabilidad de retraso",
-        "drivers": "Señales principales",
-        "chart_title": "Perfil de predicción",
-        "chart_note": "Este gráfico muestra la salida del modelo como reparto de probabilidad, no como garantía.",
-        "steps": [
-            ("1. Introduce datos programados", "Aerolínea, ruta, fecha, horas programadas, duración y distancia."),
-            ("2. El modelo estima probabilidad", "La salida es P(ArrDel15 = 1), no una garantía."),
-            ("3. El batch ordena por riesgo", "Para muchos vuelos, aparece primero la mayor probabilidad."),
-        ],
-        "batch_title": "Modo batch",
-        "batch_body": "Sube un CSV con vuelos programados. FlightRisk añade probabilidad de retraso, nivel de riesgo y ranking.",
-        "csv_cols": "Columnas requeridas: airline, origin, destination, month, day_of_week, crs_dep_time, crs_arr_time, crs_elapsed_time, distance.",
-        "sample": "Usar ejemplo batch",
-        "upload": "Subir CSV de vuelos",
-        "download": "Descargar CSV ordenado",
-        "tech_title": "Detalles técnicos del modelo",
-        "tech_intro": "Documentación portfolio expandible: model card, variables, limpieza, modelos probados, arquitectura y pipeline.",
-        "footer": "Proyecto portfolio ML. No usar para dispatch crítico, decisiones legales, compensación o aviación operacional.",
-    },
-}
+ROOT = Path(__file__).resolve().parent.parent.parent
+REPORTS_DIR = ROOT / "reports"
+SAMPLE_PATH = ROOT / "data" / "sample" / "sample_flights.csv"
 
 
-def _inject_css() -> None:
+def _inject_theme() -> None:
     st.markdown(CSS, unsafe_allow_html=True)
 
 
-def _language_selector(column) -> tuple[str, dict[str, Any]]:
-    with column:
-        choice = st.selectbox("Language / Idioma", ["English", "Español"], index=0, key="language_selector", label_visibility="collapsed")
+def _load_json(path: Path) -> dict[str, Any]:
+    try:
+        return json.loads(path.read_text(encoding="utf-8"))
+    except (FileNotFoundError, json.JSONDecodeError):
+        return {}
+
+
+def _language_selector() -> tuple[str, dict[str, Any]]:
+    choice = st.selectbox(
+        "Language / Idioma",
+        ["English", "Español"],
+        index=0,
+        key="language_selector",
+        label_visibility="collapsed",
+    )
     lang = "en" if choice == "English" else "es"
     return lang, TEXT[lang]
 
@@ -345,24 +76,19 @@ def _safe_model_card() -> dict[str, Any]:
         return {}
 
 
-def _topbar(t: dict[str, Any], model_available: bool) -> None:
-    status = t["status_loaded"] if model_available else t["status_missing"]
-    nav = "".join(f"<span>{item}</span>" for item in t["nav"])
-    st.markdown(
-        f"""
-<div class="fr-topbar">
-  <div class="fr-logo"><span class="fr-logo-mark">✈</span><span>FLIGHTRISK</span></div>
-  <div class="fr-nav">{nav}<span>•</span><span>{status}</span></div>
-</div>
-""",
-        unsafe_allow_html=True,
-    )
-
-
-def _risk_label(level: str, lang: str) -> str:
-    mapping_en = {"low": "Low", "moderate": "Moderate", "high": "High"}
-    mapping_es = {"low": "Bajo", "moderate": "Moderado", "high": "Alto"}
-    return (mapping_en if lang == "en" else mapping_es).get(level, level)
+def _safe_catalog() -> dict[str, list[str]]:
+    fallback = {
+        "carriers": ["AA", "AS", "B6", "DL", "F9", "G4", "HA", "NK", "UA", "WN"],
+        "airports": ["ATL", "BOS", "CLT", "DEN", "DFW", "EWR", "JFK", "LAX", "MIA", "ORD", "SFO"],
+    }
+    try:
+        catalog = prediction_service.input_catalog()
+        return {
+            "carriers": catalog.get("carriers") or fallback["carriers"],
+            "airports": catalog.get("airports") or fallback["airports"],
+        }
+    except Exception:
+        return fallback
 
 
 def _sample_input() -> PredictionInput:
@@ -379,179 +105,324 @@ def _sample_input() -> PredictionInput:
     )
 
 
-def _sample_prediction(model_available: bool) -> dict[str, Any]:
-    fallback = {"delay_probability": 0.238, "risk_level": "moderate", "top_factors": ["sample route profile"]}
+def _safe_sample_state(model_available: bool) -> tuple[dict[str, Any], dict[str, Any]]:
+    fallback_prediction = {
+        "delay_probability": 0.238,
+        "risk_level": "moderate",
+        "decision_threshold": 0.52,
+        "top_factors": ["sample schedule profile"],
+    }
+    fallback_context = {
+        "route": "JFK → LAX",
+        "global_rate": 0.227,
+        "route_rate": 0.162,
+        "route_support_estimate": 3842,
+        "route_seen": True,
+        "signals": [],
+    }
     if not model_available:
-        return fallback
+        return fallback_prediction, fallback_context
     try:
-        return prediction_service.predict_flight(_sample_input())
+        payload = _sample_input()
+        return prediction_service.predict_flight(payload), prediction_service.prediction_context(payload)
     except Exception:
-        return fallback
+        return fallback_prediction, fallback_context
 
 
-def _aircraft_visual(t: dict[str, Any]) -> None:
+def _fmt_pct(value: Any, digits: int = 1) -> str:
+    if not isinstance(value, (int, float)):
+        return "n/a"
+    return f"{value * 100:.{digits}f}%"
+
+
+def _fmt_int(value: Any) -> str:
+    if not isinstance(value, (int, float)):
+        return "n/a"
+    return f"{int(round(value)):,}"
+
+
+def _hhmm(value: time) -> int:
+    return value.hour * 100 + value.minute
+
+
+def _risk_copy(level: str, lang: str) -> tuple[str, str]:
+    if lang == "es":
+        mapping = {
+            "low": ("REVISIÓN RUTINARIA", "Perfil inferior a los niveles de mayor exposición del artefacto actual."),
+            "moderate": ("VIGILAR", "El vuelo merece contexto adicional antes de tratar el score como señal fuerte."),
+            "high": ("REVISIÓN PRIORITARIA", "El modelo sitúa este vuelo en una zona de exposición elevada."),
+        }
+    else:
+        mapping = {
+            "low": ("ROUTINE REVIEW", "The profile sits below the current artifact's higher-exposure range."),
+            "moderate": ("WATCH", "The flight deserves additional context before treating the score as a strong signal."),
+            "high": ("PRIORITY REVIEW", "The model places this flight in an elevated-exposure range."),
+        }
+    return mapping.get(level, mapping["moderate"])
+
+
+def _topbar(model_available: bool, artifact_version: str | None) -> None:
+    status_class = "ok" if model_available else ""
+    status_text = "Model loaded" if model_available else "Model unavailable"
+    artifact = artifact_version or "unknown"
     st.markdown(
         f"""
-<div class="fr-aircraft-card" aria-hidden="true">
-  <div class="fr-aircraft">✈</div>
-  <div class="fr-aircraft-copy"><b>{t['visual_title']}</b><br>{t['visual_body']}</div>
+<div class="fr-topbar">
+  <div class="fr-brand">
+    <div class="fr-mark">FR</div>
+    <div>
+      <div class="fr-brand-name">FLIGHTRISK</div>
+      <div class="fr-byline">Built by Oriol Martínez · ML product engineering</div>
+    </div>
+  </div>
+  <div class="fr-status">
+    <span class="fr-chip">v{APP_VERSION} · {RELEASE_NAME}</span>
+    <span class="fr-chip">artifact {artifact}</span>
+    <span class="fr-chip {status_class}">{status_text}</span>
+  </div>
 </div>
 """,
         unsafe_allow_html=True,
     )
 
 
-def _hero(t: dict[str, Any], lang: str, model_available: bool) -> None:
-    result = _sample_prediction(model_available)
-    prob = float(result.get("delay_probability", 0.238)) * 100
-    risk = _risk_label(str(result.get("risk_level", "moderate")), lang)
+def _hero(t: dict[str, Any], model_available: bool) -> None:
+    prediction, context = _safe_sample_state(model_available)
+    probability = float(prediction.get("delay_probability", 0.0))
+    route_rate = float(context.get("route_rate", 0.0))
+    global_rate = float(context.get("global_rate", 0.0))
+    relative = probability / route_rate if route_rate > 0 else probability / max(global_rate, 1e-9)
+    support = context.get("route_support_estimate")
+    route = context.get("route", "JFK → LAX")
+    priority = {"low": "ROUTINE", "moderate": "WATCH", "high": "PRIORITY"}.get(
+        str(prediction.get("risk_level", "moderate")), "WATCH"
+    )
 
-    st.markdown('<section class="fr-hero">', unsafe_allow_html=True)
-    left, right = st.columns([0.54, 0.46], gap="large")
+    st.markdown('<div class="fr-hero">', unsafe_allow_html=True)
+    left, right = st.columns([0.64, 0.36], gap="large")
     with left:
         st.markdown(
             f"""
-<div class="fr-pill">{t['hero_pill']}</div>
+<div class="fr-kicker">{t['hero_kicker']}</div>
 <div class="fr-title">{t['hero_title']}</div>
 <div class="fr-subtitle">{t['hero_sub']}</div>
-<div class="fr-truth"><b>{t['truth_title']}</b><br><span class="fr-muted">{t['truth_body']}</span></div>
+<div class="fr-constraint">{t['constraint']}</div>
 """,
             unsafe_allow_html=True,
         )
     with right:
-        _aircraft_visual(t)
-        st.markdown(f"**{t['example_title']}**")
-        st.caption("DL · JFK → LAX · 18:30 · 375 min · 2,475 mi")
+        st.markdown(
+            f"""
+<div class="fr-flight-card">
+  <div class="fr-flight-top">
+    <div>
+      <div class="fr-flight-id">Example · DL 418 · 18:30 departure</div>
+      <div class="fr-route">{route}</div>
+    </div>
+    <div class="fr-priority">{priority}</div>
+  </div>
+  <div class="fr-risk-number">{_fmt_pct(probability)}</div>
+  <div class="fr-risk-label">current model probability · not post-calibrated</div>
+  <div class="fr-flight-grid">
+    <div class="fr-flight-stat"><b>{_fmt_pct(route_rate)}</b><span>route historical rate</span></div>
+    <div class="fr-flight-stat"><b>{relative:.2f}×</b><span>score vs route cohort</span></div>
+    <div class="fr-flight-stat"><b>{_fmt_int(support)}</b><span>estimated route support</span></div>
+    <div class="fr-flight-stat"><b>{_fmt_pct(global_rate)}</b><span>training fallback rate</span></div>
+  </div>
+</div>
+""",
+            unsafe_allow_html=True,
+        )
+    st.markdown("</div>", unsafe_allow_html=True)
+
+
+def _section_header(title: str, subtitle: str) -> None:
+    st.markdown(
+        f'<div class="fr-section-head"><h2>{title}</h2><p>{subtitle}</p></div>',
+        unsafe_allow_html=True,
+    )
+
+
+def _flight_form(lang: str, catalog: dict[str, list[str]], disabled: bool) -> PredictionInput | None:
+    carriers = catalog["carriers"]
+    airports = catalog["airports"]
+    default_carrier = carriers.index("DL") if "DL" in carriers else 0
+    default_origin = airports.index("JFK") if "JFK" in airports else 0
+    default_dest = airports.index("LAX") if "LAX" in airports else min(1, len(airports) - 1)
+
+    labels = {
+        "en": {
+            "carrier": "Carrier",
+            "origin": "Origin",
+            "destination": "Destination",
+            "date": "Flight date",
+            "departure": "Scheduled departure",
+            "arrival": "Scheduled arrival",
+            "duration": "Scheduled duration (minutes)",
+            "distance": "Distance (miles)",
+            "submit": "Analyze flight",
+        },
+        "es": {
+            "carrier": "Aerolínea",
+            "origin": "Origen",
+            "destination": "Destino",
+            "date": "Fecha del vuelo",
+            "departure": "Salida programada",
+            "arrival": "Llegada programada",
+            "duration": "Duración programada (minutos)",
+            "distance": "Distancia (millas)",
+            "submit": "Analizar vuelo",
+        },
+    }[lang]
+
+    with st.form("single_flight_form"):
         c1, c2, c3 = st.columns(3)
-        c1.metric(t["prob"], f"{prob:.1f}%")
-        c2.metric(t["bucket"], risk)
-        c3.metric(t["target"], "ArrDel15")
-        st.caption("P(ArrDel15 = 1) · probability of arriving 15+ minutes late")
-    st.markdown('</section>', unsafe_allow_html=True)
+        airline = c1.selectbox(labels["carrier"], carriers, index=default_carrier)
+        origin = c2.selectbox(labels["origin"], airports, index=default_origin)
+        destination = c3.selectbox(labels["destination"], airports, index=default_dest)
 
+        c4, c5, c6 = st.columns(3)
+        flight_date = c4.date_input(labels["date"], value=date.today())
+        departure = c5.time_input(labels["departure"], value=time(18, 30), step=300)
+        arrival = c6.time_input(labels["arrival"], value=time(21, 45), step=300)
 
-def _steps(t: dict[str, Any]) -> None:
-    html = '<div class="fr-strip">'
-    for title, body in t["steps"]:
-        html += f'<div class="fr-step"><b>{title}</b><br><span class="fr-muted">{body}</span></div>'
-    html += '</div>'
-    st.markdown(html, unsafe_allow_html=True)
+        c7, c8 = st.columns(2)
+        duration = c7.number_input(labels["duration"], min_value=20, max_value=900, value=375, step=5)
+        distance = c8.number_input(labels["distance"], min_value=20.0, max_value=10000.0, value=2475.0, step=25.0)
 
+        submitted = st.form_submit_button(labels["submit"], disabled=disabled, width="stretch")
 
-def _prediction_payload_from_form(t: dict[str, Any], prefix: str = "single") -> PredictionInput:
-    c1, c2, c3 = st.columns(3)
-    with c1:
-        airline = st.text_input(t["airline"], "DL", key=f"{prefix}_airline").upper()
-        month = st.number_input(t["month"], min_value=1, max_value=12, value=7, step=1, key=f"{prefix}_month")
-        dep = st.number_input(t["dep"], min_value=0, max_value=2400, value=1830, step=5, key=f"{prefix}_dep")
-    with c2:
-        origin = st.text_input(t["origin"], "JFK", key=f"{prefix}_origin").upper()
-        dow = st.number_input(t["dow"], min_value=1, max_value=7, value=5, step=1, key=f"{prefix}_dow")
-        arr = st.number_input(t["arr"], min_value=0, max_value=2400, value=2145, step=5, key=f"{prefix}_arr")
-    with c3:
-        dest = st.text_input(t["dest"], "LAX", key=f"{prefix}_dest").upper()
-        elapsed = st.number_input(t["elapsed"], min_value=1, value=375, step=5, key=f"{prefix}_elapsed")
-        distance = st.number_input(t["distance"], min_value=1.0, value=2475.0, step=10.0, key=f"{prefix}_distance")
+    if not submitted:
+        return None
+    if origin == destination:
+        st.error("Origin and destination must be different.")
+        return None
+
     return PredictionInput(
         airline=airline,
         origin=origin,
-        destination=dest,
-        month=int(month),
-        day_of_week=int(dow),
-        crs_dep_time=int(dep),
-        crs_arr_time=int(arr),
-        crs_elapsed_time=int(elapsed),
+        destination=destination,
+        month=flight_date.month,
+        day_of_week=flight_date.isoweekday(),
+        crs_dep_time=_hhmm(departure),
+        crs_arr_time=_hhmm(arrival),
+        crs_elapsed_time=int(duration),
         distance=float(distance),
     )
 
 
-def _probability_chart_html(probability: float, lang: str) -> str:
-    pct_delay = max(0.0, min(100.0, round(probability * 100, 1)))
-    pct_no_delay = round(100 - pct_delay, 1)
-    on_time_label = "Arrives <15 min late" if lang == "en" else "Llega con <15 min de retraso"
-    delay_label = "Arrives 15+ min late" if lang == "en" else "Llega con 15+ min de retraso"
-    subtitle = "Model output split" if lang == "en" else "Reparto de salida del modelo"
-    return f"""
-<div class="fr-prob-card">
-  <div class="fr-prob-head"><h3>{'Prediction profile' if lang == 'en' else 'Perfil de predicción'}</h3><span>{subtitle}</span></div>
-  <div class="fr-prob-row">
-    <div class="fr-prob-label">{delay_label}</div>
-    <div class="fr-prob-track"><div class="fr-prob-fill delay" style="width:{pct_delay}%"></div></div>
-    <div class="fr-prob-value">{pct_delay:.1f}%</div>
+def _render_context_rows(context: dict[str, Any]) -> None:
+    signals = context.get("signals") or []
+    for signal in signals[:4]:
+        value = signal.get("value")
+        baseline = signal.get("baseline")
+        support = signal.get("support")
+        direction = "above" if isinstance(value, (int, float)) and isinstance(baseline, (int, float)) and value >= baseline else "below"
+        support_copy = f" · ~{_fmt_int(support)} rows" if support else ""
+        st.markdown(
+            f"""
+<div class="fr-context-row">
+  <div>
+    <div class="fr-context-label">{signal.get('label', 'Historical context')}</div>
+    <div class="fr-context-meta">{direction} global fallback{support_copy}</div>
   </div>
-  <div class="fr-prob-row">
-    <div class="fr-prob-label">{on_time_label}</div>
-    <div class="fr-prob-track"><div class="fr-prob-fill" style="width:{pct_no_delay}%"></div></div>
-    <div class="fr-prob-value">{pct_no_delay:.1f}%</div>
-  </div>
+  <div class="fr-context-value">{_fmt_pct(value)}</div>
 </div>
-"""
+""",
+            unsafe_allow_html=True,
+        )
 
 
-def _single_prediction(t: dict[str, Any], lang: str, model_available: bool) -> None:
+def _render_prediction(payload: PredictionInput, lang: str) -> None:
+    try:
+        result = prediction_service.predict_flight(payload)
+        context = prediction_service.prediction_context(payload)
+    except Exception as exc:
+        st.error(f"Prediction failed: {exc}")
+        return
+
+    probability = float(result["delay_probability"])
+    route_rate = float(context.get("route_rate", context.get("global_rate", 0.0)))
+    global_rate = float(context.get("global_rate", 0.0))
+    relative = probability / route_rate if route_rate > 0 else 0.0
+    decision, explanation = _risk_copy(str(result.get("risk_level", "moderate")), lang)
+
     st.markdown(
         f"""
-<div class="fr-form-heading">
-  <div><h3>{t['input_title']}</h3><p>{t['input_help']}</p></div>
-  <div class="fr-form-badges"><span class="fr-badge">Pre-flight only</span><span class="fr-badge">ArrDel15 target</span><span class="fr-badge">BTS trained</span></div>
+<div class="fr-decision">
+  <div class="fr-decision-kicker">Schedule triage recommendation</div>
+  <h3>{decision}</h3>
+  <p>{explanation}</p>
 </div>
 """,
         unsafe_allow_html=True,
     )
-    with st.form("single_prediction_form"):
-        payload = _prediction_payload_from_form(t, "single")
-        submitted = st.form_submit_button(t["predict"], disabled=not model_available)
 
-    if submitted and model_available:
-        result = prediction_service.predict_flight(payload)
-        prob = float(result.get("delay_probability", 0.0))
-        risk = _risk_label(str(result.get("risk_level", "")), lang)
-        c1, c2, c3 = st.columns(3)
-        c1.metric(t["prob"], f"{prob * 100:.1f}%")
-        c2.metric(t["bucket"], risk)
-        c3.metric(t["target"], "ArrDel15")
+    m1, m2, m3, m4 = st.columns(4)
+    m1.metric("Model probability", _fmt_pct(probability))
+    m2.metric("Route cohort", _fmt_pct(route_rate))
+    m3.metric("Relative exposure", f"{relative:.2f}×")
+    m4.metric("Route support", _fmt_int(context.get("route_support_estimate")))
 
-        st.markdown(_probability_chart_html(prob, lang), unsafe_allow_html=True)
-        st.markdown(f'<div class="fr-chart-note">{t["chart_note"]}</div>', unsafe_allow_html=True)
+    left, right = st.columns([0.58, 0.42], gap="large")
+    with left:
+        st.markdown('<div class="fr-panel"><b>Historical schedule context</b>', unsafe_allow_html=True)
+        _render_context_rows(context)
+        st.markdown("</div>", unsafe_allow_html=True)
+    with right:
+        route_seen = "Seen in training" if context.get("route_seen") else "Unseen route fallback"
+        carrier_route_seen = "Seen in training" if context.get("carrier_route_seen") else "Unseen carrier-route fallback"
+        st.markdown(
+            f"""
+<div class="fr-panel">
+  <b>Reliability context</b>
+  <div class="fr-context-row"><div><div class="fr-context-label">Route coverage</div></div><div class="fr-context-value">{route_seen}</div></div>
+  <div class="fr-context-row"><div><div class="fr-context-label">Carrier-route coverage</div></div><div class="fr-context-value">{carrier_route_seen}</div></div>
+  <div class="fr-context-row"><div><div class="fr-context-label">Training fallback</div></div><div class="fr-context-value">{_fmt_pct(global_rate)}</div></div>
+</div>
+""",
+            unsafe_allow_html=True,
+        )
+        st.markdown(
+            '<div class="fr-note" style="margin-top:.65rem">The current committed artifact is useful mainly as a ranking signal. Its probability output has not yet been post-calibrated; calibration is explicitly shown in the Validation surface.</div>',
+            unsafe_allow_html=True,
+        )
 
-        factors = result.get("top_factors", [])
-        if factors:
-            st.write(f"**{t['drivers']}**")
-            for factor in factors:
-                st.write(f"• {factor}")
 
-
-def _sample_batch() -> pd.DataFrame:
-    return pd.DataFrame(
-        [
-            {"airline": "DL", "origin": "JFK", "destination": "LAX", "month": 7, "day_of_week": 5, "crs_dep_time": 1830, "crs_arr_time": 2145, "crs_elapsed_time": 375, "distance": 2475},
-            {"airline": "AA", "origin": "ORD", "destination": "DFW", "month": 7, "day_of_week": 1, "crs_dep_time": 1720, "crs_arr_time": 1955, "crs_elapsed_time": 155, "distance": 802},
-            {"airline": "UA", "origin": "SFO", "destination": "EWR", "month": 8, "day_of_week": 4, "crs_dep_time": 2215, "crs_arr_time": 640, "crs_elapsed_time": 325, "distance": 2565},
-            {"airline": "WN", "origin": "LAS", "destination": "DEN", "month": 6, "day_of_week": 7, "crs_dep_time": 930, "crs_arr_time": 1220, "crs_elapsed_time": 110, "distance": 628},
-            {"airline": "B6", "origin": "BOS", "destination": "MCO", "month": 12, "day_of_week": 6, "crs_dep_time": 1545, "crs_arr_time": 1910, "crs_elapsed_time": 205, "distance": 1121},
-        ]
-    )
+def _normalize_columns(df: pd.DataFrame) -> pd.DataFrame:
+    normalized = df.copy()
+    normalized.columns = [str(column).strip().lower().replace(" ", "_") for column in normalized.columns]
+    aliases = {
+        "reporting_airline": "airline",
+        "operating_airline": "airline",
+        "dest": "destination",
+        "origin_airport": "origin",
+        "destination_airport": "destination",
+        "crsdeptime": "crs_dep_time",
+        "crsarrtime": "crs_arr_time",
+        "crselapsedtime": "crs_elapsed_time",
+        "dayofweek": "day_of_week",
+    }
+    return normalized.rename(columns=aliases)
 
 
 def _payloads_from_df(df: pd.DataFrame) -> list[PredictionInput]:
-    rename = {
-        "Airline": "airline",
-        "Origin": "origin",
-        "Dest": "destination",
-        "Destination": "destination",
-        "Month": "month",
-        "DayOfWeek": "day_of_week",
-        "DayofWeek": "day_of_week",
-        "CRSDepTime": "crs_dep_time",
-        "CRSArrTime": "crs_arr_time",
-        "CRSElapsedTime": "crs_elapsed_time",
-        "Distance": "distance",
-    }
-    normalized = df.rename(columns=rename).copy()
-    required = ["airline", "origin", "destination", "month", "day_of_week", "crs_dep_time", "crs_arr_time", "crs_elapsed_time", "distance"]
-    missing = [col for col in required if col not in normalized.columns]
+    normalized = _normalize_columns(df)
+    required = [
+        "airline",
+        "origin",
+        "destination",
+        "month",
+        "day_of_week",
+        "crs_dep_time",
+        "crs_arr_time",
+        "crs_elapsed_time",
+        "distance",
+    ]
+    missing = [column for column in required if column not in normalized.columns]
     if missing:
         raise ValueError(f"Missing columns: {', '.join(missing)}")
+
     payloads: list[PredictionInput] = []
     for _, row in normalized[required].iterrows():
         payloads.append(
@@ -570,213 +441,344 @@ def _payloads_from_df(df: pd.DataFrame) -> list[PredictionInput]:
     return payloads
 
 
+def _sample_batch() -> pd.DataFrame:
+    if SAMPLE_PATH.exists():
+        sample = pd.read_csv(SAMPLE_PATH).head(18)
+        rename_map = {
+            "Airline": "airline",
+            "Origin": "origin",
+            "Dest": "destination",
+            "Month": "month",
+            "DayOfWeek": "day_of_week",
+            "CRSDepTime": "crs_dep_time",
+            "CRSArrTime": "crs_arr_time",
+            "CRSElapsedTime": "crs_elapsed_time",
+            "Distance": "distance",
+        }
+        available = {key: value for key, value in rename_map.items() if key in sample.columns}
+        sample = sample.rename(columns=available)
+        required = list(rename_map.values())
+        if all(column in sample.columns for column in required):
+            return sample[required]
+
+    return pd.DataFrame(
+        [
+            ["DL", "JFK", "LAX", 7, 5, 1830, 2145, 375, 2475],
+            ["UA", "SFO", "EWR", 7, 5, 2215, 630, 315, 2565],
+            ["AA", "ORD", "DFW", 7, 5, 1720, 1955, 155, 802],
+            ["WN", "ATL", "BOS", 7, 5, 805, 1035, 150, 946],
+        ],
+        columns=[
+            "airline", "origin", "destination", "month", "day_of_week",
+            "crs_dep_time", "crs_arr_time", "crs_elapsed_time", "distance",
+        ],
+    )
+
+
 def rank_dataframe(df: pd.DataFrame) -> pd.DataFrame:
     payloads = _payloads_from_df(df)
-    original = df.reset_index(drop=False).rename(columns={"index": "_original_index"})
-    original["_input_position"] = range(1, len(original) + 1)
-    raw_preds = prediction_service.predict_flights_batch(payloads)
-    raw_pred_df = pd.DataFrame(raw_preds)
-    raw_pred_df["_input_position"] = range(1, len(raw_pred_df) + 1)
-    merged = original.merge(raw_pred_df, on="_input_position", how="left")
-    merged = merged.sort_values("delay_probability", ascending=False).reset_index(drop=True)
-    merged["rank"] = range(1, len(merged) + 1)
-    merged["delay_probability_pct"] = (merged["delay_probability"] * 100).round(1)
-    return merged
+    normalized = _normalize_columns(df).reset_index(drop=True)
+    predictions = pd.DataFrame(prediction_service.predict_flights_batch(payloads))
+    ranked = pd.concat([normalized, predictions], axis=1)
+    ranked = ranked.sort_values("delay_probability", ascending=False).reset_index(drop=True)
+    ranked.insert(0, "rank", range(1, len(ranked) + 1))
+    ranked["delay_probability_pct"] = (ranked["delay_probability"] * 100).round(1)
+    priority_count = max(1, math.ceil(len(ranked) * 0.10))
+    watch_cutoff = max(priority_count, math.ceil(len(ranked) * 0.30))
+    ranked["priority_tier"] = "Routine"
+    ranked.loc[ranked["rank"] <= watch_cutoff, "priority_tier"] = "Watch"
+    ranked.loc[ranked["rank"] <= priority_count, "priority_tier"] = "Priority"
+    return ranked
 
 
-def _batch_mode(t: dict[str, Any], model_available: bool) -> None:
-    st.markdown(f'<div class="fr-section-title">{t["batch_title"]}</div>', unsafe_allow_html=True)
-    st.markdown(f'<div class="fr-uploader-card"><b>{t["batch_body"]}</b><br><span class="fr-muted">{t["csv_cols"]}</span></div>', unsafe_allow_html=True)
-    c1, c2 = st.columns([0.70, 0.30], gap="large")
-    with c1:
-        uploaded = st.file_uploader(t["upload"], type=["csv"], disabled=not model_available)
-    with c2:
+def _render_batch(model_available: bool) -> None:
+    st.markdown(
+        '<div class="fr-note">Required columns: airline, origin, destination, month, day_of_week, crs_dep_time, crs_arr_time, crs_elapsed_time, distance.</div>',
+        unsafe_allow_html=True,
+    )
+    left, right = st.columns([0.72, 0.28], gap="large")
+    with left:
+        uploaded = st.file_uploader("Upload schedule CSV", type=["csv"], disabled=not model_available)
+    with right:
         st.write("")
-        st.write("")
-        use_sample = st.button(t["sample"], disabled=not model_available)
+        use_sample = st.button("Load sample schedule", disabled=not model_available, width="stretch")
 
-    df: pd.DataFrame | None = None
+    dataframe: pd.DataFrame | None = None
     if uploaded is not None:
-        df = pd.read_csv(uploaded)
+        dataframe = pd.read_csv(uploaded)
     elif use_sample:
-        df = _sample_batch()
+        dataframe = _sample_batch()
 
-    if df is not None and model_available:
-        try:
-            ranked = rank_dataframe(df)
-            display_cols = [col for col in ["rank", "airline", "origin", "destination", "crs_dep_time", "delay_probability_pct", "risk_level"] if col in ranked.columns]
-            st.dataframe(ranked[display_cols] if display_cols else ranked, width="stretch", hide_index=True)
-            if "risk_level" in ranked.columns:
-                risk_counts = ranked["risk_level"].value_counts().rename_axis("Risk level").reset_index(name="Flights")
-                st.bar_chart(risk_counts.set_index("Risk level"), height=240)
-            buffer = io.StringIO()
-            ranked.to_csv(buffer, index=False)
-            st.download_button(t["download"], data=buffer.getvalue(), file_name="flightrisk_ranked_predictions.csv", mime="text/csv")
-        except Exception as exc:
-            st.error(str(exc))
+    if dataframe is None or not model_available:
+        return
+
+    try:
+        ranked = rank_dataframe(dataframe)
+    except Exception as exc:
+        st.error(str(exc))
+        return
+
+    total = len(ranked)
+    priority = int((ranked["priority_tier"] == "Priority").sum())
+    watch = int((ranked["priority_tier"] == "Watch").sum())
+    avg = float(ranked["delay_probability"].mean()) if total else 0.0
+    max_probability = float(ranked["delay_probability"].max()) if total else 0.0
+
+    m1, m2, m3, m4 = st.columns(4)
+    m1.metric("Flights ranked", f"{total}")
+    m2.metric("Priority queue", f"{priority}")
+    m3.metric("Watch queue", f"{watch}")
+    m4.metric("Highest score", _fmt_pct(max_probability))
+
+    display_columns = [
+        "rank", "airline", "origin", "destination", "crs_dep_time",
+        "delay_probability_pct", "priority_tier", "risk_level",
+    ]
+    existing = [column for column in display_columns if column in ranked.columns]
+    st.dataframe(
+        ranked[existing],
+        width="stretch",
+        hide_index=True,
+        column_config={
+            "delay_probability_pct": st.column_config.NumberColumn("Model probability", format="%.1f%%"),
+            "priority_tier": st.column_config.TextColumn("Review queue"),
+            "crs_dep_time": st.column_config.NumberColumn("Departure", format="%04d"),
+        },
+    )
+
+    distribution = ranked["priority_tier"].value_counts().reindex(["Priority", "Watch", "Routine"]).fillna(0)
+    st.bar_chart(distribution, height=230)
+
+    csv_buffer = io.StringIO()
+    ranked.to_csv(csv_buffer, index=False)
+    st.download_button(
+        "Download ranked schedule",
+        data=csv_buffer.getvalue(),
+        file_name="flightrisk_ranked_schedule.csv",
+        mime="text/csv",
+    )
+    st.caption(f"Average model probability across this schedule: {_fmt_pct(avg)}.")
 
 
-def _metric_value(metrics: dict[str, Any], key: str) -> str:
-    value = metrics.get(key)
-    return f"{value:.3f}" if isinstance(value, (float, int)) else "n/a"
+def _model_metrics(report: dict[str, Any], key: str) -> dict[str, Any]:
+    block = report.get(key, {}) if isinstance(report, dict) else {}
+    return block.get("metrics", block) if isinstance(block, dict) else {}
 
 
-def _technical_details(t: dict[str, Any]) -> None:
-    st.markdown(f'<div class="fr-section-title">{t["tech_title"]}</div>', unsafe_allow_html=True)
-    st.markdown(f'<div class="fr-tech-intro">{t["tech_intro"]}</div>', unsafe_allow_html=True)
-    info = _safe_model_info()
-    card = _safe_model_card()
+def _render_validation() -> None:
+    report = _load_json(REPORTS_DIR / "metrics.json")
+    main_metrics = _model_metrics(report, "main_model")
+    baseline_metrics = _model_metrics(report, "baseline_model")
+    selected_name = report.get("main_model", {}).get("model_name", "random_forest")
+    baseline_name = report.get("baseline_model", {}).get("model_name", "logistic_regression")
+
+    m1, m2, m3, m4 = st.columns(4)
+    m1.metric("Held-out PR-AUC", f"{main_metrics.get('pr_auc', 0):.3f}")
+    m2.metric("Lift@10%", f"{main_metrics.get('lift_at_top_10pct', 0):.2f}×")
+    m3.metric("Top-10% precision", _fmt_pct(main_metrics.get("precision_at_top_10pct")))
+    m4.metric("Held-out rows", _fmt_int(main_metrics.get("n_samples")))
+
+    st.markdown(
+        '<div class="fr-note">Honest result: the Logistic Regression baseline generalized slightly better than the validation-selected Random Forest on the final held-out period. This is retained as evidence of model-selection instability, not hidden.</div>',
+        unsafe_allow_html=True,
+    )
+
+    comparison = pd.DataFrame(
+        [
+            {
+                "Model": selected_name,
+                "ROC-AUC": main_metrics.get("roc_auc"),
+                "PR-AUC": main_metrics.get("pr_auc"),
+                "F1": main_metrics.get("f1"),
+                "Precision@10%": main_metrics.get("precision_at_top_10pct"),
+                "Lift@10%": main_metrics.get("lift_at_top_10pct"),
+            },
+            {
+                "Model": baseline_name,
+                "ROC-AUC": baseline_metrics.get("roc_auc"),
+                "PR-AUC": baseline_metrics.get("pr_auc"),
+                "F1": baseline_metrics.get("f1"),
+                "Precision@10%": baseline_metrics.get("precision_at_top_10pct"),
+                "Lift@10%": baseline_metrics.get("lift_at_top_10pct"),
+            },
+        ]
+    )
+    st.dataframe(comparison, width="stretch", hide_index=True)
+
+    left, right = st.columns([0.56, 0.44], gap="large")
+    with left:
+        calibration = report.get("main_model", {}).get("calibration", {})
+        predicted = calibration.get("mean_predicted_probability") or []
+        observed = calibration.get("fraction_of_positives") or []
+        if predicted and observed and len(predicted) == len(observed):
+            calibration_df = pd.DataFrame(
+                {"Observed frequency": observed, "Perfect calibration": predicted},
+                index=pd.Index(predicted, name="Mean predicted probability"),
+            )
+            st.markdown("**Calibration diagnostic**")
+            st.line_chart(calibration_df, height=300)
+            st.caption("The gap between observed frequency and the diagonal is why the current artifact should be treated mainly as a ranking signal.")
+    with right:
+        st.markdown(
+            """
+<div class="fr-validation-card"><b>Temporal holdout</b><span>Earlier flights train the model; later flights form validation and test periods. v0.8 also prevents identical FlightDate values from crossing a split boundary.</span></div>
+<br>
+<div class="fr-validation-card"><b>Leakage contract</b><span>Actual delays, taxi times, wheels times, actual elapsed time and delay causes are explicitly blocked from model features.</span></div>
+<br>
+<div class="fr-validation-card"><b>Next experimental gate</b><span>Ordered historical encoding, temporal backtesting and post-hoc calibration remain the next major model iteration.</span></div>
+""",
+            unsafe_allow_html=True,
+        )
+
+    selection = report.get("selection", {}).get("validation_metrics", {})
+    if selection:
+        rows = []
+        for model_name, metrics in selection.items():
+            rows.append(
+                {
+                    "Candidate": model_name,
+                    "Validation PR-AUC": metrics.get("pr_auc"),
+                    "Validation ROC-AUC": metrics.get("roc_auc"),
+                    "Lift@10%": metrics.get("lift_at_top_10pct"),
+                }
+            )
+        st.markdown("**Validation candidate comparison**")
+        st.dataframe(pd.DataFrame(rows).sort_values("Validation PR-AUC", ascending=False), width="stretch", hide_index=True)
+
+
+def _render_operations(info: dict[str, Any], card: dict[str, Any]) -> None:
     metrics = info.get("metrics", {}) if isinstance(info, dict) else {}
-    main_metrics = metrics.get("main_model", metrics) if isinstance(metrics, dict) else {}
-    selected_model = card.get("selected_model") or info.get("model_name") or "selected validation candidate"
-    threshold = info.get("decision_threshold", card.get("decision_threshold", "n/a"))
+    main = metrics.get("main_model", {}) if isinstance(metrics, dict) else {}
+    main_metrics = main.get("metrics", main) if isinstance(main, dict) else {}
 
-    with st.expander("1. Model card", expanded=True):
+    c1, c2, c3 = st.columns(3)
+    with c1:
         st.markdown(
             f"""
-**Task:** binary classification.  
-**Prediction:** `P(ArrDel15 = 1)`.  
-**Meaning:** probability that a scheduled flight arrives **15+ minutes late**.  
-**Selected model:** `{selected_model}`.  
-**Decision threshold:** `{threshold}`.  
-**Intended use:** portfolio ML demo for schedule-time delay probability estimation.  
-**Not intended for:** safety-critical dispatch, legal, compensation or operational aviation decisions.
-"""
-        )
-
-    with st.expander("2. Variables used"):
-        st.markdown(
-            """
-**Raw schedule inputs**
-- `Reporting_Airline`
-- `Origin`
-- `Dest`
-- `Month`
-- `DayofMonth` / `FlightDate` when available
-- `DayOfWeek`
-- `CRSDepTime`
-- `CRSArrTime`
-- `CRSElapsedTime`
-- `Distance`
-
-**Engineered pre-flight features**
-- departure hour and arrival hour
-- route key
-- weekend flag
-- time-of-day periods
-- red-eye / peak-time flags
-- distance band
-- scheduled speed
-
-**Historical aggregate features**
-- carrier historical delay rate
-- route historical delay rate
-- origin and destination delay rates
-- carrier-route delay rate
-- origin-hour / destination-hour rates
-- carrier-departure-hour rate
-"""
-        )
-
-    with st.expander("3. Cleaning and leakage controls"):
-        st.markdown(
-            """
-**Cleaning**
-- Normalize BTS column names across monthly CSVs.
-- Drop rows with missing `ArrDel15` target.
-- Filter cancelled/diverted rows when present.
-- Remove forbidden leakage columns before training.
-
-**Leakage controls**
-- No actual arrival/departure time is used.
-- No `ArrDelay`, `DepDelay`, `TaxiOut`, `TaxiIn`, `WheelsOff`, `WheelsOn`, `AirTime` or delay-cause columns are used as features.
-- `Cancelled` and `Diverted` are cleaning filters, not model inputs.
-- Historical aggregate rates are fitted from training data and use fallbacks for unseen entities.
-"""
-        )
-
-    with st.expander("4. Models tested and selection"):
-        st.markdown(
-            """
-**Candidate models**
-- Logistic Regression baseline
-- L1 Logistic Regression
-- RandomForestClassifier
-- ExtraTreesClassifier
-- Optional GradientBoostingClassifier
-
-**Selection logic**
-- Models are compared on validation metrics.
-- For the probability-first version, PR-AUC is the recommended selection metric.
-- Ranking metrics such as Precision@Top10% and Lift@Top10% are reported as secondary product metrics.
-"""
-        )
-        c1, c2, c3, c4 = st.columns(4)
-        c1.metric("ROC-AUC", _metric_value(main_metrics, "roc_auc"))
-        c2.metric("PR-AUC", _metric_value(main_metrics, "pr_auc"))
-        c3.metric("F1", _metric_value(main_metrics, "f1"))
-        c4.metric("Lift@10%", _metric_value(main_metrics, "lift_at_top_10pct"))
-
-    with st.expander("5. Architecture"):
-        st.markdown(
-            """
-<div class="fr-detail-grid">
-  <div class="fr-detail-card"><b>Streamlit UI</b><br><span>Single-flight prediction, batch scoring and portfolio documentation.</span></div>
-  <div class="fr-detail-card"><b>Prediction service</b><br><span>Loads the versioned model artifact and exposes prediction helpers.</span></div>
-  <div class="fr-detail-card"><b>Model artifact</b><br><span>Serialized scikit-learn preprocessing and classifier pipeline.</span></div>
-  <div class="fr-detail-card"><b>Reports</b><br><span>Metrics, feature importance, confusion matrix and error analysis.</span></div>
-  <div class="fr-detail-card"><b>Training scripts</b><br><span>Reproducible commands for sampling, training and temporal backtesting.</span></div>
-  <div class="fr-detail-card"><b>FastAPI service</b><br><span>API layer for deployment and integration beyond the Streamlit UI.</span></div>
-</div>
+<div class="fr-validation-card"><b>{card.get('selected_model', info.get('model_name', 'unknown'))}</b><span>Current serialized classifier selected on validation PR-AUC.</span></div>
 """,
             unsafe_allow_html=True,
         )
-        st.markdown("**Main folders**")
+    with c2:
         st.markdown(
-            """
-- `app/dashboard/` — Streamlit interface
-- `app/api/` — FastAPI service
-- `app/services/` — prediction service layer
-- `src/data/` — loading, cleaning and splitting
-- `src/features/` — engineered and historical features
-- `src/models/` — training, evaluation, thresholding and registry
-- `scripts/` — reproducible training and backtesting commands
-"""
-        )
-
-    with st.expander("6. Training pipeline"):
-        st.markdown(
-            """
-<div class="fr-flow">
-  <div class="fr-flow-step"><b>BTS monthly CSVs</b><span>Raw schedule and target columns.</span></div><div class="fr-flow-arrow">→</div>
-  <div class="fr-flow-step"><b>Clean data</b><span>Normalize columns, remove missing target and leakage fields.</span></div><div class="fr-flow-arrow">→</div>
-  <div class="fr-flow-step"><b>Build features</b><span>Schedule-time features plus train-fitted historical rates.</span></div><div class="fr-flow-arrow">→</div>
-  <div class="fr-flow-step"><b>Train candidates</b><span>Compare baseline and tree-based models.</span></div><div class="fr-flow-arrow">→</div>
-  <div class="fr-flow-step"><b>Evaluate & save</b><span>Store artifact, threshold, metrics and reports.</span></div>
-</div>
+            f"""
+<div class="fr-validation-card"><b>{_fmt_int(info.get('n_train_rows'))} training rows</b><span>Real BTS Reporting Carrier On-Time Performance data.</span></div>
 """,
             unsafe_allow_html=True,
         )
-        st.markdown("**Training command example**")
+    with c3:
         st.markdown(
-            '<div class="fr-command">python -m scripts.run_real_data_demo --selection-metric pr_auc --bootstrap-samples 0 --max-rows-per-month 50000</div>',
+            f"""
+<div class="fr-validation-card"><b>{len(info.get('feature_columns') or [])} model features</b><span>Schedule, calendar, route and train-fitted historical aggregates.</span></div>
+""",
             unsafe_allow_html=True,
+        )
+
+    with st.expander("Model card", expanded=True):
+        st.markdown(
+            f"""
+- **Task:** {card.get('task', 'Binary arrival-delay classification')}
+- **Target:** `{card.get('target', 'ArrDel15')}`
+- **Product release:** `v{APP_VERSION}`
+- **Serialized artifact metadata:** `{info.get('version', 'unknown')}`
+- **Decision threshold:** `{info.get('decision_threshold', 'n/a')}`
+- **Held-out PR-AUC:** `{main_metrics.get('pr_auc', 'n/a')}`
+- **Intended use:** {card.get('intended_use', 'Portfolio ML evaluation')}
+- **Not intended for:** {card.get('not_intended_use', 'Operational aviation decisions')}
+"""
+        )
+
+    with st.expander("Pre-departure leakage contract"):
+        st.markdown(
+            """
+**Allowed before departure**
+
+- carrier, origin and destination
+- calendar and scheduled times
+- scheduled duration and distance
+- historical aggregates fitted from training data
+
+**Explicitly blocked**
+
+- `ArrDelay`, `DepDelay`, `ArrDelayMinutes`
+- actual departure/arrival, taxi and wheels times
+- actual elapsed time and airborne time
+- carrier, weather, NAS and late-aircraft delay causes
+- cancellation and diversion status as inference features
+"""
+        )
+
+    with st.expander("API surface"):
+        st.code(
+            """GET  /health
+GET  /model/info
+GET  /model/card
+POST /predict
+POST /predict/batch
+POST /rank
+GET  /monitoring/summary
+GET  /monitoring/drift""",
+            language="text",
+        )
+        st.markdown("FastAPI provides interactive OpenAPI documentation at `/docs`.")
+
+    with st.expander("Repository architecture"):
+        st.code(
+            """app/api/           FastAPI transport layer
+app/dashboard/     Streamlit product surface
+app/services/      inference service layer
+src/data/          loading, cleaning, temporal splitting
+src/features/      schedule features and historical aggregates
+src/models/        training, evaluation, registry, inference
+src/monitoring/    prediction logging and PSI drift checks
+scripts/           reproducible CLI workflows
+reports/           committed evaluation evidence""",
+            language="text",
         )
 
 
 def main() -> None:
-    _inject_css()
-    left, right = st.columns([0.78, 0.22], gap="small")
-    lang, t = _language_selector(right)
+    _inject_theme()
+    info = _safe_model_info()
+    card = _safe_model_card()
     model_available = prediction_service.is_model_available()
-    with left:
-        _topbar(t, model_available)
-    _hero(t, lang, model_available)
-    _steps(t)
-    _single_prediction(t, lang, model_available)
-    _batch_mode(t, model_available)
-    _technical_details(t)
-    st.markdown(f'<div class="fr-footer">{t["footer"]}</div>', unsafe_allow_html=True)
+
+    top_left, top_right = st.columns([0.84, 0.16], gap="small")
+    with top_left:
+        _topbar(model_available, info.get("version"))
+    with top_right:
+        lang, t = _language_selector()
+
+    _hero(t, model_available)
+
+    tabs = st.tabs(t["tabs"])
+    with tabs[0]:
+        _section_header(t["analyze_title"], t["analyze_sub"])
+        payload = _flight_form(lang, _safe_catalog(), disabled=not model_available)
+        if payload is not None:
+            _render_prediction(payload, lang)
+        else:
+            st.markdown(
+                '<div class="fr-note">The form converts date and clock inputs into the exact schedule features required by the model. No post-departure field is requested.</div>',
+                unsafe_allow_html=True,
+            )
+
+    with tabs[1]:
+        _section_header(t["rank_title"], t["rank_sub"])
+        _render_batch(model_available)
+
+    with tabs[2]:
+        _section_header(t["validation_title"], t["validation_sub"])
+        _render_validation()
+
+    with tabs[3]:
+        _section_header(t["operations_title"], t["operations_sub"])
+        _render_operations(info, card)
+
+    st.markdown(
+        '<div class="fr-footer">FlightRisk · Built by Oriol Martínez · Portfolio ML system · Not for operational aviation decisions.</div>',
+        unsafe_allow_html=True,
+    )
 
 
 if __name__ == "__main__":

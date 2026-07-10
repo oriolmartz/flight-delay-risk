@@ -24,7 +24,7 @@ The main training script uses:
 train/validation/test split ordered by FlightDate
 ```
 
-v6.5 adds:
+The evaluation layer includes:
 
 ```bash
 python -m scripts.run_temporal_backtest --n-splits 3
@@ -40,7 +40,7 @@ fold 3: train even larger early period -> test final period
 
 ## Confidence intervals
 
-v6.5 adds bootstrap intervals for the final held-out evaluation:
+The evaluation layer includes bootstrap intervals for the final held-out evaluation:
 
 ```bash
 python -m scripts.run_real_data_demo --bootstrap-samples 200
@@ -64,7 +64,7 @@ Look for:
 
 ## Hyperparameter search
 
-v6.5 adds a modest time-aware search:
+The evaluation layer includes a modest time-aware search:
 
 ```bash
 python -m scripts.tune_hyperparameters --model logistic_regression --n-iter 12

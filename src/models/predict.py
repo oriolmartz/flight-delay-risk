@@ -9,11 +9,9 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-import numpy as np
 import pandas as pd
 
 from src.config import (
-    FEATURE_COLUMNS,
     RISK_LOW_MAX,
     RISK_MODERATE_MAX,
 )
@@ -111,7 +109,26 @@ def predict_single(artifact: FlightRiskArtifact, payload: PredictionInput, thres
 def predict_batch(
     artifact: FlightRiskArtifact, payloads: list[PredictionInput], threshold: float
 ) -> list[dict]:
-    return [predict_single(artifact, p, threshold) for p in payloads]
+    """Score a batch with one feature transformation and one model call."""
+    if not payloads:
+        return []
+
+    raw_df = pd.concat([payload.to_raw_frame() for payload in payloads], ignore_index=True)
+    df = add_schedule_features(raw_df)
+    df = artifact.historical_aggregates.transform(df)
+    probabilities = artifact.pipeline.predict_proba(df[artifact.feature_columns])[:, 1]
+
+    return [
+        {
+            "delay_probability": round(float(probability), 4),
+            "risk_level": risk_level_from_probability(float(probability)),
+            "decision_threshold": threshold,
+            "top_factors": top_factors_for_input(
+                row, artifact.historical_aggregates.global_fallback
+            ),
+        }
+        for probability, (_, row) in zip(probabilities, df.iterrows())
+    ]
 
 
 def rank_predictions(predictions: list[dict]) -> list[dict]:

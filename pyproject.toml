@@ -1,12 +1,12 @@
 [project]
 name = "flightrisk"
-version = "3.0.0"
-description = "End-to-end ML system that predicts flight delay risk from public U.S. aviation data."
+version = "0.8.0"
+description = "Pre-departure flight-delay risk workbench for schedule triage and ML validation."
 readme = "README.md"
 requires-python = ">=3.10"
 license = { text = "MIT" }
 authors = [
-    { name = "FlightRisk Contributors" }
+    { name = "Oriol Martínez" }
 ]
 keywords = ["machine-learning", "flight-delay", "fastapi", "scikit-learn", "portfolio"]
 
@@ -25,6 +25,7 @@ target-version = "py310"
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "W"]
+ignore = ["E501"]
 
 [build-system]
 requires = ["setuptools>=68.0"]

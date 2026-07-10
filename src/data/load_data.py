@@ -8,8 +8,8 @@ so the rest of the pipeline can rely on a single stable schema.
 """
 from __future__ import annotations
 
-from pathlib import Path
 import re
+from pathlib import Path
 
 import pandas as pd
 

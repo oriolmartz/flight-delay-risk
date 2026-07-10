@@ -1,0 +1,26 @@
+{
+  "project": "FlightRisk",
+  "version": "0.8.0",
+  "release_name": "Product Foundation",
+  "author": "Oriol Martínez",
+  "quality_gate": {
+    "tests": 70,
+    "status": "passed",
+    "lint": "ruff passed",
+    "artifact_load": "passed",
+    "single_inference": "passed",
+    "batch_inference": "passed"
+  },
+  "model_artifact": {
+    "path": "models/flightrisk_model.joblib",
+    "sha256": "4f4aff7f0f4fc8af059c9ab4894512d58542a00b85c65d4e77df6ef1d5166eb0",
+    "training_rows": 1511025,
+    "validation_rows": 377757,
+    "test_rows": 472196
+  },
+  "distribution_notes": [
+    "Raw BTS monthly CSV files are intentionally excluded.",
+    "The full processed training parquet is intentionally excluded.",
+    "The trained model, reports, sample data and demo parquet are included."
+  ]
+}

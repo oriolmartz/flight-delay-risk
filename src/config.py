@@ -83,7 +83,7 @@ REQUIRED_RAW_COLUMNS: list[str] = [
 ]
 
 # Final feature columns used by the model (pre-flight information only).
-# v6.1 adds richer schedule/context features while preserving leakage safety.
+# The feature set includes richer schedule/context features while preserving leakage safety.
 FEATURE_COLUMNS: list[str] = [
     "Airline",
     "Origin",

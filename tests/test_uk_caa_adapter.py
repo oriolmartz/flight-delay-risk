@@ -2,7 +2,10 @@ from pathlib import Path
 
 import pandas as pd
 
-from src.reference.uk_caa_adapter import build_uk_caa_context_dataset, normalize_uk_caa_punctuality_file
+from src.reference.uk_caa_adapter import (
+    build_uk_caa_context_dataset,
+    normalize_uk_caa_punctuality_file,
+)
 
 
 def test_normalize_uk_caa_file_from_flexible_columns(tmp_path: Path):

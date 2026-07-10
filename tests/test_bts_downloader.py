@@ -1,6 +1,10 @@
 from pathlib import Path
 
-from scripts.download_bts_data import build_bts_prezip_url, manual_download_instructions, parse_months
+from scripts.download_bts_data import (
+    build_bts_prezip_url,
+    manual_download_instructions,
+    parse_months,
+)
 
 
 def test_build_bts_prezip_url_contains_expected_file_name():

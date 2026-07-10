@@ -25,7 +25,7 @@ The main training script uses fixed candidate models first. That is intentional 
 - Interviewers can reasonably ask why these hyperparameters were chosen.
 
 **Mitigation**
-- v6.5 adds `scripts.tune_hyperparameters` with time-aware randomized search.
+- The repository includes `scripts.tune_hyperparameters` with time-aware randomized search.
 - Search results are saved to `reports/hyperparameter_search.json`.
 
 ## 3. Evaluation design
@@ -37,8 +37,8 @@ The main run uses a time-aware train/validation/test split, not random k-fold. T
 - One month can make performance look better or worse than a longer horizon.
 
 **Mitigation**
-- v6.5 adds rolling expanding-window backtesting via `scripts.run_temporal_backtest`.
-- v6.5 adds bootstrap confidence intervals for held-out ROC-AUC, PR-AUC and F1.
+- The repository includes rolling expanding-window backtesting via `scripts.run_temporal_backtest`.
+- The repository includes bootstrap confidence intervals for held-out ROC-AUC, PR-AUC and F1.
 
 ## 4. European data
 

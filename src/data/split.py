@@ -23,17 +23,35 @@ logger = get_logger(__name__)
 def time_aware_split(
     df: pd.DataFrame, test_size: float = 0.2
 ) -> tuple[pd.DataFrame, pd.DataFrame]:
-    """Split chronologically: earliest (1 - test_size) rows train, rest test."""
-    df_sorted = df.sort_values("FlightDate").reset_index(drop=True)
-    cutoff_idx = int(len(df_sorted) * (1 - test_size))
-    train_df = df_sorted.iloc[:cutoff_idx].reset_index(drop=True)
-    test_df = df_sorted.iloc[cutoff_idx:].reset_index(drop=True)
+    """Split chronologically without placing the same timestamp in both sets."""
+    if not 0 < test_size < 1:
+        raise ValueError("test_size must be between 0 and 1")
+
+    df_sorted = df.copy()
+    df_sorted["FlightDate"] = pd.to_datetime(df_sorted["FlightDate"], errors="raise")
+    df_sorted = df_sorted.sort_values("FlightDate").reset_index(drop=True)
+    unique_dates = pd.Index(df_sorted["FlightDate"].drop_duplicates())
+    if len(unique_dates) < 2:
+        raise ValueError("Time-aware split requires at least two distinct FlightDate values")
+
+    cutoff_position = int(len(unique_dates) * (1 - test_size))
+    cutoff_position = min(max(cutoff_position, 1), len(unique_dates) - 1)
+    cutoff_date = unique_dates[cutoff_position]
+
+    train_df = df_sorted[df_sorted["FlightDate"] < cutoff_date].reset_index(drop=True)
+    test_df = df_sorted[df_sorted["FlightDate"] >= cutoff_date].reset_index(drop=True)
+
+    if train_df.empty or test_df.empty:
+        raise ValueError("Time-aware split produced an empty train or test partition")
+    if train_df["FlightDate"].max() >= test_df["FlightDate"].min():
+        raise AssertionError("Temporal boundary overlap detected")
+
     logger.info(
         "Time-aware split: train=%d rows (up to %s), test=%d rows (from %s)",
         len(train_df),
-        train_df["FlightDate"].max() if len(train_df) else "n/a",
+        train_df["FlightDate"].max(),
         len(test_df),
-        test_df["FlightDate"].min() if len(test_df) else "n/a",
+        test_df["FlightDate"].min(),
     )
     return train_df, test_df
 

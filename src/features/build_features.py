@@ -51,7 +51,7 @@ def _period_from_hour(hour: pd.Series) -> pd.Series:
 def add_schedule_features(df: pd.DataFrame) -> pd.DataFrame:
     """Add derived pre-flight schedule/calendar features to ``df``.
 
-    v6.1 adds richer schedule-only features. These are still leakage-safe:
+    The feature layer adds richer schedule-only features. These are still leakage-safe:
     they use only scheduled times, route, carrier, distance and calendar fields.
     """
     df = df.copy()

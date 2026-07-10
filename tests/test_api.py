@@ -32,6 +32,10 @@ def trained_model_artifact():
     context_preexisting = context_path.exists()
     context_backup = context_path.read_bytes() if context_preexisting else None
     shutil.copyfile(sample_context_path, context_path)
+    model_path = Path(DEFAULT_MODEL_PATH)
+    model_preexisting = model_path.exists()
+    model_backup = model_path.read_bytes() if model_preexisting else None
+
     raw_df = pd.read_csv(SAMPLE_CSV_PATH)
     raw_df = normalize_columns(raw_df)
     clean_df = clean_flights(raw_df)
@@ -59,6 +63,10 @@ def trained_model_artifact():
     yield
 
     prediction_service.get_artifact.cache_clear()
+    if model_preexisting and model_backup is not None:
+        model_path.write_bytes(model_backup)
+    else:
+        model_path.unlink(missing_ok=True)
     if context_preexisting and context_backup is not None:
         context_path.write_bytes(context_backup)
     else:

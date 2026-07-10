@@ -1,19 +1,19 @@
 """Train a real European aggregate punctuality model from UK CAA context rows."""
 from __future__ import annotations
 
-from pathlib import Path
 from dataclasses import dataclass
+from pathlib import Path
 
 import joblib
 import pandas as pd
 from sklearn.compose import ColumnTransformer
 from sklearn.ensemble import RandomForestClassifier
-from sklearn.metrics import classification_report, roc_auc_score
+from sklearn.metrics import roc_auc_score
 from sklearn.model_selection import train_test_split
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import OneHotEncoder, StandardScaler
 
-from src.reference.european_context import load_european_context, DEFAULT_EUROPE_CONTEXT_PATH
+from src.reference.european_context import DEFAULT_EUROPE_CONTEXT_PATH, load_european_context
 
 DEFAULT_EUROPE_MODEL_PATH = Path("models/european_punctuality_model.joblib")
 

@@ -13,17 +13,15 @@ import argparse
 import json
 from pathlib import Path
 
-import pandas as pd
 from sklearn.ensemble import ExtraTreesClassifier, RandomForestClassifier
 from sklearn.linear_model import LogisticRegression
 from sklearn.model_selection import RandomizedSearchCV, TimeSeriesSplit
 from sklearn.pipeline import Pipeline
 
-from src.config import RANDOM_SEED, RAW_DATA_DIR, REPORTS_DIR
+from src.config import FEATURE_COLUMNS, RANDOM_SEED, RAW_DATA_DIR, REPORTS_DIR, TARGET_COL
 from src.data.clean import clean_flights
 from src.data.load_data import load_raw_directory
 from src.data.split import split_train_test
-from src.config import FEATURE_COLUMNS, TARGET_COL
 from src.features.build_features import add_schedule_features, assert_no_leakage_columns
 from src.features.historical_aggregates import HistoricalAggregates
 from src.models.train import build_preprocessing_pipeline

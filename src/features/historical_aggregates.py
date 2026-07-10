@@ -2,7 +2,7 @@
 Historical delay-rate and schedule-density aggregate features.
 
 All aggregates are fit on the training split only, then applied to validation,
-test and inference rows. v6.1 adds richer pre-flight signal: carrier-route,
+test and inference rows. The current encoder adds richer pre-flight signal: carrier-route,
 airport-hour and schedule-volume features that are known before departure when
 computed from historical/schedule data.
 """
@@ -105,7 +105,7 @@ class HistoricalAggregates:
         self.carrier_dep_hour_shares = _share_map(train_df, "CarrierDepHour")
 
         logger.info(
-            "Fit historical aggregates v6.1: %d carriers, %d routes, %d carrier-routes, "
+            "Fit historical aggregates: %d carriers, %d routes, %d carrier-routes, "
             "%d origin-hour keys, %d destination-hour keys, global fallback=%.4f",
             len(self.carrier_rates),
             len(self.route_rates),

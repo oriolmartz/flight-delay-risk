@@ -1,7 +1,7 @@
 """
 End-to-end fallback demo that requires no BTS download.
 
-Runs the full v6.1 pipeline on the bundled sample file: cleaning, training,
+Runs the full FlightRisk pipeline on the bundled sample file: cleaning, training,
 validation model selection, threshold tuning, test evaluation, error analysis,
 drift reference generation and model artifact saving.
 
@@ -30,9 +30,9 @@ logger = get_logger(__name__)
 
 
 def main() -> None:
-    logger.info("=== FlightRisk v6.1 local demo (bundled sample data) ===")
+    logger.info("=== FlightRisk local demo (bundled sample data) ===")
 
-    with MLflowRun("local-demo-v6.1", tags={"project": "FlightRisk", "source": "sample_demo"}) as run:
+    with MLflowRun("local-demo", tags={"project": "FlightRisk", "source": "sample_demo"}) as run:
         raw_df = pd.read_csv(SAMPLE_CSV_PATH)
         raw_df = normalize_columns(raw_df)
         logger.info("Loaded sample data: %d rows", len(raw_df))

@@ -1,4 +1,4 @@
-"""Error analysis utilities for FlightRisk v6.1."""
+"""Error analysis utilities for FlightRisk."""
 from __future__ import annotations
 
 import json
@@ -6,7 +6,7 @@ from pathlib import Path
 from typing import Any
 
 import pandas as pd
-from sklearn.metrics import precision_score, recall_score, f1_score
+from sklearn.metrics import f1_score, precision_score, recall_score
 
 from src.config import REPORTS_DIR
 

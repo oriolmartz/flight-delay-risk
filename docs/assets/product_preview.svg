@@ -1,0 +1,77 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1440" height="820" viewBox="0 0 1440 820">
+  <defs>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="14" stdDeviation="18" flood-color="#101b2d" flood-opacity="0.12"/>
+    </filter>
+    <style>
+      .sans{font-family:Inter,Arial,sans-serif}.ink{fill:#101b2d}.muted{fill:#5d6673}.navy{fill:#17304f}.amber{fill:#bb7a24}.white{fill:#fbfaf7}
+      .small{font-size:15px}.tiny{font-size:12px}.label{font-size:12px;font-weight:800;letter-spacing:1.3px}.title{font-size:48px;font-weight:900;letter-spacing:-2px}.metric{font-size:29px;font-weight:900}.body{font-size:17px}.bold{font-weight:800}
+    </style>
+  </defs>
+  <rect width="1440" height="820" fill="#f3efe6"/>
+  <g opacity="0.35" stroke="#d9d2c5" stroke-width="1">
+    <path d="M0 42H1440M0 84H1440M0 126H1440M0 168H1440M0 210H1440M0 252H1440M0 294H1440M0 336H1440M0 378H1440M0 420H1440M0 462H1440M0 504H1440M0 546H1440M0 588H1440M0 630H1440M0 672H1440M0 714H1440M0 756H1440M0 798H1440"/>
+    <path d="M42 0V820M84 0V820M126 0V820M168 0V820M210 0V820M252 0V820M294 0V820M336 0V820M378 0V820M420 0V820M462 0V820M504 0V820M546 0V820M588 0V820M630 0V820M672 0V820M714 0V820M756 0V820M798 0V820M840 0V820M882 0V820M924 0V820M966 0V820M1008 0V820M1050 0V820M1092 0V820M1134 0V820M1176 0V820M1218 0V820M1260 0V820M1302 0V820M1344 0V820M1386 0V820"/>
+  </g>
+
+  <rect x="70" y="35" width="1300" height="64" rx="12" fill="#fbfaf7" stroke="#d9d2c5" filter="url(#shadow)"/>
+  <rect x="91" y="51" width="34" height="34" rx="8" fill="#17304f"/>
+  <text x="108" y="74" text-anchor="middle" class="sans white tiny bold">FR</text>
+  <text x="140" y="65" class="sans ink small bold" letter-spacing="2">FLIGHTRISK</text>
+  <text x="140" y="84" class="sans muted tiny">Built by Oriol Martínez · ML product engineering</text>
+  <rect x="1033" y="54" width="140" height="26" rx="13" fill="#f7f3eb" stroke="#d9d2c5"/>
+  <text x="1103" y="72" text-anchor="middle" class="sans muted tiny bold">v0.8.0 · Product</text>
+  <rect x="1184" y="54" width="165" height="26" rx="13" fill="#f7f3eb" stroke="#d9d2c5"/>
+  <text x="1266" y="72" text-anchor="middle" class="sans" font-size="12" font-weight="800" fill="#3f716d">● MODEL LOADED</text>
+
+  <rect x="70" y="120" width="1300" height="304" rx="16" fill="#fbfaf7" stroke="#d9d2c5" filter="url(#shadow)"/>
+  <circle cx="1285" cy="165" r="130" fill="#f1e2c6" opacity="0.55"/>
+  <text x="105" y="164" class="sans amber label">PRE-DEPARTURE RISK · SCHEDULE TRIAGE</text>
+  <text x="105" y="222" class="sans ink title">Know which flights deserve</text>
+  <text x="105" y="278" class="sans navy title">attention before departure.</text>
+  <text x="105" y="320" class="sans muted body">Rank scheduled flights, compare each score with its historical cohort</text>
+  <text x="105" y="346" class="sans muted body">and expose the validation evidence behind the model.</text>
+  <rect x="105" y="370" width="620" height="35" rx="4" fill="#f1e2c6" opacity="0.72"/>
+  <rect x="105" y="370" width="4" height="35" fill="#bb7a24"/>
+  <text x="119" y="393" class="sans" font-size="13" fill="#62533b">Schedule-only · no live weather or ATC state · not for operational dispatch</text>
+
+  <rect x="928" y="145" width="390" height="250" rx="13" fill="#17304f" filter="url(#shadow)"/>
+  <text x="954" y="177" class="sans" font-size="12" font-weight="800" letter-spacing="1.3" fill="#c9d2dc">EXAMPLE · DL 418 · 18:30 DEPARTURE</text>
+  <text x="954" y="217" class="sans white" font-size="30" font-weight="900">JFK → LAX</text>
+  <rect x="1210" y="162" width="82" height="26" rx="5" fill="#bb7a24"/>
+  <text x="1251" y="180" text-anchor="middle" class="sans white tiny bold">PRIORITY</text>
+  <text x="954" y="280" class="sans white" font-size="50" font-weight="900">52.9%</text>
+  <text x="954" y="303" class="sans" font-size="12" fill="#c9d2dc">current model probability · not post-calibrated</text>
+  <line x1="954" y1="329" x2="1292" y2="329" stroke="#ffffff" opacity="0.18"/>
+  <text x="954" y="354" class="sans white small bold">18.8%</text><text x="954" y="374" class="sans" font-size="11" fill="#c9d2dc">route cohort</text>
+  <text x="1050" y="354" class="sans white small bold">2.82×</text><text x="1050" y="374" class="sans" font-size="11" fill="#c9d2dc">relative exposure</text>
+  <text x="1152" y="354" class="sans white small bold">2,112</text><text x="1152" y="374" class="sans" font-size="11" fill="#c9d2dc">route support</text>
+
+  <rect x="70" y="448" width="1300" height="55" rx="10" fill="#fbfaf7" stroke="#d9d2c5"/>
+  <text x="105" y="482" class="sans navy small bold">Analyze flight</text>
+  <text x="315" y="482" class="sans muted small bold">Rank schedule</text>
+  <text x="520" y="482" class="sans muted small bold">Validation</text>
+  <text x="680" y="482" class="sans muted small bold">Model &amp; operations</text>
+  <line x1="96" y1="499" x2="226" y2="499" stroke="#bb7a24" stroke-width="4"/>
+
+  <rect x="70" y="525" width="825" height="245" rx="12" fill="#fbfaf7" stroke="#d9d2c5" filter="url(#shadow)"/>
+  <text x="96" y="560" class="sans ink" font-size="20" font-weight="900">Historical schedule context</text>
+  <line x1="96" y1="580" x2="870" y2="580" stroke="#d9d2c5"/>
+  <text x="96" y="613" class="sans ink small bold">Route historical delay rate</text><text x="842" y="613" text-anchor="end" class="sans ink small bold">18.8%</text>
+  <text x="96" y="633" class="sans muted tiny">below global fallback · ~2,112 rows</text>
+  <line x1="96" y1="648" x2="870" y2="648" stroke="#d9d2c5"/>
+  <text x="96" y="681" class="sans ink small bold">Origin-hour historical rate</text><text x="842" y="681" text-anchor="end" class="sans ink small bold">32.5%</text>
+  <text x="96" y="701" class="sans muted tiny">above global fallback · ~1,346 rows</text>
+  <line x1="96" y1="716" x2="870" y2="716" stroke="#d9d2c5"/>
+  <text x="96" y="749" class="sans ink small bold">Carrier historical delay rate</text><text x="842" y="749" text-anchor="end" class="sans ink small bold">18.3%</text>
+
+  <rect x="920" y="525" width="450" height="245" rx="12" fill="#fbfaf7" stroke="#d9d2c5" filter="url(#shadow)"/>
+  <text x="946" y="560" class="sans ink" font-size="20" font-weight="900">Reliability context</text>
+  <line x1="946" y1="580" x2="1344" y2="580" stroke="#d9d2c5"/>
+  <text x="946" y="616" class="sans ink small bold">Route coverage</text><text x="1320" y="616" text-anchor="end" class="sans" font-size="14" font-weight="800" fill="#3f716d">Seen in training</text>
+  <line x1="946" y1="635" x2="1344" y2="635" stroke="#d9d2c5"/>
+  <text x="946" y="671" class="sans ink small bold">Carrier-route coverage</text><text x="1320" y="671" text-anchor="end" class="sans" font-size="14" font-weight="800" fill="#3f716d">Seen in training</text>
+  <line x1="946" y1="690" x2="1344" y2="690" stroke="#d9d2c5"/>
+  <text x="946" y="726" class="sans ink small bold">Training fallback</text><text x="1320" y="726" text-anchor="end" class="sans ink small bold">22.7%</text>
+  <rect x="946" y="740" width="374" height="18" rx="4" fill="#f1e2c6"/>
+</svg>

@@ -11,11 +11,14 @@ XGBoost/LightGBM model can be swapped in via build_main_pipeline().
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Any
 
 import pandas as pd
 from sklearn.compose import ColumnTransformer
-from sklearn.ensemble import ExtraTreesClassifier, GradientBoostingClassifier, RandomForestClassifier
+from sklearn.ensemble import (
+    ExtraTreesClassifier,
+    GradientBoostingClassifier,
+    RandomForestClassifier,
+)
 from sklearn.linear_model import LogisticRegression
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import OneHotEncoder, StandardScaler
@@ -87,7 +90,7 @@ def build_l1_logistic_pipeline() -> Pipeline:
                     class_weight="balanced",
                     random_state=RANDOM_SEED,
                     solver="liblinear",
-                    l1_ratio=1.0,
+                    penalty="l1",
                     C=0.35,
                 ),
             ),
@@ -152,7 +155,7 @@ def build_extra_trees_pipeline() -> Pipeline:
 def build_gradient_boosting_pipeline() -> Pipeline:
     """GradientBoosting candidate using dense one-hot encoded features.
 
-    This gives v6.1 an optional boosting-based tabular candidate using only scikit-learn,
+    This provides an optional boosting-based tabular candidate using only scikit-learn,
     without making XGBoost/LightGBM mandatory for the portfolio repo.
     """
     preprocessing = ColumnTransformer(

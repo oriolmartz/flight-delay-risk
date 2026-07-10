@@ -101,7 +101,7 @@ def main() -> None:
             print(str(exc))
             raise SystemExit(2) from exc
 
-    with MLflowRun("real-data-v6.5", tags={"project": "FlightRisk", "source": "bts_real_data"}) as run:
+    with MLflowRun("real-data-training", tags={"project": "FlightRisk", "source": "bts_real_data"}) as run:
         run.log_params(
             {
                 "test_size": args.test_size,
@@ -211,7 +211,7 @@ def main() -> None:
             n_test=len(test_df),
             extra={
                 "version": "6.5.0",
-                "feature_set": "v6.5_schedule_density_ranking_ci_backtesting",
+                "feature_set": "schedule_density_ranking_ci_backtesting",
                 "baseline_model_name": models["baseline"].name,
                 "candidate_models": [models[key].name for key in candidate_keys],
                 "selected_model_key": selected_key,

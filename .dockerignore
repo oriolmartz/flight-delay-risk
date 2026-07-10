@@ -1,0 +1,29 @@
+.git
+.github
+.venv
+venv
+__pycache__
+*.py[cod]
+.pytest_cache
+.ruff_cache
+.mypy_cache
+.ipynb_checkpoints
+
+# Large local datasets are never needed in serving images.
+data/raw/*
+data/processed/*
+!data/raw/.gitkeep
+!data/processed/.gitkeep
+
+# Runtime-only artifacts.
+monitoring/*.csv
+mlruns
+wandb
+
+# Local/editor files.
+.env
+.streamlit/secrets.toml
+.vscode
+.idea
+.DS_Store
+Thumbs.db

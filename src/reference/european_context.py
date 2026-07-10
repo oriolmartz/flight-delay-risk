@@ -1,4 +1,4 @@
-"""Real European aggregated punctuality context layer for FlightRisk v6.
+"""Real European aggregated punctuality context layer for FlightRisk.
 
 The production European mode is real-data-only: it consumes a generated context
 CSV built from official/public European punctuality sources (currently UK CAA).
@@ -12,12 +12,11 @@ Canonical CSV schema:
 """
 from __future__ import annotations
 
-from dataclasses import dataclass
 import os
+from dataclasses import dataclass
 from pathlib import Path
 
 import pandas as pd
-
 
 DEFAULT_EUROPE_CONTEXT_PATH = Path("data/europe/europe_punctuality_context.csv")
 SAMPLE_EUROPE_CONTEXT_PATH = Path("data/europe/europe_punctuality_sample.csv")
@@ -152,7 +151,9 @@ def _aggregate_to_context(df: pd.DataFrame, matched_level: str, source: str, air
 
 def lookup_european_context(airline: str, origin: str, destination: str, month: int, context_path: str | Path = DEFAULT_EUROPE_CONTEXT_PATH) -> EuropeanPunctualityContext:
     df = load_european_context(context_path)
-    airline = airline.upper(); origin = origin.upper(); destination = destination.upper()
+    airline = airline.upper()
+    origin = origin.upper()
+    destination = destination.upper()
     pair = f"{origin}-{destination}"
     if df.empty:
         return EuropeanPunctualityContext(

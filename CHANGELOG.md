@@ -1,17 +1,24 @@
 # Changelog
 
-## v7.9.3 — README and portfolio documentation cleanup
+## v0.8.0 — Product Foundation
 
-- Rewrote README as a portfolio-grade technical overview instead of a version-note collage.
-- Added clear architecture and training-pipeline diagrams using Mermaid.
-- Documented target definition, leakage controls, feature groups, candidate models and metric rationale.
-- Added transparent discussion of Random Forest selection versus Logistic Regression held-out test performance.
-- Removed Europe from the main README narrative and focused the project on `P(ArrDel15 = 1)`.
+- Reframed FlightRisk as a pre-departure schedule-risk workbench.
+- Rebuilt the Streamlit interface around Analyze, Rank, Validation and Model & Operations surfaces.
+- Added a warm aviation-operations visual system and visible personal byline.
+- Replaced numeric calendar/time inputs with natural date and time controls.
+- Added historical cohort, coverage and estimated-support context to single-flight analysis.
+- Converted batch scoring into a prioritised schedule-review queue.
+- Surfaced real held-out metrics and calibration limitations in the UI.
+- Prevented identical `FlightDate` values from crossing temporal split boundaries.
+- Corrected the L1 Logistic Regression candidate to use `penalty="l1"` explicitly.
+- Vectorised batch inference into one model call.
+- Introduced a single public product version and cleaned artifact metadata.
+- Replaced brittle historical UI assertions with product-contract tests.
+- Rewrote the README for recruiters and technical reviewers.
+- Added a local quality gate.
 
-## v7.9.2 — Model card visual fix
+## Pre-v0.8 development history
 
-- Replaced the prediction profile chart with a custom light horizontal probability split.
-- Removed dark code-block rendering from the Architecture and Training Pipeline expanders.
-- Added clean technical cards and a readable pipeline flow.
-- Kept Europe out of the main UI narrative.
-- Preserved the read-time sampling fix for `--max-rows-per-month`.
+Earlier internal versions explored the initial API, model artifact, European transfer layer,
+monitoring, ranking metrics and several Streamlit visual directions. v0.8.0 resets the public
+versioning scheme around coherent, reviewable portfolio releases.

@@ -19,8 +19,9 @@ streamlit>=1.59,<2.0
 # Testing
 pytest>=8.0,<9.0
 httpx>=0.27,<1.0
+ruff>=0.6,<1.0
 
-# Optional MLOps tracking (v4)
+# Optional MLOps tracking
 # Enable with FLIGHTRISK_ENABLE_MLFLOW=1 after installing.
 # mlflow>=2.12,<3.0
 
@@ -28,7 +29,7 @@ httpx>=0.27,<1.0
 jupyter>=1.0,<2.0
 matplotlib>=3.8,<4.0
 
-# Optional external gradient boosting libraries. v4 already includes
+# Optional external gradient boosting libraries. The project already includes
 # scikit-learn GradientBoosting without extra dependencies.
 # xgboost>=2.0,<3.0
 # lightgbm>=4.3,<5.0

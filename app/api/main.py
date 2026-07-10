@@ -5,13 +5,25 @@ from fastapi import FastAPI, HTTPException, Response
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.schemas import (
-    BatchFlightInput, BatchPredictionOutput, DriftResponse, EuropeanFlightInput, EuropeanPredictionOutput,
-    FlightInput, HealthResponse, ModelCardResponse, ModelInfoResponse, MonitoringSummaryResponse,
-    PredictionOutput, RegionCatalogResponse, EuropeanContextSummaryResponse, RankingOutput,
+    BatchFlightInput,
+    BatchPredictionOutput,
+    DriftResponse,
+    EuropeanContextSummaryResponse,
+    EuropeanFlightInput,
+    EuropeanPredictionOutput,
+    FlightInput,
+    HealthResponse,
+    ModelCardResponse,
+    ModelInfoResponse,
+    MonitoringSummaryResponse,
+    PredictionOutput,
+    RankingOutput,
+    RegionCatalogResponse,
 )
 from app.services import prediction_service
 from src.models.predict import PredictionInput
 from src.utils.logging import get_logger
+from src.version import APP_VERSION
 
 logger = get_logger(__name__)
 
@@ -21,7 +33,7 @@ app = FastAPI(
         'Ranks scheduled flights by arrival-delay risk and estimates the probability of 15+ minute delay, '
         'using only pre-flight schedule-time information. Includes a European context layer.'
     ),
-    version='7.4.0',
+    version=APP_VERSION,
 )
 app.add_middleware(CORSMiddleware, allow_origins=['*'], allow_methods=['*'], allow_headers=['*'])
 

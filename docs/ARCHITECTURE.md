@@ -2,7 +2,7 @@
 
 FlightRisk v3 is organized as a production-shaped ML system rather than a notebook-only experiment.
 
-![FlightRisk v3 architecture](assets/architecture_v3.svg)
+![FlightRisk architecture](assets/architecture.svg)
 
 ## High-level flow
 

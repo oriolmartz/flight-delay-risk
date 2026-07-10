@@ -17,7 +17,7 @@ The pipeline supports many monthly BTS files, but one month is a controlled base
 
 ### Why not random k-fold?
 
-Flight data is temporal. Random k-fold would leak future distribution into past folds. I use time-aware splits and v6.5 adds expanding-window backtests.
+Flight data is temporal. Random k-fold would leak future distribution into past folds. I use time-aware splits and the repository includes expanding-window backtests.
 
 ### Why are the U.S. metrics modest?
 
