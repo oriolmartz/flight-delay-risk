@@ -1,17 +1,26 @@
 services:
   - type: web
-    name: flightrisk-api
+    name: flight-delay-risk-api
     runtime: docker
     dockerfilePath: ./Dockerfile.api
-    healthCheckPath: /health
+    healthCheckPath: /ready
     envVars:
       - key: FLIGHTRISK_ENABLE_MLFLOW
         value: "0"
+      - key: FLIGHTRISK_MODEL_PATH
+        value: /app/models/flightrisk_model.joblib
+      - key: FLIGHTRISK_SCHEDULE_CONTEXT_PATH
+        value: /app/data/processed/schedule_context.joblib
 
   - type: web
-    name: flightrisk-dashboard
+    name: flight-delay-risk-dashboard
     runtime: docker
     dockerfilePath: ./Dockerfile.dashboard
+    healthCheckPath: /_stcore/health
     envVars:
       - key: FLIGHTRISK_ENABLE_MLFLOW
         value: "0"
+      - key: FLIGHTRISK_MODEL_PATH
+        value: /app/models/flightrisk_model.joblib
+      - key: FLIGHTRISK_SCHEDULE_CONTEXT_PATH
+        value: /app/data/processed/schedule_context.joblib

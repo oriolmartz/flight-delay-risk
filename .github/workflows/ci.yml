@@ -18,7 +18,15 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install -r requirements.txt
+          pip install -r requirements-advanced.txt
+      - name: Run full test suite
+        env:
+          PYTEST_DISABLE_PLUGIN_AUTOLOAD: "1"
+          OMP_NUM_THREADS: "1"
+          MKL_NUM_THREADS: "1"
+          OPENBLAS_NUM_THREADS: "1"
+          NUMEXPR_NUM_THREADS: "1"
+        run: python -m pytest -q
       - name: Run bilingual UI smoke
         run: python -c "from scripts.streamlit_smoke import main; raise SystemExit(main())"
       - name: Run release quality gate

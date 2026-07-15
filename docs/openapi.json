@@ -1,0 +1,2032 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Flight Delay Risk API",
+    "description": "Ranks scheduled flights by arrival-delay risk and returns a post-hoc calibrated estimate of 15+ minute delay, using only pre-flight schedule-time information. Includes a European context layer.",
+    "version": "1.5.0"
+  },
+  "paths": {
+    "/live": {
+      "get": {
+        "tags": [
+          "system"
+        ],
+        "summary": "Live",
+        "operationId": "live_live_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LivenessResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/ready": {
+      "get": {
+        "tags": [
+          "system"
+        ],
+        "summary": "Ready",
+        "operationId": "ready_ready_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReadinessResponse"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Service dependencies are not ready"
+          }
+        }
+      }
+    },
+    "/health": {
+      "get": {
+        "tags": [
+          "system"
+        ],
+        "summary": "Health",
+        "operationId": "health_health_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HealthResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/model/info": {
+      "get": {
+        "tags": [
+          "system"
+        ],
+        "summary": "Get Model Info",
+        "operationId": "get_model_info_model_info_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ModelInfoResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/model/card": {
+      "get": {
+        "tags": [
+          "system"
+        ],
+        "summary": "Get Model Card",
+        "operationId": "get_model_card_model_card_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ModelCardResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/regions/europe": {
+      "get": {
+        "tags": [
+          "regions"
+        ],
+        "summary": "Get Europe Region Catalog",
+        "operationId": "get_europe_region_catalog_regions_europe_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RegionCatalogResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/regions/europe/context": {
+      "get": {
+        "tags": [
+          "regions"
+        ],
+        "summary": "Get Europe Context Summary",
+        "operationId": "get_europe_context_summary_regions_europe_context_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EuropeanContextSummaryResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/predict": {
+      "post": {
+        "tags": [
+          "prediction"
+        ],
+        "summary": "Predict",
+        "operationId": "predict_predict_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/FlightInput"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PredictionOutput"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/predict/european": {
+      "post": {
+        "tags": [
+          "prediction"
+        ],
+        "summary": "Predict European",
+        "operationId": "predict_european_predict_european_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EuropeanFlightInput"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EuropeanPredictionOutput"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/predict/batch": {
+      "post": {
+        "tags": [
+          "prediction"
+        ],
+        "summary": "Predict Batch Endpoint",
+        "operationId": "predict_batch_endpoint_predict_batch_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BatchFlightInput"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BatchPredictionOutput"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/rank": {
+      "post": {
+        "tags": [
+          "ranking"
+        ],
+        "summary": "Rank Flights Endpoint",
+        "operationId": "rank_flights_endpoint_rank_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BatchFlightInput"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RankingOutput"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/reports/flight": {
+      "post": {
+        "tags": [
+          "reports"
+        ],
+        "summary": "Flight Report",
+        "operationId": "flight_report_reports_flight_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/FlightReportInput"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/reports/schedule": {
+      "post": {
+        "tags": [
+          "reports"
+        ],
+        "summary": "Schedule Report",
+        "operationId": "schedule_report_reports_schedule_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ScheduleReportInput"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/monitoring/summary": {
+      "get": {
+        "tags": [
+          "monitoring"
+        ],
+        "summary": "Get Monitoring Summary",
+        "operationId": "get_monitoring_summary_monitoring_summary_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MonitoringSummaryResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/monitoring/drift": {
+      "get": {
+        "tags": [
+          "monitoring"
+        ],
+        "summary": "Get Drift Summary",
+        "operationId": "get_drift_summary_monitoring_drift_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DriftResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/": {
+      "get": {
+        "tags": [
+          "system"
+        ],
+        "summary": "Root",
+        "operationId": "root__get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "type": "object",
+                  "title": "Response Root  Get"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "BatchFlightInput": {
+        "properties": {
+          "flights": {
+            "items": {
+              "$ref": "#/components/schemas/FlightInput"
+            },
+            "type": "array",
+            "maxItems": 500,
+            "minItems": 1,
+            "title": "Flights"
+          }
+        },
+        "type": "object",
+        "required": [
+          "flights"
+        ],
+        "title": "BatchFlightInput"
+      },
+      "BatchPredictionOutput": {
+        "properties": {
+          "predictions": {
+            "items": {
+              "$ref": "#/components/schemas/PredictionOutput"
+            },
+            "type": "array",
+            "title": "Predictions"
+          }
+        },
+        "type": "object",
+        "required": [
+          "predictions"
+        ],
+        "title": "BatchPredictionOutput"
+      },
+      "DriftResponse": {
+        "properties": {
+          "status": {
+            "type": "string",
+            "title": "Status"
+          },
+          "max_psi": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Max Psi"
+          },
+          "features": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Features"
+          }
+        },
+        "type": "object",
+        "required": [
+          "status",
+          "features"
+        ],
+        "title": "DriftResponse"
+      },
+      "EuropeanContextOutput": {
+        "properties": {
+          "status": {
+            "type": "string",
+            "title": "Status"
+          },
+          "source": {
+            "type": "string",
+            "title": "Source"
+          },
+          "year": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Year"
+          },
+          "month": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Month"
+          },
+          "airline": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Airline"
+          },
+          "origin": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Origin"
+          },
+          "destination": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Destination"
+          },
+          "airport_pair": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Airport Pair"
+          },
+          "avg_arrival_delay_min": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Avg Arrival Delay Min"
+          },
+          "pct_flights_15min_late": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Pct Flights 15Min Late"
+          },
+          "cancelled_pct": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cancelled Pct"
+          },
+          "number_flights_matched": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Number Flights Matched"
+          },
+          "matched_level": {
+            "type": "string",
+            "title": "Matched Level"
+          }
+        },
+        "type": "object",
+        "required": [
+          "status",
+          "source",
+          "matched_level"
+        ],
+        "title": "EuropeanContextOutput"
+      },
+      "EuropeanContextSummaryResponse": {
+        "properties": {
+          "available": {
+            "type": "boolean",
+            "title": "Available"
+          },
+          "rows": {
+            "type": "integer",
+            "title": "Rows"
+          },
+          "source_path": {
+            "type": "string",
+            "title": "Source Path"
+          },
+          "is_sample": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Is Sample"
+          },
+          "real_data": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Real Data"
+          },
+          "total_matched_flights": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Total Matched Flights"
+          },
+          "airlines": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Airlines"
+          },
+          "routes": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Routes"
+          },
+          "months": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "integer"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Months"
+          },
+          "note": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Note"
+          }
+        },
+        "type": "object",
+        "required": [
+          "available",
+          "rows",
+          "source_path",
+          "airlines",
+          "routes"
+        ],
+        "title": "EuropeanContextSummaryResponse"
+      },
+      "EuropeanFlightInput": {
+        "properties": {
+          "airline": {
+            "type": "string",
+            "title": "Airline",
+            "description": "European airline code, e.g. 'IB'."
+          },
+          "origin": {
+            "type": "string",
+            "title": "Origin",
+            "description": "European origin airport IATA code, e.g. 'BCN'."
+          },
+          "destination": {
+            "type": "string",
+            "title": "Destination",
+            "description": "European destination airport IATA code, e.g. 'AMS'."
+          },
+          "month": {
+            "type": "integer",
+            "maximum": 12.0,
+            "minimum": 1.0,
+            "title": "Month"
+          },
+          "day_of_week": {
+            "type": "integer",
+            "maximum": 7.0,
+            "minimum": 1.0,
+            "title": "Day Of Week"
+          },
+          "crs_dep_time": {
+            "type": "integer",
+            "maximum": 2400.0,
+            "minimum": 0.0,
+            "title": "Crs Dep Time"
+          },
+          "crs_arr_time": {
+            "type": "integer",
+            "maximum": 2400.0,
+            "minimum": 0.0,
+            "title": "Crs Arr Time"
+          },
+          "crs_elapsed_time": {
+            "type": "integer",
+            "exclusiveMinimum": 0.0,
+            "title": "Crs Elapsed Time"
+          },
+          "distance": {
+            "anyOf": [
+              {
+                "type": "number",
+                "exclusiveMinimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Distance",
+            "description": "Optional manual distance in miles."
+          }
+        },
+        "type": "object",
+        "required": [
+          "airline",
+          "origin",
+          "destination",
+          "month",
+          "day_of_week",
+          "crs_dep_time",
+          "crs_arr_time",
+          "crs_elapsed_time"
+        ],
+        "title": "EuropeanFlightInput",
+        "description": "Experimental European flight layer. Distance is auto-estimated if missing."
+      },
+      "EuropeanPredictionOutput": {
+        "properties": {
+          "delay_probability": {
+            "type": "number",
+            "title": "Delay Probability",
+            "description": "Post-hoc calibrated estimate of a 15+ minute arrival delay."
+          },
+          "raw_model_score": {
+            "type": "number",
+            "title": "Raw Model Score",
+            "description": "Uncalibrated score emitted by the selected classifier."
+          },
+          "calibration_method": {
+            "type": "string",
+            "title": "Calibration Method",
+            "description": "Post-hoc calibration method applied to the raw score."
+          },
+          "risk_level": {
+            "type": "string",
+            "title": "Risk Level",
+            "description": "'low', 'moderate', or 'high'."
+          },
+          "decision_threshold": {
+            "type": "number",
+            "title": "Decision Threshold",
+            "description": "Probability threshold used for binary risk decisions."
+          },
+          "top_factors": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Top Factors",
+            "description": "Non-causal schedule-context signals for this flight."
+          },
+          "local_contributions": {
+            "items": {
+              "$ref": "#/components/schemas/LocalContributionOutput"
+            },
+            "type": "array",
+            "title": "Local Contributions",
+            "description": "Signed local pre-calibration log-odds contributions from the selected model."
+          },
+          "explanation_scale": {
+            "type": "string",
+            "title": "Explanation Scale",
+            "description": "Scale used by local model contributions.",
+            "default": "log_odds_before_calibration"
+          },
+          "review_recommended": {
+            "type": "boolean",
+            "title": "Review Recommended",
+            "description": "Whether the configured operational policy sends this flight to priority review.",
+            "default": false
+          },
+          "operational_action": {
+            "type": "string",
+            "title": "Operational Action",
+            "default": "standard_monitoring"
+          },
+          "policy_name": {
+            "type": "string",
+            "title": "Policy Name",
+            "default": "fixed_threshold"
+          },
+          "policy_probability_cutoff": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Policy Probability Cutoff"
+          },
+          "policy_capacity_fraction": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Policy Capacity Fraction"
+          },
+          "region": {
+            "type": "string",
+            "title": "Region"
+          },
+          "airline_name": {
+            "type": "string",
+            "title": "Airline Name"
+          },
+          "origin_label": {
+            "type": "string",
+            "title": "Origin Label"
+          },
+          "destination_label": {
+            "type": "string",
+            "title": "Destination Label"
+          },
+          "distance_miles": {
+            "type": "number",
+            "title": "Distance Miles"
+          },
+          "distance_source": {
+            "type": "string",
+            "title": "Distance Source"
+          },
+          "european_context": {
+            "$ref": "#/components/schemas/EuropeanContextOutput"
+          },
+          "experimental": {
+            "type": "boolean",
+            "title": "Experimental",
+            "default": true
+          },
+          "transfer_note": {
+            "type": "string",
+            "title": "Transfer Note"
+          }
+        },
+        "type": "object",
+        "required": [
+          "delay_probability",
+          "raw_model_score",
+          "calibration_method",
+          "risk_level",
+          "decision_threshold",
+          "top_factors",
+          "region",
+          "airline_name",
+          "origin_label",
+          "destination_label",
+          "distance_miles",
+          "distance_source",
+          "european_context",
+          "transfer_note"
+        ],
+        "title": "EuropeanPredictionOutput"
+      },
+      "FlightInput": {
+        "properties": {
+          "airline": {
+            "type": "string",
+            "title": "Airline",
+            "description": "Operating/reporting carrier code, e.g. 'DL'.",
+            "examples": [
+              "DL"
+            ]
+          },
+          "origin": {
+            "type": "string",
+            "title": "Origin",
+            "description": "Origin airport IATA code, e.g. 'JFK'.",
+            "examples": [
+              "JFK"
+            ]
+          },
+          "destination": {
+            "type": "string",
+            "title": "Destination",
+            "description": "Destination airport IATA code, e.g. 'LAX'.",
+            "examples": [
+              "LAX"
+            ]
+          },
+          "month": {
+            "type": "integer",
+            "maximum": 12.0,
+            "minimum": 1.0,
+            "title": "Month",
+            "description": "Scheduled month (1-12)."
+          },
+          "day_of_week": {
+            "type": "integer",
+            "maximum": 7.0,
+            "minimum": 1.0,
+            "title": "Day Of Week",
+            "description": "Scheduled day of week (1=Mon ... 7=Sun)."
+          },
+          "crs_dep_time": {
+            "type": "integer",
+            "maximum": 2400.0,
+            "minimum": 0.0,
+            "title": "Crs Dep Time",
+            "description": "Scheduled departure time, HHMM format. 2400 is accepted as midnight."
+          },
+          "crs_arr_time": {
+            "type": "integer",
+            "maximum": 2400.0,
+            "minimum": 0.0,
+            "title": "Crs Arr Time",
+            "description": "Scheduled arrival time, HHMM format. 2400 is accepted as midnight."
+          },
+          "crs_elapsed_time": {
+            "type": "integer",
+            "exclusiveMinimum": 0.0,
+            "title": "Crs Elapsed Time",
+            "description": "Scheduled flight duration in minutes."
+          },
+          "distance": {
+            "type": "number",
+            "exclusiveMinimum": 0.0,
+            "title": "Distance",
+            "description": "Great-circle distance in miles."
+          },
+          "flight_date": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Flight Date",
+            "description": "Optional ISO scheduled date for exact calendar features."
+          }
+        },
+        "type": "object",
+        "required": [
+          "airline",
+          "origin",
+          "destination",
+          "month",
+          "day_of_week",
+          "crs_dep_time",
+          "crs_arr_time",
+          "crs_elapsed_time",
+          "distance"
+        ],
+        "title": "FlightInput",
+        "description": "A single scheduled flight, described using only pre-flight information.",
+        "example": {
+          "airline": "DL",
+          "crs_arr_time": 2145,
+          "crs_dep_time": 1830,
+          "crs_elapsed_time": 375,
+          "day_of_week": 5,
+          "destination": "LAX",
+          "distance": 2475,
+          "flight_date": "2026-07-18",
+          "month": 7,
+          "origin": "JFK"
+        }
+      },
+      "FlightReportInput": {
+        "properties": {
+          "airline": {
+            "type": "string",
+            "title": "Airline",
+            "description": "Operating/reporting carrier code, e.g. 'DL'.",
+            "examples": [
+              "DL"
+            ]
+          },
+          "origin": {
+            "type": "string",
+            "title": "Origin",
+            "description": "Origin airport IATA code, e.g. 'JFK'.",
+            "examples": [
+              "JFK"
+            ]
+          },
+          "destination": {
+            "type": "string",
+            "title": "Destination",
+            "description": "Destination airport IATA code, e.g. 'LAX'.",
+            "examples": [
+              "LAX"
+            ]
+          },
+          "month": {
+            "type": "integer",
+            "maximum": 12.0,
+            "minimum": 1.0,
+            "title": "Month",
+            "description": "Scheduled month (1-12)."
+          },
+          "day_of_week": {
+            "type": "integer",
+            "maximum": 7.0,
+            "minimum": 1.0,
+            "title": "Day Of Week",
+            "description": "Scheduled day of week (1=Mon ... 7=Sun)."
+          },
+          "crs_dep_time": {
+            "type": "integer",
+            "maximum": 2400.0,
+            "minimum": 0.0,
+            "title": "Crs Dep Time",
+            "description": "Scheduled departure time, HHMM format. 2400 is accepted as midnight."
+          },
+          "crs_arr_time": {
+            "type": "integer",
+            "maximum": 2400.0,
+            "minimum": 0.0,
+            "title": "Crs Arr Time",
+            "description": "Scheduled arrival time, HHMM format. 2400 is accepted as midnight."
+          },
+          "crs_elapsed_time": {
+            "type": "integer",
+            "exclusiveMinimum": 0.0,
+            "title": "Crs Elapsed Time",
+            "description": "Scheduled flight duration in minutes."
+          },
+          "distance": {
+            "type": "number",
+            "exclusiveMinimum": 0.0,
+            "title": "Distance",
+            "description": "Great-circle distance in miles."
+          },
+          "flight_date": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Flight Date"
+          },
+          "language": {
+            "type": "string",
+            "pattern": "^(en|es)$",
+            "title": "Language",
+            "default": "en"
+          },
+          "flight_number": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 12
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Flight Number"
+          }
+        },
+        "type": "object",
+        "required": [
+          "airline",
+          "origin",
+          "destination",
+          "month",
+          "day_of_week",
+          "crs_dep_time",
+          "crs_arr_time",
+          "crs_elapsed_time",
+          "distance"
+        ],
+        "title": "FlightReportInput",
+        "example": {
+          "airline": "DL",
+          "crs_arr_time": 2145,
+          "crs_dep_time": 1830,
+          "crs_elapsed_time": 375,
+          "day_of_week": 5,
+          "destination": "LAX",
+          "distance": 2475,
+          "flight_date": "2026-07-18",
+          "month": 7,
+          "origin": "JFK"
+        }
+      },
+      "HTTPValidationError": {
+        "properties": {
+          "detail": {
+            "items": {
+              "$ref": "#/components/schemas/ValidationError"
+            },
+            "type": "array",
+            "title": "Detail"
+          }
+        },
+        "type": "object",
+        "title": "HTTPValidationError"
+      },
+      "HealthResponse": {
+        "properties": {
+          "status": {
+            "type": "string",
+            "title": "Status"
+          },
+          "model_loaded": {
+            "type": "boolean",
+            "title": "Model Loaded"
+          }
+        },
+        "type": "object",
+        "required": [
+          "status",
+          "model_loaded"
+        ],
+        "title": "HealthResponse"
+      },
+      "LivenessResponse": {
+        "properties": {
+          "status": {
+            "type": "string",
+            "title": "Status"
+          },
+          "version": {
+            "type": "string",
+            "title": "Version"
+          }
+        },
+        "type": "object",
+        "required": [
+          "status",
+          "version"
+        ],
+        "title": "LivenessResponse"
+      },
+      "LocalContributionOutput": {
+        "properties": {
+          "feature": {
+            "type": "string",
+            "title": "Feature"
+          },
+          "contribution": {
+            "type": "number",
+            "title": "Contribution"
+          },
+          "direction": {
+            "type": "string",
+            "title": "Direction"
+          },
+          "magnitude": {
+            "type": "number",
+            "title": "Magnitude"
+          },
+          "active_category": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Active Category"
+          },
+          "raw_value": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "integer"
+              },
+              {
+                "type": "number"
+              },
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Raw Value"
+          }
+        },
+        "type": "object",
+        "required": [
+          "feature",
+          "contribution",
+          "direction",
+          "magnitude"
+        ],
+        "title": "LocalContributionOutput"
+      },
+      "ModelCardResponse": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "version": {
+            "type": "string",
+            "title": "Version"
+          },
+          "calibration_method": {
+            "type": "string",
+            "title": "Calibration Method"
+          },
+          "historical_encoding": {
+            "type": "string",
+            "title": "Historical Encoding"
+          },
+          "task": {
+            "type": "string",
+            "title": "Task"
+          },
+          "target": {
+            "type": "string",
+            "title": "Target"
+          },
+          "intended_use": {
+            "type": "string",
+            "title": "Intended Use"
+          },
+          "not_intended_use": {
+            "type": "string",
+            "title": "Not Intended Use"
+          },
+          "selected_model": {
+            "type": "string",
+            "title": "Selected Model"
+          },
+          "candidate_models": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Candidate Models"
+          },
+          "decision_threshold": {
+            "type": "number",
+            "title": "Decision Threshold"
+          },
+          "operational_policy": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Operational Policy"
+          },
+          "main_metrics": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Main Metrics"
+          },
+          "baseline_metrics": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Baseline Metrics"
+          },
+          "leakage_controls": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Leakage Controls"
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "version",
+          "calibration_method",
+          "historical_encoding",
+          "task",
+          "target",
+          "intended_use",
+          "not_intended_use",
+          "selected_model",
+          "candidate_models",
+          "decision_threshold",
+          "main_metrics",
+          "baseline_metrics",
+          "leakage_controls"
+        ],
+        "title": "ModelCardResponse"
+      },
+      "ModelInfoResponse": {
+        "properties": {
+          "model_name": {
+            "type": "string",
+            "title": "Model Name"
+          },
+          "trained_at_utc": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Trained At Utc"
+          },
+          "version": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Version"
+          },
+          "release_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Release Name"
+          },
+          "artifact_schema_version": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Artifact Schema Version"
+          },
+          "calibration_method": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Calibration Method"
+          },
+          "historical_encoding": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Historical Encoding"
+          },
+          "n_train_rows": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "N Train Rows"
+          },
+          "n_test_rows": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "N Test Rows"
+          },
+          "validation_rows": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Validation Rows"
+          },
+          "feature_columns": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Feature Columns"
+          },
+          "decision_threshold": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Decision Threshold"
+          },
+          "operational_policy": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Operational Policy"
+          },
+          "metrics": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Metrics"
+          }
+        },
+        "type": "object",
+        "required": [
+          "model_name",
+          "feature_columns",
+          "metrics"
+        ],
+        "title": "ModelInfoResponse"
+      },
+      "MonitoringSummaryResponse": {
+        "properties": {
+          "total_predictions": {
+            "type": "integer",
+            "title": "Total Predictions"
+          },
+          "average_probability": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Average Probability"
+          },
+          "high_risk_share": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "High Risk Share"
+          },
+          "moderate_or_high_risk_share": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Moderate Or High Risk Share"
+          },
+          "latest_prediction_utc": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Latest Prediction Utc"
+          },
+          "model_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Model Name"
+          },
+          "model_version": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Model Version"
+          }
+        },
+        "type": "object",
+        "required": [
+          "total_predictions"
+        ],
+        "title": "MonitoringSummaryResponse"
+      },
+      "PredictionOutput": {
+        "properties": {
+          "delay_probability": {
+            "type": "number",
+            "title": "Delay Probability",
+            "description": "Post-hoc calibrated estimate of a 15+ minute arrival delay."
+          },
+          "raw_model_score": {
+            "type": "number",
+            "title": "Raw Model Score",
+            "description": "Uncalibrated score emitted by the selected classifier."
+          },
+          "calibration_method": {
+            "type": "string",
+            "title": "Calibration Method",
+            "description": "Post-hoc calibration method applied to the raw score."
+          },
+          "risk_level": {
+            "type": "string",
+            "title": "Risk Level",
+            "description": "'low', 'moderate', or 'high'."
+          },
+          "decision_threshold": {
+            "type": "number",
+            "title": "Decision Threshold",
+            "description": "Probability threshold used for binary risk decisions."
+          },
+          "top_factors": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Top Factors",
+            "description": "Non-causal schedule-context signals for this flight."
+          },
+          "local_contributions": {
+            "items": {
+              "$ref": "#/components/schemas/LocalContributionOutput"
+            },
+            "type": "array",
+            "title": "Local Contributions",
+            "description": "Signed local pre-calibration log-odds contributions from the selected model."
+          },
+          "explanation_scale": {
+            "type": "string",
+            "title": "Explanation Scale",
+            "description": "Scale used by local model contributions.",
+            "default": "log_odds_before_calibration"
+          },
+          "review_recommended": {
+            "type": "boolean",
+            "title": "Review Recommended",
+            "description": "Whether the configured operational policy sends this flight to priority review.",
+            "default": false
+          },
+          "operational_action": {
+            "type": "string",
+            "title": "Operational Action",
+            "default": "standard_monitoring"
+          },
+          "policy_name": {
+            "type": "string",
+            "title": "Policy Name",
+            "default": "fixed_threshold"
+          },
+          "policy_probability_cutoff": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Policy Probability Cutoff"
+          },
+          "policy_capacity_fraction": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Policy Capacity Fraction"
+          }
+        },
+        "type": "object",
+        "required": [
+          "delay_probability",
+          "raw_model_score",
+          "calibration_method",
+          "risk_level",
+          "decision_threshold",
+          "top_factors"
+        ],
+        "title": "PredictionOutput"
+      },
+      "RankedPredictionOutput": {
+        "properties": {
+          "delay_probability": {
+            "type": "number",
+            "title": "Delay Probability",
+            "description": "Post-hoc calibrated estimate of a 15+ minute arrival delay."
+          },
+          "raw_model_score": {
+            "type": "number",
+            "title": "Raw Model Score",
+            "description": "Uncalibrated score emitted by the selected classifier."
+          },
+          "calibration_method": {
+            "type": "string",
+            "title": "Calibration Method",
+            "description": "Post-hoc calibration method applied to the raw score."
+          },
+          "risk_level": {
+            "type": "string",
+            "title": "Risk Level",
+            "description": "'low', 'moderate', or 'high'."
+          },
+          "decision_threshold": {
+            "type": "number",
+            "title": "Decision Threshold",
+            "description": "Probability threshold used for binary risk decisions."
+          },
+          "top_factors": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Top Factors",
+            "description": "Non-causal schedule-context signals for this flight."
+          },
+          "local_contributions": {
+            "items": {
+              "$ref": "#/components/schemas/LocalContributionOutput"
+            },
+            "type": "array",
+            "title": "Local Contributions",
+            "description": "Signed local pre-calibration log-odds contributions from the selected model."
+          },
+          "explanation_scale": {
+            "type": "string",
+            "title": "Explanation Scale",
+            "description": "Scale used by local model contributions.",
+            "default": "log_odds_before_calibration"
+          },
+          "review_recommended": {
+            "type": "boolean",
+            "title": "Review Recommended",
+            "description": "Whether the configured operational policy sends this flight to priority review.",
+            "default": false
+          },
+          "operational_action": {
+            "type": "string",
+            "title": "Operational Action",
+            "default": "standard_monitoring"
+          },
+          "policy_name": {
+            "type": "string",
+            "title": "Policy Name",
+            "default": "fixed_threshold"
+          },
+          "policy_probability_cutoff": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Policy Probability Cutoff"
+          },
+          "policy_capacity_fraction": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Policy Capacity Fraction"
+          },
+          "rank": {
+            "type": "integer",
+            "title": "Rank"
+          },
+          "risk_percentile": {
+            "type": "number",
+            "title": "Risk Percentile"
+          },
+          "risk_bucket": {
+            "type": "string",
+            "title": "Risk Bucket"
+          }
+        },
+        "type": "object",
+        "required": [
+          "delay_probability",
+          "raw_model_score",
+          "calibration_method",
+          "risk_level",
+          "decision_threshold",
+          "top_factors",
+          "rank",
+          "risk_percentile",
+          "risk_bucket"
+        ],
+        "title": "RankedPredictionOutput"
+      },
+      "RankingOutput": {
+        "properties": {
+          "flights_ranked": {
+            "type": "integer",
+            "title": "Flights Ranked"
+          },
+          "top_5pct_count": {
+            "type": "integer",
+            "title": "Top 5Pct Count"
+          },
+          "top_10pct_count": {
+            "type": "integer",
+            "title": "Top 10Pct Count"
+          },
+          "policy_capacity_count": {
+            "type": "integer",
+            "title": "Policy Capacity Count",
+            "default": 0
+          },
+          "policy_capacity_fraction": {
+            "type": "number",
+            "title": "Policy Capacity Fraction",
+            "default": 0.1
+          },
+          "policy_name": {
+            "type": "string",
+            "title": "Policy Name",
+            "default": "top_10pct_capacity"
+          },
+          "ranking_metric_note": {
+            "type": "string",
+            "title": "Ranking Metric Note"
+          },
+          "ranked_predictions": {
+            "items": {
+              "$ref": "#/components/schemas/RankedPredictionOutput"
+            },
+            "type": "array",
+            "title": "Ranked Predictions"
+          }
+        },
+        "type": "object",
+        "required": [
+          "flights_ranked",
+          "top_5pct_count",
+          "top_10pct_count",
+          "ranking_metric_note",
+          "ranked_predictions"
+        ],
+        "title": "RankingOutput"
+      },
+      "ReadinessResponse": {
+        "properties": {
+          "status": {
+            "type": "string",
+            "title": "Status"
+          },
+          "version": {
+            "type": "string",
+            "title": "Version"
+          },
+          "checks": {
+            "additionalProperties": {
+              "type": "boolean"
+            },
+            "type": "object",
+            "title": "Checks"
+          },
+          "model": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Model"
+          }
+        },
+        "type": "object",
+        "required": [
+          "status",
+          "version",
+          "checks"
+        ],
+        "title": "ReadinessResponse"
+      },
+      "RegionCatalogResponse": {
+        "properties": {
+          "region": {
+            "type": "string",
+            "title": "Region"
+          },
+          "airports": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "type": "array",
+            "title": "Airports"
+          },
+          "airlines": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "type": "array",
+            "title": "Airlines"
+          },
+          "context_summary": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Context Summary"
+          }
+        },
+        "type": "object",
+        "required": [
+          "region",
+          "airports",
+          "airlines"
+        ],
+        "title": "RegionCatalogResponse"
+      },
+      "ScheduleReportInput": {
+        "properties": {
+          "flights": {
+            "items": {
+              "$ref": "#/components/schemas/FlightInput"
+            },
+            "type": "array",
+            "maxItems": 500,
+            "minItems": 1,
+            "title": "Flights"
+          },
+          "language": {
+            "type": "string",
+            "pattern": "^(en|es)$",
+            "title": "Language",
+            "default": "en"
+          }
+        },
+        "type": "object",
+        "required": [
+          "flights"
+        ],
+        "title": "ScheduleReportInput"
+      },
+      "ValidationError": {
+        "properties": {
+          "loc": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer"
+                }
+              ]
+            },
+            "type": "array",
+            "title": "Location"
+          },
+          "msg": {
+            "type": "string",
+            "title": "Message"
+          },
+          "type": {
+            "type": "string",
+            "title": "Error Type"
+          },
+          "input": {
+            "title": "Input"
+          },
+          "ctx": {
+            "type": "object",
+            "title": "Context"
+          }
+        },
+        "type": "object",
+        "required": [
+          "loc",
+          "msg",
+          "type"
+        ],
+        "title": "ValidationError"
+      }
+    }
+  }
+}

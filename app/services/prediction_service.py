@@ -2,8 +2,11 @@
 from __future__ import annotations
 
 from functools import lru_cache
+from pathlib import Path
 
-from src.config import DEFAULT_MODEL_PATH
+import numpy as np
+
+from src.config import DEFAULT_MODEL_PATH, REPORTS_DIR, SCHEDULE_CONTEXT_PATH
 from src.features.build_features import add_schedule_features
 from src.models.predict import PredictionInput, predict_batch, predict_single, rank_batch
 from src.models.registry import FlightRiskArtifact
@@ -32,13 +35,45 @@ def is_model_available() -> bool:
     try:
         get_artifact()
         return True
-    except FileNotFoundError:
+    except (FileNotFoundError, RuntimeError, ValueError):
         return False
+
+
+def readiness_status() -> dict:
+    """Return deployment readiness without exposing internal paths."""
+    checks = {
+        "model_artifact": Path(DEFAULT_MODEL_PATH).exists(),
+        "schedule_context": Path(SCHEDULE_CONTEXT_PATH).exists(),
+        "metrics_report": (REPORTS_DIR / "metrics.json").exists(),
+        "scale_refit_report": (REPORTS_DIR / "scale_refit.json").exists(),
+    }
+    model: dict = {}
+    try:
+        artifact = get_artifact()
+        model = {
+            "name": artifact.metadata.get("model_name", "unknown"),
+            "version": artifact.metadata.get("version"),
+            "artifact_schema_version": artifact.metadata.get("artifact_schema_version"),
+            "trained_rows": artifact.metadata.get("n_train_rows"),
+        }
+        checks["artifact_load"] = True
+        checks["release_version_match"] = artifact.metadata.get("version") == APP_VERSION
+        checks["schema_v7_or_newer"] = int(artifact.metadata.get("artifact_schema_version", 0)) >= 7
+    except Exception:
+        checks["artifact_load"] = False
+        checks["release_version_match"] = False
+        checks["schema_v7_or_newer"] = False
+    return {
+        "status": "ready" if all(checks.values()) else "degraded",
+        "version": APP_VERSION,
+        "checks": checks,
+        "model": model,
+    }
 
 
 def model_info() -> dict:
     artifact = get_artifact()
-    return {**artifact.metadata, 'metrics': artifact.metrics, 'decision_threshold': artifact.decision_threshold}
+    return {**artifact.metadata, 'metrics': artifact.metrics, 'decision_threshold': artifact.decision_threshold, 'operational_policy': artifact.operational_policy}
 
 
 def model_card() -> dict:
@@ -46,7 +81,7 @@ def model_card() -> dict:
     metrics = artifact.metrics or {}
     metadata = artifact.metadata or {}
     return {
-        'name': 'FlightRisk',
+        'name': 'Flight Delay Risk',
         'version': APP_VERSION,
         'task': 'Binary classification: arrival delay of 15+ minutes',
         'target': 'ArrDel15',
@@ -55,6 +90,7 @@ def model_card() -> dict:
         'selected_model': metadata.get('model_name', 'unknown'),
         'candidate_models': metadata.get('candidate_models', []),
         'decision_threshold': artifact.decision_threshold,
+        'operational_policy': artifact.operational_policy,
         'calibration_method': metadata.get('calibration_method', 'identity'),
         'historical_encoding': metadata.get('historical_encoding', 'train-fitted aggregates'),
         'main_metrics': metrics.get('main_model', {}),
@@ -62,8 +98,9 @@ def model_card() -> dict:
         'leakage_controls': [
             'Only scheduled/pre-flight fields are used at inference time.',
             'Post-flight delay, taxi, wheels, actual-time and cancellation columns are forbidden as features.',
-            'Training-row historical rates use targets from strictly earlier FlightDate values only.',
-            'Validation, test and inference use smoothed maps fitted on the model-training period, with explicit unseen fallbacks.',
+            'Training-row historical and recent-form rates use targets from strictly earlier FlightDate values only.',
+            'Scheduled-congestion features are target-free and built from published timetable density.',
+            'Validation, test and inference use smoothed maps fitted on permitted prior periods, with explicit unseen fallbacks.',
             'Model selection and threshold tuning are performed on validation data, then reported on a held-out test split.',
             'The European layer is a transfer layer over the same model and should be treated as experimental.',
         ],
@@ -197,11 +234,16 @@ def rank_flights_batch(payloads: list[PredictionInput], threshold: float | None 
     ranked = rank_batch(artifact, payloads, effective_threshold)
     for result in ranked:
         result.setdefault("top_factors", [])
+    policy = artifact.operational_policy or {}
+    capacity_fraction = float(policy.get("capacity_fraction", 0.10))
     return {
         "flights_ranked": len(ranked),
         "top_5pct_count": max(1, round(len(ranked) * 0.05)) if ranked else 0,
         "top_10pct_count": max(1, round(len(ranked) * 0.10)) if ranked else 0,
-        "ranking_metric_note": "Sorted by predicted ArrDel15 probability; product evaluation should prioritize Precision@TopK and Lift@TopK.",
+        "policy_capacity_count": max(1, int(np.ceil(len(ranked) * capacity_fraction))) if ranked else 0,
+        "policy_capacity_fraction": capacity_fraction,
+        "policy_name": str(policy.get("policy_name", "top_10pct_capacity")),
+        "ranking_metric_note": "Sorted by calibrated ArrDel15 probability; the operational policy enforces a declared review-capacity budget.",
         "ranked_predictions": ranked,
     }
 

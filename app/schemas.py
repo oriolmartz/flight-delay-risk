@@ -16,6 +16,7 @@ class FlightInput(BaseModel):
     crs_arr_time: int = Field(..., ge=0, le=2400, description="Scheduled arrival time, HHMM format. 2400 is accepted as midnight.")
     crs_elapsed_time: int = Field(..., gt=0, description="Scheduled flight duration in minutes.")
     distance: float = Field(..., gt=0, description="Great-circle distance in miles.")
+    flight_date: str | None = Field(default=None, description="Optional ISO scheduled date for exact calendar features.")
 
     @field_validator("crs_dep_time", "crs_arr_time")
     @classmethod
@@ -44,6 +45,7 @@ class FlightInput(BaseModel):
                 "crs_arr_time": 2145,
                 "crs_elapsed_time": 375,
                 "distance": 2475,
+                "flight_date": "2026-07-18",
             }
         }
     }
@@ -125,8 +127,13 @@ class PredictionOutput(BaseModel):
     risk_level: str = Field(..., description="'low', 'moderate', or 'high'.")
     decision_threshold: float = Field(..., description="Probability threshold used for binary risk decisions.")
     top_factors: list[str] = Field(..., description="Non-causal schedule-context signals for this flight.")
-    local_contributions: list[LocalContributionOutput] = Field(default_factory=list, description="Signed local log-odds contributions from the selected linear model.")
+    local_contributions: list[LocalContributionOutput] = Field(default_factory=list, description="Signed local pre-calibration log-odds contributions from the selected model.")
     explanation_scale: str = Field(default="log_odds_before_calibration", description="Scale used by local model contributions.")
+    review_recommended: bool = Field(default=False, description="Whether the configured operational policy sends this flight to priority review.")
+    operational_action: str = Field(default="standard_monitoring")
+    policy_name: str = Field(default="fixed_threshold")
+    policy_probability_cutoff: float | None = None
+    policy_capacity_fraction: float | None = None
 
 
 class EuropeanPredictionOutput(PredictionOutput):
@@ -155,8 +162,23 @@ class RankingOutput(BaseModel):
     flights_ranked: int
     top_5pct_count: int
     top_10pct_count: int
+    policy_capacity_count: int = 0
+    policy_capacity_fraction: float = 0.10
+    policy_name: str = "top_10pct_capacity"
     ranking_metric_note: str
     ranked_predictions: list[RankedPredictionOutput]
+
+
+class LivenessResponse(BaseModel):
+    status: str
+    version: str
+
+
+class ReadinessResponse(BaseModel):
+    status: str
+    version: str
+    checks: dict[str, bool]
+    model: dict = Field(default_factory=dict)
 
 
 class HealthResponse(BaseModel):
@@ -177,6 +199,7 @@ class ModelInfoResponse(BaseModel):
     validation_rows: int | None = None
     feature_columns: list[str]
     decision_threshold: float | None = None
+    operational_policy: dict = Field(default_factory=dict)
     metrics: dict
 
 
@@ -192,6 +215,7 @@ class ModelCardResponse(BaseModel):
     selected_model: str
     candidate_models: list[str]
     decision_threshold: float
+    operational_policy: dict = Field(default_factory=dict)
     main_metrics: dict
     baseline_metrics: dict
     leakage_controls: list[str]

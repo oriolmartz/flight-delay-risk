@@ -9,8 +9,17 @@ services:
       - ./models:/app/models
       - ./reports:/app/reports
       - ./monitoring:/app/monitoring
+      - ./data/processed:/app/data/processed:ro
     environment:
-      - FLIGHTRISK_ENABLE_MLFLOW=0
+      FLIGHTRISK_ENABLE_MLFLOW: "0"
+      FLIGHTRISK_MODEL_PATH: /app/models/flightrisk_model.joblib
+      FLIGHTRISK_SCHEDULE_CONTEXT_PATH: /app/data/processed/schedule_context.joblib
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/ready', timeout=3)"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
 
   dashboard:
     build:
@@ -19,10 +28,14 @@ services:
     ports:
       - "8501:8501"
     depends_on:
-      - api
+      api:
+        condition: service_healthy
     volumes:
       - ./models:/app/models
       - ./reports:/app/reports
       - ./monitoring:/app/monitoring
+      - ./data/processed:/app/data/processed:ro
     environment:
-      - FLIGHTRISK_ENABLE_MLFLOW=0
+      FLIGHTRISK_ENABLE_MLFLOW: "0"
+      FLIGHTRISK_MODEL_PATH: /app/models/flightrisk_model.joblib
+      FLIGHTRISK_SCHEDULE_CONTEXT_PATH: /app/data/processed/schedule_context.joblib
