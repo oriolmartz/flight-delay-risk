@@ -8,7 +8,11 @@ from src.data.clean import clean_flights
 from src.data.load_data import normalize_columns
 from src.data.split import split_train_test
 from src.models.evaluate import evaluate_model
-from src.models.train import prepare_eval_frame, train_models
+from src.models.train import (
+    candidate_keys_for_profile,
+    prepare_eval_frame,
+    train_models,
+)
 
 
 def _load_sample() -> pd.DataFrame:
@@ -62,12 +66,15 @@ class TestTrainingPipeline:
         assert (proba >= 0).all() and (proba <= 1).all()
 
 
-def test_gradient_boosting_is_opt_in():
-    df = _load_sample()
-    train_df, _ = split_train_test(df, test_size=0.25)
 
-    models, _, _, _ = train_models(train_df.copy())
-    assert "gradient_boosting" not in models
-
-    models_with_gb, _, _, _ = train_models(train_df.copy(), include_gradient_boosting=True)
-    assert "gradient_boosting" in models_with_gb
+def test_public_full_profile_stays_core_only():
+    assert candidate_keys_for_profile("full") == [
+        "baseline",
+        "random_forest",
+        "extra_trees",
+    ]
+    assert candidate_keys_for_profile("full", include_gradient_boosting=True) == [
+        "baseline",
+        "random_forest",
+        "extra_trees",
+    ]

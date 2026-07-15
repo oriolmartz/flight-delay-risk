@@ -30,12 +30,20 @@ def ranking_metrics(
     y_true: pd.Series | np.ndarray,
     y_proba: np.ndarray,
     fractions: tuple[float, ...] = (0.05, 0.10, 0.20),
+    *,
+    tie_breaker: np.ndarray | None = None,
 ) -> dict[str, Any]:
     y = np.asarray(y_true).astype(int)
     p = np.asarray(y_proba).astype(float)
     n = len(y)
     baseline_rate = float(np.mean(y)) if n else 0.0
-    order = np.argsort(-p)
+    if tie_breaker is None:
+        secondary = np.arange(n, 0, -1, dtype=float)
+    else:
+        secondary = np.asarray(tie_breaker, dtype=float).reshape(-1)
+        if len(secondary) != n:
+            raise ValueError("tie_breaker must match y_proba")
+    order = np.lexsort((-secondary, -p))
     out: dict[str, Any] = {"baseline_positive_rate": baseline_rate}
     for frac in fractions:
         k = max(1, int(round(n * frac))) if n else 0
@@ -55,6 +63,8 @@ def compute_metrics(
     y_true: pd.Series | np.ndarray,
     y_pred: np.ndarray,
     y_proba: np.ndarray,
+    *,
+    ranking_tie_breaker: np.ndarray | None = None,
 ) -> dict[str, Any]:
     metrics = {
         "roc_auc": float(roc_auc_score(y_true, y_proba)),
@@ -66,29 +76,43 @@ def compute_metrics(
         "positive_rate_predicted": float(np.mean(y_pred)),
         "n_samples": int(len(y_true)),
     }
-    metrics.update(ranking_metrics(y_true, y_proba))
+    metrics.update(ranking_metrics(y_true, y_proba, tie_breaker=ranking_tie_breaker))
     metrics.update(probability_metrics(y_true, y_proba))
     return metrics
 
 
 def get_feature_names(pipeline) -> list[str]:
-    preprocessing = pipeline.named_steps["preprocessing"]
+    preprocessing = pipeline.named_steps.get("preprocessing")
+    if preprocessing is None:
+        return [*CATEGORICAL_FEATURES, *NUMERIC_FEATURES]
+    if hasattr(preprocessing, "get_feature_names_out"):
+        try:
+            return [str(value) for value in preprocessing.get_feature_names_out()]
+        except Exception:
+            pass
     names: list[str] = []
-    if "cat" in preprocessing.named_transformers_:
-        cat_encoder = preprocessing.named_transformers_["cat"]
-        names.extend(list(cat_encoder.get_feature_names_out(CATEGORICAL_FEATURES)))
-    if "num" in preprocessing.named_transformers_:
-        names.extend(list(NUMERIC_FEATURES))
-    return names
+    if hasattr(preprocessing, "named_transformers_"):
+        if "cat" in preprocessing.named_transformers_:
+            cat_encoder = preprocessing.named_transformers_["cat"]
+            if hasattr(cat_encoder, "get_feature_names_out"):
+                try:
+                    names.extend(list(cat_encoder.get_feature_names_out(CATEGORICAL_FEATURES)))
+                except Exception:
+                    names.extend(CATEGORICAL_FEATURES)
+        if "num" in preprocessing.named_transformers_:
+            names.extend(list(NUMERIC_FEATURES))
+    return names or [*CATEGORICAL_FEATURES, *NUMERIC_FEATURES]
 
 
 def get_feature_importance(pipeline, model_name: str) -> pd.DataFrame | None:
-    model = pipeline.named_steps["model"]
+    model = pipeline.named_steps.get("model")
+    if model is None:
+        return None
     feature_names = get_feature_names(pipeline)
     if hasattr(model, "feature_importances_"):
-        importances = model.feature_importances_
+        importances = np.asarray(model.feature_importances_).ravel()
     elif hasattr(model, "coef_"):
-        importances = np.abs(model.coef_).ravel()
+        importances = np.abs(np.asarray(model.coef_)).ravel()
     else:
         logger.warning("Model %s has no feature_importances_ or coef_; skipping.", model_name)
         return None
@@ -105,7 +129,6 @@ def get_feature_importance(pipeline, model_name: str) -> pd.DataFrame | None:
         .reset_index(drop=True)
     )
 
-
 def evaluate_probabilities(
     y_true: pd.Series | np.ndarray,
     y_proba: np.ndarray,
@@ -114,11 +137,14 @@ def evaluate_probabilities(
     threshold: float = 0.5,
     pipeline=None,
     bootstrap_samples: int = 0,
+    ranking_tie_breaker: np.ndarray | None = None,
 ) -> dict[str, Any]:
     """Evaluate explicit probability outputs, calibrated or raw."""
     probabilities = np.asarray(y_proba, dtype=float)
     y_pred = (probabilities >= threshold).astype(int)
-    metrics = compute_metrics(y_true, y_pred, probabilities)
+    metrics = compute_metrics(
+        y_true, y_pred, probabilities, ranking_tie_breaker=ranking_tie_breaker
+    )
     confidence_intervals = None
     if bootstrap_samples and bootstrap_samples > 0:
         confidence_intervals = compute_metric_confidence_intervals(
@@ -165,6 +191,7 @@ def evaluate_model(
         threshold=threshold,
         pipeline=pipeline,
         bootstrap_samples=bootstrap_samples,
+        ranking_tie_breaker=raw_proba,
     )
     result["raw_probability_metrics"] = probability_metrics(y_test, raw_proba)
     return result
