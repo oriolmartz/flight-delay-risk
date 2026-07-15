@@ -2,466 +2,275 @@
 
 # Flight Delay Risk
 
-### Pre-departure flight-delay risk workbench · English / Español
+### Pre-departure decision support for limited airline operations capacity
 
-Built by **Oriol Martínez**
+**Prioritize the flights that deserve attention first — using calibrated delay risk, historical evidence and temporal validation.**
 
-Flight Delay Risk ranks scheduled flights by estimated arrival-delay exposure, validates every uploaded row, explains the selected model, and exposes the temporal evidence behind the public artifact.
+[English](README.md) · [Español](README_ES.md) · [Dataset](https://www.transtats.bts.gov/DL_SelectFields.aspx?gnoyr_VQ=FGJ) · [API contract](docs/openapi.json)
 
-`English / Español` · `FastAPI` · `Streamlit` · `scikit-learn` · `BTS 2024` · `temporal validation` · `calibration` · `PDF reports` · `monitoring` · `Docker`
+![Flight Delay Risk dashboard](docs/assets/readme_hero.png)
 
-![Flight Delay Risk product preview](docs/assets/product_preview.svg)
-
-**[English](README.md) · [Español](README_ES.md)**
+`Python` · `scikit-learn` · `PyTorch` · `XGBoost` · `LightGBM` · `FastAPI` · `Streamlit` · `Docker`
 
 </div>
 
-> **Core idea.** Most flight-delay demos return a score. Flight Delay Risk turns that score into a review workflow: enter or upload a schedule, rank risk, inspect evidence, verify temporal stability and export a bilingual brief.
+## The business problem
 
-## Public release status
+Airline operations teams cannot investigate every scheduled departure with the same level of attention. Review capacity is limited, while delay risk changes across routes, carriers, airports, time windows and operating periods.
 
-**Flight Delay Risk v1.5.0 — Self-Explaining Product UI Release** is the stable portfolio release. It packages a frozen Extra Trees family refitted on a deterministic 250,000-flight sample, an untouched 50,453-flight final test, calibrated top-10% review policy, API/UI, OpenAPI contract, Docker health checks and production smoke evidence.
+Flight Delay Risk is designed for a simple operational question:
 
-A hosted URL is not embedded in the archive. The repository is deployment-ready, but the committed smoke proves packaging and runtime contracts rather than external uptime.
+> **Which scheduled flights should an operations analyst review first before departure?**
 
-The v1.5 interface adopts a very-light-blue aviation palette, a more compact triage banner, qualitative route-support labels, prevalence-aware temporal charts and clearer validation naming. The deployed statistical artifact remains the scaled Extra Trees refit from v1.4; v1.5 changes the public model scope and product surface without reselecting the final model on test evidence.
+The system does not treat a probability as a decision. It separates:
 
-## Self-explaining interface
-
-The dashboard is designed to be understood without reading this README. Every visible metric includes a one-line interpretation, technical acronyms are translated into product language, and raw diagnostics remain available under **Advanced** expanders.
-
-## Product tour
-
-### 1. Analyze flight
-
-Enter natural schedule fields:
-
-- carrier and optional flight number;
-- origin and destination;
-- flight date;
-- scheduled departure and arrival;
-- scheduled duration and distance.
-
-The application derives all model features and returns:
-
-- calibrated probability of a 15+ minute arrival delay;
-- raw model score for traceability;
-- historical route rate and exact support;
-- relative exposure against the route cohort;
-- route and carrier-route coverage;
-- signed local model contributions;
-- bilingual PDF risk brief.
-
-The local explanation is native to the selected estimator. Linear models use exact feature-value × coefficient contributions; tree ensembles use decision-path probability deltas mapped to the ensemble's pre-calibration log-odds change. They explain model behaviour, not real-world causes.
-
-### 2. Rank schedule
-
-Upload the natural CSV template or load the bundled sample:
-
-```csv
-flight_number,airline,origin,destination,flight_date,scheduled_departure,scheduled_arrival,scheduled_duration_minutes,distance_miles
-418,DL,JFK,LAX,2026-07-18,18:30,21:45,375,2475
+```text
+scheduled flight data
+→ calibrated delay risk
+→ review-capacity policy
+→ Priority / Watch / Routine queue
 ```
 
-Flight Delay Risk then:
+The current policy prioritizes the highest-risk **10% of an uploaded schedule**. This is a triage tool, not an automatic claim that a flight will be delayed.
 
-1. normalizes supported column aliases;
-2. validates schema and values row by row;
-3. excludes malformed rows without discarding the valid schedule;
-4. reports unseen and low-support routes before ranking;
-5. transforms the valid batch once;
-6. produces calibrated probabilities and historical context;
-7. ranks flights into `Priority`, `Watch` and `Routine` queues;
-8. exports CSV and bilingual PDF briefs.
+| Product question | Flight Delay Risk response |
+|---|---|
+| **Who is it designed for?** | Airline operations, network-control or disruption-management analysts. |
+| **What decision does it support?** | Which flights deserve limited pre-departure review capacity first. |
+| **What is predicted?** | Probability of arriving at least 15 minutes late. |
+| **What happens when evidence is weak?** | The UI exposes low-support or unseen routes instead of hiding uncertainty. |
+| **What does it not use?** | Live weather, aircraft rotation, crew, ATC or post-departure information. |
+
+## Operational result
+
+The deployed Extra Trees artifact was refitted using **168,519 flights**, calibrated on **31,028 later flights**, and evaluated on an untouched **50,453-flight** October–December 2024 test period.
+
+| Outcome | Result | Plain-language meaning |
+|---|---:|---|
+| **Priority-list lift** | **1.64×** | The top 10% contains about 64% more delayed flights than random selection. |
+| **Priority precision** | **28.0%** | Roughly 28 of every 100 prioritized flights were delayed. |
+| **Ranking quality (PR-AUC)** | **0.239** | The model ranks delayed flights above non-delayed flights better than the 16–17% test prevalence baseline. |
+| **Calibration error (ECE)** | **0.013** | Predicted probabilities closely matched observed frequencies on the final test. |
+
+These are moderate, honest results for a schedule-only problem. The project preserves negative results, temporal variation and drift rather than presenting the best validation number as guaranteed future performance.
+
+## Product workflow
+
+### 1. Analyze one scheduled flight
+
+Enter carrier, route, date, scheduled times, duration and distance. The application returns:
+
+- calibrated probability of a 15+ minute arrival delay;
+- risk compared with the historical route baseline;
+- number of prior flights supporting that reference;
+- the factors that raised or reduced the model estimate;
+- a bilingual PDF brief.
+
+
+### 2. Rank a schedule under limited capacity
+
+Upload the included CSV template or a valid schedule. The system:
+
+1. validates every row;
+2. preserves valid rows when others fail;
+3. flags unseen and low-support routes;
+4. ranks flights by calibrated risk;
+5. assigns `Priority`, `Watch` and `Routine` queues;
+6. exports CSV and bilingual PDF reports.
 
 Priority tiers are relative to the uploaded schedule. Calibrated probability remains the model's absolute estimate.
 
-### 3. Validation
+### 3. Inspect temporal evidence
 
-The validation surface reads committed reports and exposes:
+The dashboard explains how model choice, ranking quality and calibration changed across later time windows. No model family dominated every fold.
 
-- held-out PR-AUC and Lift@10%;
-- Brier score and expected calibration error;
-- reliability curve on the untouched test period;
-- three expanding temporal folds;
-- fold-level model and calibration selection;
-- a seven-model benchmark spanning linear, tree, boosting and neural models;
-- the ordered historical-encoding contract.
 
-### 4. Model & operations
+### 4. Monitor deployment health
 
-The operations surface exposes:
+The repository includes:
 
-- artifact and feature lineage;
-- training, validation and test periods;
-- live demo prediction counts;
-- average logged probability;
-- PSI drift status;
-- measured local inference latency;
-- model card, leakage contract and API surface;
-- Docker and public-deployment instructions.
+- `/live` and `/ready` endpoints;
+- model and release metadata;
+- request IDs and processing-time headers;
+- OpenAPI export;
+- prediction logging and lightweight PSI drift monitoring;
+- Docker, Compose and Render configurations;
+- a production smoke test covering prediction and ranking contracts.
 
----
+## Why this is a decision system, not another classifier demo
 
-## Honest result
+A high score is not automatically actionable. Flight Delay Risk makes the policy layer explicit:
 
-### v1.4 scaled refit
+- **Prediction:** How likely is a 15+ minute arrival delay?
+- **Evidence:** How much historical support exists for the route and cohort?
+- **Constraint:** Only a limited fraction of flights can be reviewed.
+- **Decision:** Which flights enter the priority queue?
+- **Guardrail:** Is calibration or feature drift deteriorating?
 
-The model family and 10% review-capacity policy were frozen before this layer. The release sample grows from 30,000 to **250,000 flights** across all twelve months; 168,519 rows are used for finalist refit, 31,028 for calibration and **50,453 flights** remain in the untouched October 19–December 31 test.
+This separation lets the same model support different operational capacities or cost assumptions without pretending that the model itself knows the business decision.
 
-| Metric | v1.5.0 artifact |
-|---|---:|
-| ROC-AUC | 0.6179 |
-| PR-AUC | 0.2386 |
-| Precision@Top10% | 0.2801 |
-| Lift@Top10% | 1.639× |
-| Brier score | 0.1385 |
-| Expected calibration error | 0.0130 |
+## Data
 
-The exact top-10% policy reviews 5,046 flights with precision `0.2800`, recall `0.1639` and lift `1.6384×`. Weekly block intervals on the larger test give PR-AUC `[0.2036, 0.2813]` and Lift@10% `[1.5096, 1.7510]` using 100 resamples. Paired intervals against the SGD numeric logistic baseline exclude zero for PR-AUC, ROC-AUC, Brier and Lift.
+**Official source:** U.S. Department of Transportation, Bureau of Transportation Statistics — Reporting Carrier On-Time Performance.
 
-The scale-up required an engineering change, not a model-family reselection: Extra Trees now uses compact ordinal `float32` preprocessing, while the baseline is explicitly identified as SGD logistic. A 500,000-row build was attempted but the recency-aware historical encoder exceeded the reproducible resource budget; v1.4 stops at 250,000 rather than claiming unverified scale.
+- [Download individual flight records from BTS TranStats](https://www.transtats.bts.gov/DL_SelectFields.aspx?gnoyr_VQ=FGJ)
+- [Dataset overview and field coverage](https://www.transtats.bts.gov/DatabaseInfo.asp?QO_VQ=EFD)
+- [BTS airline on-time statistics](https://www.transtats.bts.gov/ontime/)
 
-See [`docs/SCALE_REFIT_AND_DEPLOYMENT.md`](docs/SCALE_REFIT_AND_DEPLOYMENT.md).
+The canonical 2024 dataset contains:
 
-### Seven-model selection benchmark
+- **7,079,081** source rows from 12 monthly files;
+- **6,965,267** cleaned supervised flight records;
+- full coverage from January 1 to December 31, including all 366 days;
+- a target defined as `ArrDel15 = 1` when arrival is at least 15 minutes late.
 
-The public model zoo is intentionally compact: one interpretable baseline, two bagging ensembles, two modern boosting libraries and two neural tabular models. Every candidate sees the same chronological training and selection blocks with family-appropriate preprocessing.
+Raw BTS files and the processed parquet are intentionally excluded from Git. The committed data manifest records source hashes, cleaning totals, schema, coverage and the processed-dataset fingerprint.
 
-| Candidate | ROC-AUC | PR-AUC | Lift@10% |
-|---|---:|---:|---:|
-| **Extra Trees** | **0.6685** | **0.3728** | **1.784×** |
-| Random Forest | 0.6633 | 0.3637 | 1.744× |
-| Logistic Regression | 0.6486 | 0.3586 | 1.774× |
-| LightGBM | 0.6573 | 0.3577 | 1.656× |
-| XGBoost | 0.6566 | 0.3524 | 1.665× |
-| MLP with embeddings | 0.6481 | 0.3442 | 1.656× |
-| FT-Transformer | 0.6416 | 0.3330 | 1.439× |
+See [`docs/DATA.md`](docs/DATA.md).
 
-Extra Trees won the declared PR-AUC selection rule. Random Forest remains as the recognisable bagging reference; XGBoost and LightGBM cover modern boosting; the MLP and FT-Transformer remain first-class neural candidates. Elastic Net, sklearn HistGradientBoosting and CatBoost were removed from the public scope to reduce redundant comparisons.
+## Model comparison
 
-### Feature-family ablation
+The public model zoo compares recognizable ML paradigms under the same chronological protocol:
 
-The ablation retrains the same Extra Trees configuration on the same chronological blocks. Only the named feature scope changes.
+| Paradigm | Candidates |
+|---|---|
+| Interpretable baseline | Logistic Regression |
+| Bagging | Random Forest, Extra Trees |
+| Gradient boosting | XGBoost, LightGBM |
+| Neural tabular | MLP with embeddings, FT-Transformer |
 
-| Scope | Features | PR-AUC | Δ PR-AUC | Lift@10% | Δ Lift |
-|---|---:|---:|---:|---:|---:|
-| Full system | 112 | **0.3728** | — | 1.784× | — |
-| Without core schedule | 80 | 0.3385 | -0.0342 | 1.606× | -0.177× |
-| Without calendar | 96 | 0.3667 | -0.0061 | 1.764× | -0.020× |
-| Without historical rates | 96 | 0.3686 | -0.0041 | 1.705× | -0.079× |
-| Without historical support | 92 | 0.3679 | -0.0048 | 1.803× | +0.020× |
-| Without recency | 96 | 0.3704 | -0.0023 | 1.833× | +0.049× |
-| Without scheduled congestion | 100 | 0.3689 | -0.0038 | 1.754× | -0.030× |
-| Core only | 32 | 0.3602 | -0.0125 | 1.725× | -0.059× |
+Extra Trees won the declared selection rule. PyTorch is used for the two neural candidates; the deployed model is the scikit-learn Extra Trees ensemble.
 
-The full feature system wins the declared PR-AUC objective. Support and recency show a real metric trade-off: removing them lowers PR-AUC but raises point Lift@10%. The report keeps both outcomes instead of labelling every new family a universal improvement.
+<details>
+<summary><strong>Selection benchmark</strong></summary>
 
-### Calibration impact
-
-Isotonic calibration was selected on a later holdout inside the calibration block and then refitted on all 3,701 calibration rows.
-
-| Metric | Raw score | Calibrated probability |
+| Candidate | PR-AUC | Lift@10% |
 |---|---:|---:|
-| Brier score | 0.2266 | **0.1409** |
-| Expected calibration error | 0.2922 | **0.0304** |
-| Log loss | 0.6448 | **0.4576** |
-| Mean prediction | 0.4629 | **0.1546** |
-| Observed positive rate | 0.1707 | 0.1707 |
+| **Extra Trees** | **0.3728** | **1.784×** |
+| Random Forest | 0.3637 | 1.744× |
+| Logistic Regression | 0.3586 | 1.774× |
+| LightGBM | 0.3577 | 1.656× |
+| XGBoost | 0.3524 | 1.665× |
+| MLP with embeddings | 0.3442 | 1.656× |
+| FT-Transformer | 0.3330 | 1.439× |
 
-Candidate calibrators are fitted on September 5–26, selected on September 27–October 18, and the winning method is refitted on the complete calibration block. The test period remains untouched.
+The model was selected on a chronological selection block, not on the final test.
 
-### Temporal validation
+</details>
 
-The committed three-fold expanding backtest repeats the seven public candidates, fold-local historical feature construction, model selection, calibration-method selection and evaluation.
+## Validation design
 
-| Metric | Mean | Std | Range |
-|---|---:|---:|---:|
-| ROC-AUC | 0.6163 | 0.0537 | 0.5821–0.6783 |
-| PR-AUC | 0.2835 | 0.1137 | 0.1942–0.4115 |
-| Precision@Top10% | 0.3402 | 0.1192 | 0.2614–0.4774 |
-| Lift@Top10% | 1.717× | 0.1321 | 1.577–1.840× |
-| Brier score | 0.1523 | 0.0237 | 0.1331–0.1787 |
-| ECE | 0.0379 | 0.0310 | 0.0135–0.0727 |
+The release follows a strict chronological contract:
 
 ```text
-MLP with embeddings selected: 1 / 3 folds
-FT-Transformer selected:       1 / 3 folds
-Extra Trees selected:          1 / 3 folds
-Sigmoid calibration:           2 / 3 folds
-Isotonic calibration:          1 / 3 folds
+model training
+→ model selection
+→ calibration and policy fitting
+→ untouched final test
 ```
 
-The absence of a universal winner is itself a result: representation and model-family performance vary materially across time.
+Historical target-derived features use only earlier dates. Same-day labels are never used to construct features for another row on that date.
 
-See:
+Explicitly blocked post-flight fields include actual delays, actual arrival/departure times, taxi times, cancellation, diversion and delay-cause columns.
 
-- [`reports/feature_ablation.md`](reports/feature_ablation.md)
+<details>
+<summary><strong>Technical evidence and reports</strong></summary>
+
 - [`reports/candidate_benchmark.md`](reports/candidate_benchmark.md)
 - [`reports/temporal_backtest.md`](reports/temporal_backtest.md)
-- [`reports/calibration_report.md`](reports/calibration_report.md)
+- [`reports/feature_ablation.md`](reports/feature_ablation.md)
+- [`reports/feature_stability.md`](reports/feature_stability.md)
+- [`reports/operational_policy.md`](reports/operational_policy.md)
+- [`reports/robustness_audit.md`](reports/robustness_audit.md)
+- [`reports/drift_analysis.md`](reports/drift_analysis.md)
+- [`docs/MODEL_CARD.md`](docs/MODEL_CARD.md)
+- [`docs/LIMITATIONS.md`](docs/LIMITATIONS.md)
 
-## Current artifact
-
-The canonical parquet contains **6,965,267 cleaned BTS 2024 flights** covering every day of the leap year and fingerprinted in [`data/processed/data_manifest.json`](data/processed/data_manifest.json). The target-free congestion context is fitted on all 6,965,267 schedules.
-
-The v1.5 artifact uses a deterministic **250,000-row proportional sample**:
-
-| Purpose | Dates | Rows |
-|---|---|---:|
-| Model training | Jan 1 – Jul 16 | 133,599 |
-| Prior selection inherited into refit | Jul 17 – Sep 4 | 34,920 |
-| Frozen-finalist refit | Jan 1 – Sep 4 | **168,519** |
-| Calibration | Sep 5 – Oct 18 | 31,028 |
-| Untouched test | Oct 19 – Dec 31 | **50,453** |
-
-Artifact schema v7 records the data fingerprint, schedule context, split dates, sample scale, preprocessing precision, calibrator, operational policy and deployment contract. The packaged model is approximately 52.4 MB.
-
-## Leakage contract
-
-### Allowed before departure
-
-- reporting carrier;
-- origin and destination;
-- calendar and scheduled times;
-- scheduled duration and distance;
-- historical rates and frequency maps built from prior dates.
-
-### Explicitly blocked
-
-```text
-ArrDelay, ArrDelayMinutes, DepDelay,
-ActualElapsedTime, AirTime,
-TaxiOut, TaxiIn,
-WheelsOff, WheelsOn,
-DepTime, ArrTime,
-CarrierDelay, WeatherDelay, NASDelay, LateAircraftDelay,
-Cancelled, Diverted
-```
-
-Training-row historical features use targets from strictly earlier `FlightDate` values. Rows from the same date are transformed together, preventing same-day target leakage.
-
-```python
-assert model_train.FlightDate.max() < selection.FlightDate.min()
-assert selection.FlightDate.max() < calibration.FlightDate.min()
-assert calibration.FlightDate.max() < test.FlightDate.min()
-```
-
----
+</details>
 
 ## Architecture
 
 ![Flight Delay Risk architecture](docs/assets/architecture.svg)
 
 ```text
-BTS data
-  -> normalization and leakage removal
-  -> source fingerprinting + duplicate-month protection
-  -> model-train / selection / calibration / test split
-  -> target-free full-timetable schedule context
-  -> 112 features: calendar + prior history + support + recency + congestion
-  -> candidate comparison on selection only
-  -> holdout-selected calibration + threshold
-  -> versioned artifact
-  -> inference + model-native explanations
-  -> bilingual Streamlit / FastAPI / PDF delivery
-  -> prediction logging + PSI monitoring
+BTS monthly flight records
+→ validation, cleaning and source fingerprinting
+→ chronological splits
+→ schedule, history, support, recency and congestion features
+→ model-family comparison
+→ calibration
+→ top-k operational policy
+→ FastAPI / Streamlit / PDF delivery
+→ logging, health checks and drift monitoring
 ```
-
-Repository map:
-
-```text
-app/api/           FastAPI transport and report endpoints
-app/dashboard/     bilingual Streamlit product surface
-app/services/      prediction, cohort-context and PDF services
-src/data/          loading, cleaning and temporal splitting
-src/features/      schedule features and historical aggregates
-src/models/        training, calibration, explanation and inference
-src/monitoring/    prediction logs and PSI drift checks
-scripts/           training, backtest, quality and benchmark workflows
-reports/           committed model and performance evidence
-```
-
----
-
-## API
-
-```text
-GET  /health
-GET  /model/info
-GET  /model/card
-POST /predict
-POST /predict/batch
-POST /rank
-POST /reports/flight
-POST /reports/schedule
-GET  /monitoring/summary
-GET  /monitoring/drift
-```
-
-Interactive OpenAPI documentation is available at `/docs` when the API is running.
-
-Example prediction response:
-
-```json
-{
-  "delay_probability": 0.1691,
-  "raw_model_score": 0.5874,
-  "calibration_method": "isotonic",
-  "risk_level": "moderate",
-  "local_contributions": [
-    {
-      "feature": "RouteDelayRate",
-      "contribution": 0.184,
-      "direction": "increase"
-    }
-  ],
-  "explanation_scale": "log_odds_before_calibration"
-}
-```
-
----
-
-## Measured performance
-
-Committed local release measurements after warm-up:
-
-| Operation | Median |
-|---|---:|
-| Artifact load | 1,903.4 ms |
-| Single prediction | 388.6 ms |
-| 100-flight batch | 581.4 ms |
-| 1,000-flight batch | 1,543.7 ms |
-
-These figures were measured in the release environment. Hosted latency also depends on network overhead and cold starts. Full environment metadata is in [`reports/performance_benchmark.json`](reports/performance_benchmark.json).
-
----
 
 ## Run locally
 
-### Python
+The trained artifact is included. You do not need to retrain the model to use the application.
 
 ```bash
 python -m venv .venv
 source .venv/bin/activate      # Windows: .venv\Scripts\activate
 pip install -r requirements.txt
-# For the complete model zoo, including neural and external boosters:
-# pip install -r requirements-advanced.txt
-
-streamlit run app/dashboard/streamlit_app.py
-uvicorn app.api.main:app --reload
 ```
 
-### Docker
+Start the API:
+
+```bash
+python -m uvicorn app.api.main:app --host 0.0.0.0 --port 8000
+```
+
+Start the dashboard in another terminal:
+
+```bash
+python -m streamlit run app/dashboard/streamlit_app.py
+```
+
+Open:
+
+- Dashboard: `http://localhost:8501`
+- API documentation: `http://localhost:8000/docs`
+- Readiness: `http://localhost:8000/ready`
+
+Or run both with Docker:
 
 ```bash
 docker compose up --build
 ```
 
-- Dashboard: `http://localhost:8501`
-- API: `http://localhost:8000`
-- OpenAPI: `http://localhost:8000/docs`
+## Repository map
 
-### Make targets
-
-```bash
-make setup-advanced
-make test
-make quality
-make benchmark
-make dashboard
-make api
+```text
+app/api/           FastAPI transport and public contracts
+app/dashboard/     bilingual Streamlit decision interface
+app/services/      prediction and reporting services
+src/data/          ingestion, cleaning, manifests and temporal splitting
+src/features/      schedule, history, recency and congestion features
+src/models/        training, calibration, policy and explanations
+src/monitoring/    logs, robustness and drift checks
+scripts/           reproducible training, evaluation and release workflows
+reports/           committed evidence behind the public artifact
+docs/              model card, data guide, deployment and limitations
 ```
-
----
-
-## Reproduce the model evidence
-
-```bash
-python -m scripts.prepare_data
-python -m scripts.build_schedule_context
-python -m scripts.run_feature_ablation --max-rows 30000
-python -m scripts.train_model --max-rows 30000 --candidate-profile flagship
-python -m scripts.run_temporal_backtest --max-rows 9000 --n-splits 3 --candidate-profile flagship
-python -m scripts.run_feature_stability --max-rows 30000 --n-splits 3
-python -m scripts.run_policy_backtest --max-rows 30000 --n-splits 3
-python -m scripts.build_layer4_release
-python -m scripts.evaluate_model
-python -m scripts.benchmark_inference
-python -m scripts.quality_gate
-```
-
-Raw BTS files remain Git-ignored. Download, duplicate-month handling, uniform sampling and manifest generation are documented in [`docs/DATA.md`](docs/DATA.md).
-
----
-
-## Quality gate
-
-```bash
-python -m scripts.quality_gate
-```
-
-The v1.5.0 gate verifies:
-
-- compilation and Ruff;
-- committed full-suite evidence from the dedicated CI/local test step;
-- independent neural training/serialization smoke;
-- artifact version and loadability;
-- calibrated single and vectorized batch inference;
-- model-native explanation output;
-- bilingual PDF generation;
-- committed temporal, calibration, feature-stability, policy, uncertainty, drift and performance reports;
-- release manifest integrity.
-
----
-
-## Deployment
-
-The repository contains:
-
-- `Dockerfile.api`;
-- `Dockerfile.dashboard`;
-- `docker-compose.yml`;
-- `render.yaml`;
-- Streamlit configuration;
-- health endpoint and release checks.
-
-Deployment steps and the places where public URLs should be inserted are documented in [`docs/PUBLIC_RELEASE.md`](docs/PUBLIC_RELEASE.md).
-
----
 
 ## Limitations
 
-- No live weather, aircraft rotation, crew, ATC or airport-operations state.
-- BTS-trained artifact; the European context layer remains experimental and is not Europe-calibrated.
-- Moderate ranking performance reflects a noisy schedule-only problem.
-- Historical cohort rates can be weak for unseen or low-support combinations; the UI surfaces both conditions.
-- Local contributions explain the selected estimator, not causal mechanisms.
-- Monitoring is intentionally lightweight and file-based for a portfolio release.
-
-See [`docs/LIMITATIONS.md`](docs/LIMITATIONS.md) and [`docs/MODEL_CARD.md`](docs/MODEL_CARD.md).
-
----
+- Schedule-only inputs cannot observe live weather, aircraft rotation, crew, ATC or airport disruption state.
+- Ranking performance varies across time; no model family dominated every temporal fold.
+- Historical route evidence may be weak for rare or unseen combinations.
+- Local feature contributions explain model behaviour, not causal mechanisms.
+- The application is deployment-ready, but no public hosted URL is claimed until uptime is verified.
 
 ## What this project demonstrates
 
-- supervised tabular ML on real public records;
-- comparison of linear, tree, boosting and neural tabular paradigms;
-- learned categorical embeddings and an FT-Transformer with early stopping;
-- temporal data splitting and leakage prevention;
-- ordered target-rate features with smoothing, support and recency;
-- target-free full-timetable congestion context;
-- chronological feature-family ablation with negative results preserved;
-- honest model selection across time;
-- probability calibration;
-- ranking metrics for an operational queue;
-- model-native local explanation;
-- bilingual product design;
-- robust CSV onboarding and row-level validation;
-- vectorized inference;
-- PDF report generation;
-- FastAPI, Streamlit, Docker, CI and monitoring;
-- the ability to finish and publish an end-to-end ML product.
+- end-to-end applied ML engineering on real public records;
+- separation of prediction, evidence, policy and action;
+- temporal validation and leakage prevention;
+- classical, boosting and neural tabular model comparison;
+- probability calibration, uncertainty and drift analysis;
+- operational ranking under a capacity constraint;
+- API, dashboard, PDF reporting, Docker, CI and release evidence;
+- honest communication of moderate performance and model limitations.
 
 ## License
 
