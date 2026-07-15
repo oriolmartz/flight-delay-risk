@@ -4,6 +4,12 @@
 
 Flight Delay Risk uses the **U.S. DOT / Bureau of Transportation Statistics (BTS) TranStats — Reporting Carrier On-Time Performance** dataset.
 
+Official links:
+
+- [Download individual flight records](https://www.transtats.bts.gov/DL_SelectFields.aspx?gnoyr_VQ=FGJ)
+- [Dataset overview and field coverage](https://www.transtats.bts.gov/DatabaseInfo.asp?QO_VQ=EFD)
+- [BTS airline on-time statistics](https://www.transtats.bts.gov/ontime/)
+
 The supervised target is:
 
 ```text
