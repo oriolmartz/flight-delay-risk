@@ -1,0 +1,153 @@
+{
+  "release": "1.3.0",
+  "protocol": "paired_week_block_bootstrap_on_untouched_final_test",
+  "bootstrap_samples": 500,
+  "point_metrics": {
+    "roc_auc": 0.5848802262883408,
+    "pr_auc": 0.2073125090103798,
+    "brier_score": 0.14089005496308898,
+    "expected_calibration_error": 0.030432641716271146,
+    "lift_at_top_10pct": 1.362993255847324
+  },
+  "weekly_block_confidence_intervals": {
+    "roc_auc": {
+      "mean": 0.5855897065623765,
+      "lower": 0.5690661292335791,
+      "upper": 0.6000002610911567,
+      "samples": 500,
+      "frequency": "week",
+      "blocks": 12
+    },
+    "pr_auc": {
+      "mean": 0.20815225335112728,
+      "lower": 0.1726324354576016,
+      "upper": 0.2470004942176637,
+      "samples": 500,
+      "frequency": "week",
+      "blocks": 12
+    },
+    "brier_score": {
+      "mean": 0.14069691870555223,
+      "lower": 0.12060403414409443,
+      "upper": 0.1631128870978954,
+      "samples": 500,
+      "frequency": "week",
+      "blocks": 12
+    },
+    "expected_calibration_error": {
+      "mean": 0.03058522820159538,
+      "lower": 0.016493479327939934,
+      "upper": 0.04672265566622538,
+      "samples": 500,
+      "frequency": "week",
+      "blocks": 12
+    },
+    "lift_at_top_10pct": {
+      "mean": 1.3295821780927455,
+      "lower": 1.1608913062085247,
+      "upper": 1.4848479589530226,
+      "samples": 500,
+      "frequency": "week",
+      "blocks": 12
+    }
+  },
+  "paired_difference_vs_baseline": {
+    "pr_auc": {
+      "mean": 0.045696321822920154,
+      "lower": 0.022427153225119883,
+      "upper": 0.06774865266460692,
+      "samples": 500,
+      "frequency": "week",
+      "blocks": 12,
+      "difference": "first_minus_second",
+      "excludes_zero": true
+    },
+    "roc_auc": {
+      "mean": 0.11720407215021049,
+      "lower": 0.05934231701245841,
+      "upper": 0.1619908270338738,
+      "samples": 500,
+      "frequency": "week",
+      "blocks": 12,
+      "difference": "first_minus_second",
+      "excludes_zero": true
+    },
+    "brier_score": {
+      "mean": -0.024276154617397492,
+      "lower": -0.03579390347967179,
+      "upper": -0.013057474614307918,
+      "samples": 500,
+      "frequency": "week",
+      "blocks": 12,
+      "difference": "first_minus_second",
+      "excludes_zero": true
+    },
+    "lift_at_top_10pct": {
+      "mean": 0.40124588013435447,
+      "lower": 0.12258453483753773,
+      "upper": 0.6520617030869599,
+      "samples": 500,
+      "frequency": "week",
+      "blocks": 12,
+      "difference": "first_minus_second",
+      "excludes_zero": true
+    }
+  },
+  "selected_model_metrics": {
+    "roc_auc": 0.5848802262883408,
+    "pr_auc": 0.2073125090103798,
+    "f1": 0.2522202486678508,
+    "precision": 0.23336072308956451,
+    "recall": 0.2743961352657005,
+    "positive_rate_actual": 0.1707075705096487,
+    "positive_rate_predicted": 0.20072571334322942,
+    "n_samples": 6063,
+    "baseline_positive_rate": 0.1707075705096487,
+    "precision_at_top_5pct": 0.21122112211221122,
+    "recall_at_top_5pct": 0.06183574879227053,
+    "lift_at_top_5pct": 1.2373272109819677,
+    "n_at_top_5pct": 303,
+    "precision_at_top_10pct": 0.23267326732673269,
+    "recall_at_top_10pct": 0.13623188405797101,
+    "lift_at_top_10pct": 1.362993255847324,
+    "n_at_top_10pct": 606,
+    "precision_at_top_20pct": 0.2341302555647156,
+    "recall_at_top_20pct": 0.2743961352657005,
+    "lift_at_top_20pct": 1.3715282507138846,
+    "n_at_top_20pct": 1213,
+    "brier_score": 0.14089005496308898,
+    "log_loss": 0.45755757355228976,
+    "expected_calibration_error": 0.030432641716271146,
+    "mean_predicted_probability": 0.154618465734344,
+    "observed_positive_rate": 0.1707075705096487
+  },
+  "baseline_metrics": {
+    "roc_auc": 0.4559821521220297,
+    "pr_auc": 0.15738722760106433,
+    "f1": 0.0,
+    "precision": 0.0,
+    "recall": 0.0,
+    "positive_rate_actual": 0.1707075705096487,
+    "positive_rate_predicted": 0.0,
+    "n_samples": 6063,
+    "baseline_positive_rate": 0.1707075705096487,
+    "precision_at_top_5pct": 0.1485148514851485,
+    "recall_at_top_5pct": 0.043478260869565216,
+    "lift_at_top_5pct": 0.8699956952216961,
+    "n_at_top_5pct": 303,
+    "precision_at_top_10pct": 0.15676567656765678,
+    "recall_at_top_10pct": 0.09178743961352658,
+    "lift_at_top_10pct": 0.9183287894006793,
+    "n_at_top_10pct": 606,
+    "precision_at_top_20pct": 0.15828524319868095,
+    "recall_at_top_20pct": 0.1855072463768116,
+    "lift_at_top_20pct": 0.9272303666798093,
+    "n_at_top_20pct": 1213,
+    "brier_score": 0.16559127298022241,
+    "log_loss": 0.8647466429313768,
+    "expected_calibration_error": 0.15047896379043252,
+    "mean_predicted_probability": 0.02110097931673324,
+    "observed_positive_rate": 0.1707075705096487
+  },
+  "interpretation": "Intervals reflect temporal clustering. A point estimate is not treated as a stable improvement when the paired confidence interval includes zero."
+}

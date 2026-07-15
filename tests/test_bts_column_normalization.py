@@ -16,7 +16,7 @@ def test_real_bts_upper_snake_case_columns_are_normalized():
             "CRS_DEP_TIME": [1830, 830],
             "CRS_ELAPSED_TIME": [375, 100],
             "Cancelled": [0.0, 0.0],
-            "DayOfWeek": [5, 1],
+            "DayOfWeek": [1, 2],
             "Dest": ["LAX", "ATL"],
             "Distance": [2475, 760],
             "Diverted": [0.0, 0.0],

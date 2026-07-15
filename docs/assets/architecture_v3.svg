@@ -1,7 +1,7 @@
 <svg width="1200" height="520" viewBox="0 0 1200 520" fill="none" xmlns="http://www.w3.org/2000/svg">
   <rect width="1200" height="520" rx="28" fill="#eff6ff"/>
   <rect x="36" y="34" width="1128" height="452" rx="26" fill="white" stroke="#bfdbfe" stroke-width="2"/>
-  <text x="60" y="82" font-family="Inter,Arial" font-size="30" font-weight="800" fill="#0b1f4d">FlightRisk v3 architecture</text>
+  <text x="60" y="82" font-family="Inter,Arial" font-size="30" font-weight="800" fill="#0b1f4d">Flight Delay Risk v3 architecture</text>
   <text x="60" y="112" font-family="Inter,Arial" font-size="16" fill="#475569">Real BTS data → leakage-safe ML pipeline → model selection + tuned threshold → API/dashboard deployment</text>
 
   <defs>

@@ -1,12 +1,13 @@
-# Candidate benchmark
+# Flight Delay Risk seven-model benchmark
 
-This benchmark compares four model families on the same later validation block using ordered historical encoding. It is retained as model-development evidence; the public v1.0 artifact is chosen with temporal-stability evidence rather than this single split alone.
+Selected by PR-AUC: **Extra Trees**
 
-| Candidate | ROC-AUC | PR-AUC | Lift@10% | Raw Brier | Raw ECE |
-|---|---:|---:|---:|---:|---:|
-| `extra_trees` | 0.6430 | 0.2559 | 1.779× | 0.2463 | 0.3326 |
-| `logistic_l1` | 0.6404 | 0.2516 | 1.765× | 0.2786 | 0.3644 |
-| `random_forest` | 0.6439 | 0.2516 | 1.763× | 0.2502 | 0.3381 |
-| `baseline` | 0.6338 | 0.2473 | 1.730× | 0.2795 | 0.3618 |
-
-Single-split validation winner: **extra_trees**.
+| Candidate | ROC-AUC | PR-AUC | Lift@10% |
+|---|---:|---:|---:|
+| Extra Trees | 0.6685 | 0.3728 | 1.784× |
+| Random Forest | 0.6633 | 0.3637 | 1.744× |
+| Logistic Regression | 0.6486 | 0.3586 | 1.774× |
+| LightGBM | 0.6573 | 0.3577 | 1.656× |
+| XGBoost | 0.6566 | 0.3524 | 1.665× |
+| MLP with embeddings | 0.6481 | 0.3442 | 1.656× |
+| FT-Transformer | 0.6416 | 0.3330 | 1.439× |

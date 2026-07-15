@@ -21,12 +21,14 @@ SAMPLE_DATA_DIR: Path = DATA_DIR / "sample"
 MODELS_DIR: Path = ROOT_DIR / "models"
 REPORTS_DIR: Path = ROOT_DIR / "reports"
 MONITORING_DIR: Path = ROOT_DIR / "monitoring"
-PREDICTION_LOG_PATH: Path = MONITORING_DIR / "prediction_log.csv"
+PREDICTION_LOG_PATH: Path = Path(os.getenv("FLIGHTRISK_PREDICTION_LOG_PATH", MONITORING_DIR / "prediction_log.csv"))
 DRIFT_REPORT_PATH: Path = REPORTS_DIR / "drift_reference.json"
 MLRUNS_DIR: Path = ROOT_DIR / "mlruns"
 
 DEFAULT_PROCESSED_PATH: Path = PROCESSED_DATA_DIR / "flights_processed.parquet"
-DEFAULT_MODEL_PATH: Path = MODELS_DIR / "flightrisk_model.joblib"
+DATA_MANIFEST_PATH: Path = PROCESSED_DATA_DIR / "data_manifest.json"
+SCHEDULE_CONTEXT_PATH: Path = Path(os.getenv("FLIGHTRISK_SCHEDULE_CONTEXT_PATH", PROCESSED_DATA_DIR / "schedule_context.joblib"))
+DEFAULT_MODEL_PATH: Path = Path(os.getenv("FLIGHTRISK_MODEL_PATH", MODELS_DIR / "flightrisk_model.joblib"))
 SAMPLE_CSV_PATH: Path = SAMPLE_DATA_DIR / "sample_flights.csv"
 
 # Target column
@@ -70,9 +72,11 @@ FORBIDDEN_LEAKAGE_COLUMNS: list[str] = [
 
 # Columns we require to exist (after normalization) in raw BTS CSVs.
 REQUIRED_RAW_COLUMNS: list[str] = [
+    "FlightDate",
     "Year",
     "Month",
     "DayOfWeek",
+    "Airline",
     "Origin",
     "Dest",
     "CRSDepTime",
@@ -82,60 +86,83 @@ REQUIRED_RAW_COLUMNS: list[str] = [
     TARGET_COL,
 ]
 
-# Final feature columns used by the model (pre-flight information only).
-# The feature set includes richer schedule/context features while preserving leakage safety.
-FEATURE_COLUMNS: list[str] = [
-    "Airline",
-    "Origin",
-    "Dest",
-    "Route",
-    "DepPeriod",
-    "ArrPeriod",
-    "DistanceBand",
+
+# Canonical columns persisted in the processed training dataset. Keeping the
+# processed schema narrow makes chunked preparation deterministic across BTS
+# exports that contain different optional columns.
+PROCESSED_COLUMNS: list[str] = [
+    "FlightDate",
+    "Year",
     "Month",
     "DayOfWeek",
-    "IsWeekend",
-    "DepHour",
-    "ArrHour",
-    "CRSElapsedTime",
-    "Distance",
-    "ScheduledSpeedMph",
-    "LogDistance",
-    "DepHourSin",
-    "DepHourCos",
-    "ArrHourSin",
-    "ArrHourCos",
-    "IsMorningPeak",
-    "IsEveningPeak",
-    "IsPeakHour",
-    "IsRedEye",
-    "IsLongHaul",
-    "CarrierDelayRate",
-    "RouteDelayRate",
-    "OriginDelayRate",
-    "DestDelayRate",
-    "CarrierRouteDelayRate",
-    "AirlineOriginDelayRate",
-    "AirlineDestDelayRate",
-    "OriginHourDelayRate",
-    "DestHourDelayRate",
-    "CarrierDepHourDelayRate",
-    "RouteFlightShare",
-    "CarrierRouteFlightShare",
-    "AirlineOriginFlightShare",
-    "OriginHourFlightShare",
-    "DestHourFlightShare",
-    "CarrierDepHourFlightShare",
-]
-
-CATEGORICAL_FEATURES: list[str] = [
     "Airline",
     "Origin",
     "Dest",
-    "Route",
-    "DepPeriod",
-    "ArrPeriod",
-    "DistanceBand",
+    "CRSDepTime",
+    "CRSArrTime",
+    "CRSElapsedTime",
+    "Distance",
+    TARGET_COL,
+]
+
+# Final leakage-safe feature schema grouped for auditable ablation.
+CORE_SCHEDULE_FEATURES: list[str] = [
+    "Airline", "Origin", "Dest", "Route", "DepPeriod", "ArrPeriod", "DistanceBand",
+    "Month", "DayOfWeek", "IsWeekend", "DepHour", "ArrHour", "DepMinute", "ArrMinute",
+    "CRSElapsedTime", "Distance", "ScheduledSpeedMph", "LogDistance",
+    "DepHourSin", "DepHourCos", "ArrHourSin", "ArrHourCos",
+    "DepMinuteSin", "DepMinuteCos", "ArrMinuteSin", "ArrMinuteCos",
+    "IsMorningPeak", "IsEveningPeak", "IsPeakHour", "IsRedEye", "IsLongHaul",
+    "IsOvernightSchedule",
+]
+CALENDAR_FEATURES: list[str] = [
+    "Season", "CalendarDateKnown", "DayOfMonth", "DayOfYear", "WeekOfYear", "Quarter",
+    "YearProgress", "MonthSin", "MonthCos", "DayOfWeekSin", "DayOfWeekCos",
+    "YearDaySin", "YearDayCos", "DaysToNearestFederalHoliday", "IsFederalHoliday",
+    "IsHolidayWindow",
+]
+HISTORICAL_RATE_FEATURES: list[str] = [
+    "CarrierDelayRate", "RouteDelayRate", "OriginDelayRate", "DestDelayRate",
+    "CarrierRouteDelayRate", "AirlineOriginDelayRate", "AirlineDestDelayRate",
+    "OriginHourDelayRate", "DestHourDelayRate", "CarrierDepHourDelayRate",
+    "RouteFlightShare", "CarrierRouteFlightShare", "AirlineOriginFlightShare",
+    "OriginHourFlightShare", "DestHourFlightShare", "CarrierDepHourFlightShare",
+]
+HISTORICAL_SUPPORT_FEATURES: list[str] = [
+    f"{prefix}{suffix}"
+    for prefix in (
+        "CarrierHistory", "RouteHistory", "OriginHistory", "DestHistory",
+        "CarrierRouteHistory", "AirlineOriginHistory", "AirlineDestHistory",
+        "OriginHourHistory", "DestHourHistory", "CarrierDepHourHistory",
+    )
+    for suffix in ("Count", "LogCount")
+]
+RECENCY_FEATURES: list[str] = [
+    f"{prefix}{suffix}"
+    for prefix in ("CarrierDelay", "RouteDelay", "OriginDelay", "DestDelay")
+    for suffix in ("Rate28d", "Rate90d", "RateEWMA", "Trend28d")
+]
+SCHEDULE_CONGESTION_FEATURES: list[str] = [
+    "OriginScheduledDepartures30m", "OriginScheduledDepartures60m",
+    "OriginScheduledDepartures120m", "DestScheduledArrivals30m",
+    "DestScheduledArrivals60m", "DestScheduledArrivals120m",
+    "OriginDailyScheduledFlights", "DestDailyScheduledFlights",
+    "CarrierOriginDailyScheduledFlights", "RouteDailyScheduledFlights",
+    "OriginBankShare60m", "DestBankShare60m",
+]
+FEATURE_FAMILIES: dict[str, list[str]] = {
+    "core_schedule": CORE_SCHEDULE_FEATURES,
+    "calendar": CALENDAR_FEATURES,
+    "historical_rates": HISTORICAL_RATE_FEATURES,
+    "historical_support": HISTORICAL_SUPPORT_FEATURES,
+    "recency": RECENCY_FEATURES,
+    "schedule_congestion": SCHEDULE_CONGESTION_FEATURES,
+}
+FEATURE_COLUMNS: list[str] = [
+    column for family in FEATURE_FAMILIES.values() for column in family
+]
+CATEGORICAL_FEATURES: list[str] = [
+    "Airline", "Origin", "Dest", "Route", "DepPeriod", "ArrPeriod", "DistanceBand", "Season"
 ]
 NUMERIC_FEATURES: list[str] = [c for c in FEATURE_COLUMNS if c not in CATEGORICAL_FEATURES]
 

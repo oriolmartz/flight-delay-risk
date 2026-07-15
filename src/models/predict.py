@@ -9,6 +9,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
+import numpy as np
 import pandas as pd
 
 from src.config import (
@@ -31,14 +32,18 @@ class PredictionInput:
     crs_arr_time: int
     crs_elapsed_time: int
     distance: float
+    flight_date: str | None = None
 
     def to_raw_frame(self) -> pd.DataFrame:
+        flight_date = pd.to_datetime(self.flight_date, errors="coerce") if self.flight_date else pd.NaT
         return pd.DataFrame(
             [
                 {
                     "Airline": self.airline.strip().upper(),
                     "Origin": self.origin.strip().upper(),
                     "Dest": self.destination.strip().upper(),
+                    "FlightDate": flight_date if pd.notna(flight_date) else pd.NaT,
+                    "Year": int(flight_date.year) if pd.notna(flight_date) else 2024,
                     "Month": self.month,
                     "DayOfWeek": self.day_of_week,
                     "CRSDepTime": self.crs_dep_time,
@@ -56,6 +61,19 @@ def risk_level_from_probability(probability: float) -> str:
     if probability < RISK_MODERATE_MAX:
         return "moderate"
     return "high"
+
+
+def operational_decision(artifact: FlightRiskArtifact, probability: float, threshold: float) -> dict:
+    policy = artifact.operational_policy or {}
+    cutoff = float(policy.get("probability_cutoff", threshold))
+    recommended = bool(probability >= cutoff)
+    return {
+        "review_recommended": recommended,
+        "operational_action": "priority_review" if recommended else "standard_monitoring",
+        "policy_name": str(policy.get("policy_name", "fixed_threshold")),
+        "policy_probability_cutoff": cutoff,
+        "policy_capacity_fraction": policy.get("capacity_fraction"),
+    }
 
 
 def top_factors_for_input(row: pd.Series, aggregates_fallback: float) -> list[str]:
@@ -116,6 +134,7 @@ def predict_single(artifact: FlightRiskArtifact, payload: PredictionInput, thres
         "top_factors": top_factors_for_input(df.iloc[0], artifact.historical_aggregates.global_fallback),
         "local_contributions": contributions,
         "explanation_scale": "log_odds_before_calibration",
+        **operational_decision(artifact, probability, threshold),
     }
 
 
@@ -151,6 +170,7 @@ def predict_batch(
             ),
             "local_contributions": contributions,
             "explanation_scale": "log_odds_before_calibration",
+            **operational_decision(artifact, float(probability), threshold),
         }
         for raw_probability, probability, (_, row), contributions in zip(
             raw_probabilities, probabilities, df.iterrows(), explanations
@@ -158,10 +178,15 @@ def predict_batch(
     ]
 
 
-def rank_predictions(predictions: list[dict]) -> list[dict]:
-    """Sort predictions by risk and annotate operational ranking buckets."""
+def rank_predictions(predictions: list[dict], capacity_fraction: float = 0.10) -> list[dict]:
+    """Sort predictions and enforce the declared review-capacity budget."""
     n = len(predictions)
-    ranked = sorted(predictions, key=lambda item: item["delay_probability"], reverse=True)
+    ranked = sorted(
+        predictions,
+        key=lambda item: (item["delay_probability"], item.get("raw_model_score", 0.0)),
+        reverse=True,
+    )
+    capacity_count = max(1, int(np.ceil(n * capacity_fraction))) if n else 0
     out: list[dict] = []
     for idx, item in enumerate(ranked, start=1):
         percentile = idx / max(n, 1)
@@ -173,12 +198,15 @@ def rank_predictions(predictions: list[dict]) -> list[dict]:
             bucket = "top_20pct"
         else:
             bucket = "standard_watch"
+        policy_selected = idx <= capacity_count
         out.append(
             {
                 **item,
                 "rank": idx,
                 "risk_percentile": round(percentile, 4),
                 "risk_bucket": bucket,
+                "review_recommended": policy_selected,
+                "operational_action": "priority_review" if policy_selected else "standard_monitoring",
             }
         )
     return out
@@ -187,4 +215,8 @@ def rank_predictions(predictions: list[dict]) -> list[dict]:
 def rank_batch(
     artifact: FlightRiskArtifact, payloads: list[PredictionInput], threshold: float
 ) -> list[dict]:
-    return rank_predictions(predict_batch(artifact, payloads, threshold))
+    capacity_fraction = float((artifact.operational_policy or {}).get("capacity_fraction", 0.10))
+    return rank_predictions(
+        predict_batch(artifact, payloads, threshold),
+        capacity_fraction=capacity_fraction,
+    )

@@ -1,4 +1,4 @@
-"""Generate bilingual FlightRisk PDF briefs for review and export."""
+"""Generate bilingual Flight Delay Risk PDF briefs for review and export."""
 from __future__ import annotations
 
 from io import BytesIO
@@ -19,33 +19,33 @@ from reportlab.platypus import (
     TableStyle,
 )
 
-NAVY = colors.HexColor("#17304F")
+NAVY = colors.HexColor("#164A73")
 AMBER = colors.HexColor("#BB7A24")
-IVORY = colors.HexColor("#F7F3EB")
-LINE = colors.HexColor("#D9D2C5")
-MUTED = colors.HexColor("#5D6673")
-INK = colors.HexColor("#101B2D")
+IVORY = colors.HexColor("#F4F9FF")
+LINE = colors.HexColor("#D8E7F5")
+MUTED = colors.HexColor("#5D6F83")
+INK = colors.HexColor("#10243E")
 
 COPY = {
     "en": {
-        "single_title": "FlightRisk - Flight Risk Brief",
-        "schedule_title": "FlightRisk - Ranked Schedule Brief",
+        "single_title": "Flight Delay Risk - Flight Risk Brief",
+        "schedule_title": "Flight Delay Risk - Ranked Schedule Brief",
         "prepared": "Prepared for human review",
         "flight": "Flight",
         "route": "Route",
         "schedule": "Schedule",
-        "probability": "Calibrated delay probability",
-        "raw_score": "Raw model score",
-        "route_rate": "Historical route rate",
-        "relative": "Relative exposure",
-        "support": "Historical route support",
-        "coverage": "Coverage",
+        "probability": "Estimated chance of a 15+ minute arrival delay",
+        "raw_score": "Uncalibrated model score",
+        "route_rate": "Usual delay rate on this route",
+        "relative": "Risk compared with this route",
+        "support": "Earlier route flights behind the baseline",
+        "coverage": "Historical route evidence",
         "seen": "Seen in training",
         "unseen": "Fallback used",
         "decision": "Review recommendation",
-        "explanation": "Model contribution summary",
-        "increase": "Increases model score",
-        "decrease": "Reduces model score",
+        "explanation": "What influenced this estimate",
+        "increase": "Pushes risk up",
+        "decrease": "Pushes risk down",
         "limitations": "Important limitations",
         "limitations_body": (
             "Schedule-only estimate. The model does not use live weather, aircraft rotation, ATC state, "
@@ -56,41 +56,47 @@ COPY = {
         "flights": "Flights ranked",
         "priority": "Priority queue",
         "watch": "Watch queue",
-        "average": "Average calibrated probability",
-        "top": "Highest calibrated probability",
+        "average": "Average estimated delay risk",
+        "top": "Highest estimated delay risk",
         "table_rank": "Rank",
         "table_flight": "Flight",
         "table_route": "Route",
         "table_departure": "Departure",
         "table_probability": "Probability",
-        "table_cohort": "Route rate",
-        "table_exposure": "Exposure",
-        "table_support": "Support",
+        "table_cohort": "Usual route risk",
+        "table_exposure": "Risk vs route",
+        "table_support": "Earlier flights",
         "table_queue": "Queue",
-        "footer": "FlightRisk v1.0.0 - Built by Oriol Martínez - Portfolio ML system",
+        "footer": "Flight Delay Risk v1.5.0 - Built by Oriol Martínez - Portfolio ML system",
         "queue_priority": "Priority",
         "queue_watch": "Watch",
         "queue_routine": "Routine",
+        "interpretation_above": "The estimate is {delta}% above the route baseline, based on {support} earlier route flights.",
+        "interpretation_below": "The estimate is {delta}% below the route baseline, based on {support} earlier route flights.",
+        "interpretation_equal": "The estimate is close to the route baseline, based on {support} earlier route flights.",
+        "interpretation_title": "What this means",
+        "contribution_note": "These are model associations, not proven real-world causes.",
+        "schedule_note": "Priority and watch groups are relative to this uploaded schedule; they do not guarantee a delay.",
     },
     "es": {
-        "single_title": "FlightRisk - Informe de riesgo del vuelo",
-        "schedule_title": "FlightRisk - Informe del horario priorizado",
+        "single_title": "Flight Delay Risk - Informe de riesgo del vuelo",
+        "schedule_title": "Flight Delay Risk - Informe del horario priorizado",
         "prepared": "Preparado para revisión humana",
         "flight": "Vuelo",
         "route": "Ruta",
         "schedule": "Horario",
-        "probability": "Probabilidad calibrada de retraso",
-        "raw_score": "Score bruto del modelo",
-        "route_rate": "Tasa histórica de la ruta",
-        "relative": "Exposición relativa",
-        "support": "Soporte histórico de la ruta",
-        "coverage": "Cobertura",
+        "probability": "Probabilidad estimada de llegar con 15+ minutos de retraso",
+        "raw_score": "Score del modelo sin calibrar",
+        "route_rate": "Riesgo habitual de retraso en esta ruta",
+        "relative": "Riesgo comparado con esta ruta",
+        "support": "Vuelos anteriores detrás de la referencia",
+        "coverage": "Evidencia histórica de la ruta",
         "seen": "Visto en entrenamiento",
         "unseen": "Se usa fallback",
         "decision": "Recomendación de revisión",
-        "explanation": "Resumen de contribuciones del modelo",
-        "increase": "Aumenta el score del modelo",
-        "decrease": "Reduce el score del modelo",
+        "explanation": "Qué influyó en esta estimación",
+        "increase": "Eleva el riesgo",
+        "decrease": "Reduce el riesgo",
         "limitations": "Limitaciones importantes",
         "limitations_body": (
             "Estimación basada solo en el horario. El modelo no utiliza meteorología en vivo, rotación de aeronave, "
@@ -101,21 +107,27 @@ COPY = {
         "flights": "Vuelos priorizados",
         "priority": "Cola prioritaria",
         "watch": "Cola de vigilancia",
-        "average": "Probabilidad calibrada media",
-        "top": "Probabilidad calibrada máxima",
+        "average": "Riesgo estimado medio",
+        "top": "Mayor riesgo estimado",
         "table_rank": "Pos.",
         "table_flight": "Vuelo",
         "table_route": "Ruta",
         "table_departure": "Salida",
         "table_probability": "Probabilidad",
-        "table_cohort": "Tasa ruta",
-        "table_exposure": "Exposición",
-        "table_support": "Soporte",
+        "table_cohort": "Riesgo habitual ruta",
+        "table_exposure": "Riesgo vs ruta",
+        "table_support": "Vuelos anteriores",
         "table_queue": "Cola",
-        "footer": "FlightRisk v1.0.0 - Creado por Oriol Martínez - Sistema ML de portfolio",
+        "footer": "Flight Delay Risk v1.5.0 - Creado por Oriol Martínez - Sistema ML de portfolio",
         "queue_priority": "Prioridad",
         "queue_watch": "Vigilancia",
         "queue_routine": "Rutina",
+        "interpretation_above": "La estimación está un {delta}% por encima de la referencia de la ruta, basada en {support} vuelos anteriores.",
+        "interpretation_below": "La estimación está un {delta}% por debajo de la referencia de la ruta, basada en {support} vuelos anteriores.",
+        "interpretation_equal": "La estimación está cerca de la referencia de la ruta, basada en {support} vuelos anteriores.",
+        "interpretation_title": "Qué significa",
+        "contribution_note": "Son asociaciones del modelo, no causas reales demostradas.",
+        "schedule_note": "Los grupos de prioridad y vigilancia son relativos al horario subido; no garantizan un retraso.",
     },
 }
 
@@ -299,7 +311,6 @@ def build_flight_brief_pdf(
                 (t["route"], route),
                 (t["schedule"], f"{departure} - {arrival}"),
                 (t["probability"], _pct(probability)),
-                (t["raw_score"], _pct(prediction.get("raw_model_score"))),
                 (t["route_rate"], _pct(route_rate)),
                 (t["relative"], f"{relative:.2f}x"),
                 (t["support"], f"{int(context.get('route_support', 0)):,}"),
@@ -315,52 +326,52 @@ def build_flight_brief_pdf(
             A4[0] - 36 * mm,
         ),
         Spacer(1, 4 * mm),
-        Paragraph(t["explanation"], styles["heading"]),
     ]
+
+    support_count = int(context.get("route_support", 0))
+    if relative > 1.02:
+        interpretation = t["interpretation_above"].format(delta=round((relative - 1) * 100), support=f"{support_count:,}")
+    elif relative < 0.98:
+        interpretation = t["interpretation_below"].format(delta=round((1 - relative) * 100), support=f"{support_count:,}")
+    else:
+        interpretation = t["interpretation_equal"].format(support=f"{support_count:,}")
+    story.extend([
+        Paragraph(t["interpretation_title"], styles["heading"]),
+        Paragraph(interpretation, styles["body"]),
+        Spacer(1, 3 * mm),
+        Paragraph(t["explanation"], styles["heading"]),
+        Paragraph(t["contribution_note"], styles["small"]),
+        Spacer(1, 2 * mm),
+    ])
 
     contributions = prediction.get("local_contributions") or []
     if contributions:
-        explanation_rows = [["", "", ""]]
-        explanation_rows[0] = [
-            Paragraph("", styles["small"]),
-            Paragraph(t["increase"], styles["small"]),
-            Paragraph(t["decrease"], styles["small"]),
-        ]
+        explanation_rows = [[Paragraph(t["explanation"], styles["small"]), Paragraph("Effect" if lang == "en" else "Efecto", styles["small"])]]
         for item in contributions[:6]:
             label = FEATURE_LABELS[lang].get(str(item.get("feature")), str(item.get("feature")))
             value = item.get("active_category") or item.get("raw_value")
             value_text = "" if value is None else str(value)
             contribution = float(item.get("contribution", 0.0))
-            explanation_rows.append(
-                [
-                    Paragraph(f"{label}<br/><font color='#5D6673'>{value_text}</font>", styles["body"]),
-                    f"+{contribution:.3f}" if contribution > 0 else "",
-                    f"{contribution:.3f}" if contribution < 0 else "",
-                ]
-            )
-        explanation_table = Table(explanation_rows, colWidths=[95 * mm, 38 * mm, 38 * mm])
-        explanation_table.setStyle(
-            TableStyle(
-                [
-                    ("BACKGROUND", (0, 0), (-1, 0), IVORY),
-                    ("BOX", (0, 0), (-1, -1), 0.5, LINE),
-                    ("INNERGRID", (0, 0), (-1, -1), 0.35, LINE),
-                    ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
-                    ("ALIGN", (1, 1), (-1, -1), "RIGHT"),
-                    ("TEXTCOLOR", (1, 1), (1, -1), AMBER),
-                    ("TEXTCOLOR", (2, 1), (2, -1), NAVY),
-                    ("FONTNAME", (1, 1), (-1, -1), "Helvetica-Bold"),
-                    ("FONTSIZE", (1, 1), (-1, -1), 8),
-                    ("LEFTPADDING", (0, 0), (-1, -1), 6),
-                    ("RIGHTPADDING", (0, 0), (-1, -1), 6),
-                    ("TOPPADDING", (0, 0), (-1, -1), 5),
-                    ("BOTTOMPADDING", (0, 0), (-1, -1), 5),
-                ]
-            )
-        )
+            effect = t["increase"] if contribution >= 0 else t["decrease"]
+            explanation_rows.append([
+                Paragraph(f"{label}<br/><font color='#5D6F83'>{value_text}</font>", styles["body"]),
+                Paragraph(effect, styles["body"]),
+            ])
+        explanation_table = Table(explanation_rows, colWidths=[125 * mm, 46 * mm])
+        explanation_table.setStyle(TableStyle([
+            ("BACKGROUND", (0, 0), (-1, 0), IVORY),
+            ("BOX", (0, 0), (-1, -1), 0.5, LINE),
+            ("INNERGRID", (0, 0), (-1, -1), 0.35, LINE),
+            ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
+            ("FONTNAME", (1, 1), (1, -1), "Helvetica-Bold"),
+            ("LEFTPADDING", (0, 0), (-1, -1), 6),
+            ("RIGHTPADDING", (0, 0), (-1, -1), 6),
+            ("TOPPADDING", (0, 0), (-1, -1), 5),
+            ("BOTTOMPADDING", (0, 0), (-1, -1), 5),
+        ]))
         story.append(explanation_table)
     else:
-        story.append(Paragraph("No model-native explanation is available for this artifact.", styles["body"]))
+        story.append(Paragraph("No explanation is available for this artifact." if lang == "en" else "No hay una explicación disponible para este artefacto.", styles["body"]))
 
     story.extend(
         [
@@ -440,7 +451,7 @@ def build_schedule_brief_pdf(ranked: pd.DataFrame, *, lang: str = "en") -> bytes
             ]
         )
     )
-    story.extend([summary_table, Spacer(1, 4 * mm)])
+    story.extend([summary_table, Spacer(1, 2 * mm), Paragraph(t["schedule_note"], styles["small"]), Spacer(1, 4 * mm)])
 
     headers = [
         t["table_rank"],

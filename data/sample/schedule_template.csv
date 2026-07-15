@@ -1,0 +1,2 @@
+flight_number,airline,origin,destination,flight_date,scheduled_departure,scheduled_arrival,scheduled_duration_minutes,distance_miles
+418,DL,JFK,LAX,2026-07-18,18:30,21:45,375,2475

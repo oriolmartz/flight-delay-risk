@@ -1,0 +1,66 @@
+{
+  "release": "1.5.0",
+  "protocol": "frozen_finalists_scaled_refit_same_chronological_boundaries",
+  "canonical_rows": 0,
+  "sample_rows": 250000,
+  "scale_factor_vs_v1_3": 8.333333333333334,
+  "split_rows": {
+    "model_train": 133599,
+    "selection_inherited_into_refit": 34920,
+    "refit": 168519,
+    "calibration": 31028,
+    "test": 50453
+  },
+  "split_dates": {
+    "model_train": [
+      "2024-01-01",
+      "2024-07-16"
+    ],
+    "selection_inherited_into_refit": [
+      "2024-07-17",
+      "2024-09-04"
+    ],
+    "refit": [
+      "2024-01-01",
+      "2024-09-04"
+    ],
+    "calibration": [
+      "2024-09-05",
+      "2024-10-18"
+    ],
+    "test": [
+      "2024-10-19",
+      "2024-12-31"
+    ]
+  },
+  "feature_engineering_seconds": 18.732536372999675,
+  "fit_seconds": {
+    "baseline": 1.227842650000639,
+    "extra_trees": 7.748294238000199
+  },
+  "isolated_fit_stage_seconds": 30.43298748899997,
+  "total_build_seconds": 46.4179784629996,
+  "peak_rss_mb": 1309.83203125,
+  "artifact_size_bytes": 52393397,
+  "preprocessing": "Extra Trees compact ordinal float32; SGD logistic standardized numeric/historical features",
+  "current_release": {
+    "roc_auc": 0.6178689018347625,
+    "pr_auc": 0.23857755817689355,
+    "brier_score": 0.13845021442812538,
+    "expected_calibration_error": 0.012977091706419383,
+    "lift_at_top_10pct": 1.638738285731099
+  },
+  "previous_release": {
+    "roc_auc": 0.5848802262883408,
+    "pr_auc": 0.2073125090103798,
+    "brier_score": 0.14089005496308898,
+    "expected_calibration_error": 0.030432641716271146,
+    "lift_at_top_10pct": 1.362993255847324
+  },
+  "comparison_guardrail": "The date boundaries match v1.3, but the deterministic sample contains more rows. Metric deltas are not paired row-level estimates.",
+  "public_release": {
+    "version": "1.5.0",
+    "name": "Flight Delay Risk",
+    "release_name": "Self-Explaining Product UI Release"
+  }
+}

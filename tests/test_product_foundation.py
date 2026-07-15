@@ -1,19 +1,19 @@
 import pandas as pd
 
 from src.data.split import time_aware_split
-from src.models.train import build_l1_logistic_pipeline
+from src.models.train import build_baseline_pipeline
 from src.version import APP_VERSION, RELEASE_NAME
 
 
 def test_public_release_version_is_single_source_of_truth():
-    assert APP_VERSION == "1.0.0"
-    assert RELEASE_NAME == "Public Release"
+    assert APP_VERSION == "1.5.0"
+    assert RELEASE_NAME == "Self-Explaining Product UI Release"
 
 
-def test_l1_candidate_really_uses_l1_penalty():
-    model = build_l1_logistic_pipeline().named_steps["model"]
-    assert model.penalty == "l1"
-    assert model.solver == "liblinear"
+def test_public_linear_baseline_is_regularized_logistic_regression():
+    model = build_baseline_pipeline().named_steps["model"]
+    assert model.solver == "saga"
+    assert model.class_weight == "balanced"
 
 
 def test_time_split_never_shares_a_date_across_boundary():

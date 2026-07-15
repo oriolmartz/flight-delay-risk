@@ -1,8 +1,12 @@
-"""FlightRisk FastAPI application."""
+"""Flight Delay Risk FastAPI application."""
 from __future__ import annotations
 
-from fastapi import FastAPI, HTTPException, Response
+from time import perf_counter
+from uuid import uuid4
+
+from fastapi import FastAPI, HTTPException, Request, Response
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 
 from app.schemas import (
     BatchFlightInput,
@@ -14,11 +18,13 @@ from app.schemas import (
     FlightInput,
     FlightReportInput,
     HealthResponse,
+    LivenessResponse,
     ModelCardResponse,
     ModelInfoResponse,
     MonitoringSummaryResponse,
     PredictionOutput,
     RankingOutput,
+    ReadinessResponse,
     RegionCatalogResponse,
     ScheduleReportInput,
 )
@@ -30,7 +36,7 @@ from src.version import APP_VERSION
 logger = get_logger(__name__)
 
 app = FastAPI(
-    title='FlightRisk API',
+    title='Flight Delay Risk API',
     description=(
         'Ranks scheduled flights by arrival-delay risk and returns a post-hoc calibrated estimate of 15+ minute delay, '
         'using only pre-flight schedule-time information. Includes a European context layer.'
@@ -40,12 +46,36 @@ app = FastAPI(
 app.add_middleware(CORSMiddleware, allow_origins=['*'], allow_methods=['*'], allow_headers=['*'])
 
 
+@app.middleware('http')
+async def add_release_headers(request: Request, call_next):
+    request_id = request.headers.get('x-request-id') or str(uuid4())
+    started = perf_counter()
+    response = await call_next(request)
+    response.headers['x-request-id'] = request_id
+    response.headers['x-flightrisk-version'] = APP_VERSION
+    response.headers['x-process-time-ms'] = f'{(perf_counter() - started) * 1000:.2f}'
+    return response
+
+
 def _to_prediction_input(flight: FlightInput) -> PredictionInput:
     return PredictionInput(
         airline=flight.airline, origin=flight.origin, destination=flight.destination, month=flight.month,
         day_of_week=flight.day_of_week, crs_dep_time=flight.crs_dep_time, crs_arr_time=flight.crs_arr_time,
-        crs_elapsed_time=flight.crs_elapsed_time, distance=flight.distance,
+        crs_elapsed_time=flight.crs_elapsed_time, distance=flight.distance, flight_date=flight.flight_date,
     )
+
+
+@app.get('/live', response_model=LivenessResponse, tags=['system'])
+def live() -> LivenessResponse:
+    return LivenessResponse(status='alive', version=APP_VERSION)
+
+
+@app.get('/ready', response_model=ReadinessResponse, tags=['system'], responses={503: {'description': 'Service dependencies are not ready'}})
+def ready():
+    payload = prediction_service.readiness_status()
+    if payload['status'] != 'ready':
+        return JSONResponse(status_code=503, content=payload)
+    return ReadinessResponse(**payload)
 
 
 @app.get('/health', response_model=HealthResponse, tags=['system'])
@@ -66,7 +96,7 @@ def get_model_info() -> ModelInfoResponse:
         historical_encoding=info.get('historical_encoding'),
         n_train_rows=info.get('n_train_rows'), n_test_rows=info.get('n_test_rows'),
         validation_rows=info.get('validation_rows'), feature_columns=info.get('feature_columns', []),
-        decision_threshold=info.get('decision_threshold'), metrics=info.get('metrics', {}),
+        decision_threshold=info.get('decision_threshold'), operational_policy=info.get('operational_policy', {}), metrics=info.get('metrics', {}),
     )
 
 
@@ -222,8 +252,8 @@ def favicon() -> Response:
 @app.get('/', tags=['system'])
 def root() -> dict:
     return {
-        'message': 'FlightRisk API is running. See /docs for interactive API documentation.',
-        'health': '/health', 'model_info': '/model/info', 'model_card': '/model/card',
+        'message': 'Flight Delay Risk API is running. See /docs for interactive API documentation.',
+        'live': '/live', 'ready': '/ready', 'health': '/health', 'model_info': '/model/info', 'model_card': '/model/card',
         'europe_catalog': '/regions/europe', 'predict_european': '/predict/european',
         'monitoring_summary': '/monitoring/summary', 'drift': '/monitoring/drift', 'rank': '/rank',
     }

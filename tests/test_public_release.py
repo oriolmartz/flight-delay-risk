@@ -9,6 +9,7 @@ from app.dashboard.i18n import TEXT
 from app.dashboard.streamlit_app import rank_dataframe, validate_schedule_dataframe
 from app.services import prediction_service, report_service
 from src.models.predict import PredictionInput
+from src.version import APP_VERSION
 
 
 def _sample_frame() -> pd.DataFrame:
@@ -132,6 +133,6 @@ def test_bilingual_pdf_reports_have_valid_pdf_headers():
 
 def test_performance_report_is_committed_for_release():
     report = json.loads(Path("reports/performance_benchmark.json").read_text(encoding="utf-8"))
-    assert report["release"] == "1.0.0"
+    assert report["release"] == APP_VERSION
     assert report["single_prediction_ms"]["median"] > 0
     assert report["batch_1000_ms"]["median"] > 0

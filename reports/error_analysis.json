@@ -1,578 +1,583 @@
 {
   "threshold": 0.17,
-  "rows": 60481,
-  "false_positives": 20264,
-  "false_negatives": 4429,
-  "false_positive_rate_in_predictions": 0.7926772023157566,
-  "false_negative_rate_in_actual_delays": 0.4552369205468188,
+  "rows": 6063,
+  "false_positives": 1876,
+  "false_negatives": 523,
+  "false_positive_rate_in_predictions": 0.7855946398659966,
+  "false_negative_rate_in_actual_delays": 0.5053140096618357,
   "segments": {
     "airline": [
       {
         "segment": "WN",
-        "n": 11003,
-        "actual_delay_rate": 0.14114332454785058,
-        "predicted_delay_rate": 0.44960465327637916,
-        "precision": 0.19425914695775218,
-        "recall": 0.6188023180940115,
-        "f1": 0.2956923076923077
+        "n": 1140,
+        "actual_delay_rate": 0.1736842105263158,
+        "predicted_delay_rate": 0.4368421052631579,
+        "precision": 0.22289156626506024,
+        "recall": 0.5606060606060606,
+        "f1": 0.31896551724137934
       },
       {
         "segment": "DL",
-        "n": 9008,
-        "actual_delay_rate": 0.12544404973357015,
-        "predicted_delay_rate": 0.34202930728241565,
-        "precision": 0.1694255111976631,
-        "recall": 0.46194690265486726,
-        "f1": 0.2479221087627642
+        "n": 902,
+        "actual_delay_rate": 0.14523281596452328,
+        "predicted_delay_rate": 0.3004434589800443,
+        "precision": 0.18450184501845018,
+        "recall": 0.3816793893129771,
+        "f1": 0.24875621890547264
       },
       {
         "segment": "AA",
-        "n": 8511,
-        "actual_delay_rate": 0.1816472799906004,
-        "predicted_delay_rate": 0.5778404417812243,
-        "precision": 0.2189914599430663,
-        "recall": 0.6966364812419146,
-        "f1": 0.33323019801980197
+        "n": 822,
+        "actual_delay_rate": 0.17639902676399027,
+        "predicted_delay_rate": 0.4927007299270073,
+        "precision": 0.21481481481481482,
+        "recall": 0.6,
+        "f1": 0.31636363636363635
       },
       {
         "segment": "OO",
-        "n": 6878,
-        "actual_delay_rate": 0.19380633905205003,
-        "predicted_delay_rate": 0.3056120965396918,
-        "precision": 0.230732635585157,
-        "recall": 0.36384096024006,
-        "f1": 0.2823871906841339
+        "n": 680,
+        "actual_delay_rate": 0.16323529411764706,
+        "predicted_delay_rate": 0.325,
+        "precision": 0.19004524886877827,
+        "recall": 0.3783783783783784,
+        "f1": 0.25301204819277107
       },
       {
         "segment": "UA",
-        "n": 6277,
-        "actual_delay_rate": 0.1567627847697945,
-        "predicted_delay_rate": 0.445435717699538,
-        "precision": 0.2010014306151645,
-        "recall": 0.5711382113821138,
-        "f1": 0.29735449735449737
+        "n": 674,
+        "actual_delay_rate": 0.1913946587537092,
+        "predicted_delay_rate": 0.4124629080118694,
+        "precision": 0.24100719424460432,
+        "recall": 0.5193798449612403,
+        "f1": 0.32923832923832924
       },
       {
         "segment": "YX",
-        "n": 2799,
-        "actual_delay_rate": 0.1279028224365845,
-        "predicted_delay_rate": 0.0496605930689532,
-        "precision": 0.2158273381294964,
-        "recall": 0.08379888268156424,
-        "f1": 0.12072434607645875
+        "n": 271,
+        "actual_delay_rate": 0.12177121771217712,
+        "predicted_delay_rate": 0.2915129151291513,
+        "precision": 0.17721518987341772,
+        "recall": 0.42424242424242425,
+        "f1": 0.25
       },
       {
         "segment": "MQ",
-        "n": 2395,
-        "actual_delay_rate": 0.16450939457202504,
-        "predicted_delay_rate": 0.4651356993736952,
-        "precision": 0.21723518850987433,
-        "recall": 0.6142131979695431,
-        "f1": 0.3209549071618037
-      },
-      {
-        "segment": "OH",
-        "n": 2143,
-        "actual_delay_rate": 0.19225384974335044,
-        "predicted_delay_rate": 0.41203919738684086,
-        "precision": 0.22310305775764439,
-        "recall": 0.47815533980582525,
-        "f1": 0.30424710424710427
+        "n": 222,
+        "actual_delay_rate": 0.15765765765765766,
+        "predicted_delay_rate": 0.3738738738738739,
+        "precision": 0.21686746987951808,
+        "recall": 0.5142857142857142,
+        "f1": 0.3050847457627119
       },
       {
         "segment": "NK",
-        "n": 2115,
-        "actual_delay_rate": 0.16879432624113475,
-        "predicted_delay_rate": 0.5702127659574469,
-        "precision": 0.2023217247097844,
-        "recall": 0.6834733893557423,
-        "f1": 0.3122200895713372
-      },
-      {
-        "segment": "B6",
-        "n": 2073,
-        "actual_delay_rate": 0.17462614568258564,
-        "predicted_delay_rate": 0.6087795465508924,
-        "precision": 0.2076069730586371,
-        "recall": 0.7237569060773481,
-        "f1": 0.3226600985221675
+        "n": 217,
+        "actual_delay_rate": 0.21658986175115208,
+        "predicted_delay_rate": 0.5299539170506913,
+        "precision": 0.24347826086956523,
+        "recall": 0.5957446808510638,
+        "f1": 0.345679012345679
       },
       {
         "segment": "AS",
-        "n": 2066,
-        "actual_delay_rate": 0.18151016456921587,
-        "predicted_delay_rate": 0.4728944820909971,
-        "precision": 0.20266120777891505,
-        "recall": 0.528,
-        "f1": 0.29289940828402367
+        "n": 213,
+        "actual_delay_rate": 0.1784037558685446,
+        "predicted_delay_rate": 0.4788732394366197,
+        "precision": 0.20588235294117646,
+        "recall": 0.5526315789473685,
+        "f1": 0.3
       },
       {
-        "segment": "9E",
-        "n": 1878,
-        "actual_delay_rate": 0.14057507987220447,
-        "predicted_delay_rate": 0.1869009584664537,
-        "precision": 0.17094017094017094,
-        "recall": 0.22727272727272727,
-        "f1": 0.1951219512195122
+        "segment": "OH",
+        "n": 213,
+        "actual_delay_rate": 0.215962441314554,
+        "predicted_delay_rate": 0.36619718309859156,
+        "precision": 0.21794871794871795,
+        "recall": 0.3695652173913043,
+        "f1": 0.27419354838709675
       },
       {
         "segment": "F9",
-        "n": 1687,
-        "actual_delay_rate": 0.25014819205690575,
-        "predicted_delay_rate": 0.6905749851807943,
-        "precision": 0.2892703862660944,
-        "recall": 0.7985781990521327,
-        "f1": 0.424700693131695
+        "n": 189,
+        "actual_delay_rate": 0.1746031746031746,
+        "predicted_delay_rate": 0.4708994708994709,
+        "precision": 0.1797752808988764,
+        "recall": 0.48484848484848486,
+        "f1": 0.26229508196721313
+      },
+      {
+        "segment": "B6",
+        "n": 178,
+        "actual_delay_rate": 0.21910112359550563,
+        "predicted_delay_rate": 0.5112359550561798,
+        "precision": 0.3076923076923077,
+        "recall": 0.717948717948718,
+        "f1": 0.4307692307692308
+      },
+      {
+        "segment": "9E",
+        "n": 162,
+        "actual_delay_rate": 0.1419753086419753,
+        "predicted_delay_rate": 0.2222222222222222,
+        "precision": 0.19444444444444445,
+        "recall": 0.30434782608695654,
+        "f1": 0.23728813559322035
       },
       {
         "segment": "G4",
-        "n": 930,
-        "actual_delay_rate": 0.16989247311827957,
-        "predicted_delay_rate": 0.5182795698924731,
-        "precision": 0.2033195020746888,
-        "recall": 0.620253164556962,
-        "f1": 0.30625
+        "n": 118,
+        "actual_delay_rate": 0.17796610169491525,
+        "predicted_delay_rate": 0.2966101694915254,
+        "precision": 0.14285714285714285,
+        "recall": 0.23809523809523808,
+        "f1": 0.17857142857142858
       },
       {
         "segment": "HA",
-        "n": 718,
-        "actual_delay_rate": 0.11281337047353761,
-        "predicted_delay_rate": 0.19637883008356546,
-        "precision": 0.1773049645390071,
-        "recall": 0.30864197530864196,
-        "f1": 0.22522522522522523
+        "n": 62,
+        "actual_delay_rate": 0.0967741935483871,
+        "predicted_delay_rate": 0.11290322580645161,
+        "precision": 0.14285714285714285,
+        "recall": 0.16666666666666666,
+        "f1": 0.15384615384615385
       }
     ],
     "origin": [
       {
         "segment": "ATL",
-        "n": 2955,
-        "actual_delay_rate": 0.14619289340101524,
-        "predicted_delay_rate": 0.4087986463620981,
-        "precision": 0.19701986754966888,
-        "recall": 0.5509259259259259,
-        "f1": 0.29024390243902437
-      },
-      {
-        "segment": "DFW",
-        "n": 2746,
-        "actual_delay_rate": 0.21303714493809178,
-        "predicted_delay_rate": 0.6234522942461762,
-        "precision": 0.25934579439252337,
-        "recall": 0.7589743589743589,
-        "f1": 0.38659120592076623
+        "n": 311,
+        "actual_delay_rate": 0.14790996784565916,
+        "predicted_delay_rate": 0.42443729903536975,
+        "precision": 0.19696969696969696,
+        "recall": 0.5652173913043478,
+        "f1": 0.29213483146067415
       },
       {
         "segment": "DEN",
-        "n": 2520,
-        "actual_delay_rate": 0.20674603174603173,
-        "predicted_delay_rate": 0.5527777777777778,
-        "precision": 0.22182340272792533,
-        "recall": 0.5930902111324377,
-        "f1": 0.322884012539185
+        "n": 279,
+        "actual_delay_rate": 0.17562724014336917,
+        "predicted_delay_rate": 0.4946236559139785,
+        "precision": 0.21014492753623187,
+        "recall": 0.5918367346938775,
+        "f1": 0.31016042780748665
+      },
+      {
+        "segment": "DFW",
+        "n": 249,
+        "actual_delay_rate": 0.23293172690763053,
+        "predicted_delay_rate": 0.5622489959839357,
+        "precision": 0.2714285714285714,
+        "recall": 0.6551724137931034,
+        "f1": 0.3838383838383838
       },
       {
         "segment": "ORD",
-        "n": 2365,
-        "actual_delay_rate": 0.16617336152219872,
-        "predicted_delay_rate": 0.5171247357293869,
-        "precision": 0.2027800490596893,
-        "recall": 0.6310432569974554,
-        "f1": 0.3069306930693069
-      },
-      {
-        "segment": "CLT",
-        "n": 1916,
-        "actual_delay_rate": 0.1978079331941545,
-        "predicted_delay_rate": 0.5850730688935282,
-        "precision": 0.23015165031222123,
-        "recall": 0.6807387862796834,
-        "f1": 0.344
-      },
-      {
-        "segment": "PHX",
-        "n": 1808,
-        "actual_delay_rate": 0.1415929203539823,
-        "predicted_delay_rate": 0.41150442477876104,
-        "precision": 0.19086021505376344,
-        "recall": 0.5546875,
-        "f1": 0.284
+        "n": 221,
+        "actual_delay_rate": 0.18552036199095023,
+        "predicted_delay_rate": 0.502262443438914,
+        "precision": 0.23423423423423423,
+        "recall": 0.6341463414634146,
+        "f1": 0.34210526315789475
       },
       {
         "segment": "LAX",
-        "n": 1721,
-        "actual_delay_rate": 0.11446833236490413,
-        "predicted_delay_rate": 0.431144683323649,
-        "precision": 0.12129380053908356,
-        "recall": 0.45685279187817257,
-        "f1": 0.19169329073482427
+        "n": 173,
+        "actual_delay_rate": 0.18497109826589594,
+        "predicted_delay_rate": 0.3988439306358382,
+        "precision": 0.2028985507246377,
+        "recall": 0.4375,
+        "f1": 0.27722772277227725
+      },
+      {
+        "segment": "PHX",
+        "n": 173,
+        "actual_delay_rate": 0.13872832369942195,
+        "predicted_delay_rate": 0.4682080924855491,
+        "precision": 0.14814814814814814,
+        "recall": 0.5,
+        "f1": 0.22857142857142856
+      },
+      {
+        "segment": "CLT",
+        "n": 164,
+        "actual_delay_rate": 0.21951219512195122,
+        "predicted_delay_rate": 0.5365853658536586,
+        "precision": 0.25,
+        "recall": 0.6111111111111112,
+        "f1": 0.3548387096774194
       },
       {
         "segment": "LAS",
-        "n": 1625,
-        "actual_delay_rate": 0.16,
-        "predicted_delay_rate": 0.5384615384615384,
-        "precision": 0.176,
-        "recall": 0.5923076923076923,
-        "f1": 0.2713656387665198
-      },
-      {
-        "segment": "LGA",
-        "n": 1477,
-        "actual_delay_rate": 0.16046039268788084,
-        "predicted_delay_rate": 0.22613405551794177,
-        "precision": 0.27245508982035926,
-        "recall": 0.38396624472573837,
-        "f1": 0.318739054290718
+        "n": 156,
+        "actual_delay_rate": 0.15384615384615385,
+        "predicted_delay_rate": 0.41025641025641024,
+        "precision": 0.203125,
+        "recall": 0.5416666666666666,
+        "f1": 0.29545454545454547
       },
       {
         "segment": "SEA",
-        "n": 1347,
-        "actual_delay_rate": 0.16852264291017074,
-        "predicted_delay_rate": 0.4461766889383816,
-        "precision": 0.18801996672212978,
-        "recall": 0.4977973568281938,
-        "f1": 0.27294685990338163
-      },
-      {
-        "segment": "DCA",
-        "n": 1280,
-        "actual_delay_rate": 0.16015625,
-        "predicted_delay_rate": 0.34375,
-        "precision": 0.19090909090909092,
-        "recall": 0.4097560975609756,
-        "f1": 0.26046511627906976
-      },
-      {
-        "segment": "BOS",
-        "n": 1263,
-        "actual_delay_rate": 0.1559778305621536,
-        "predicted_delay_rate": 0.38558986539984164,
-        "precision": 0.22792607802874743,
-        "recall": 0.5634517766497462,
-        "f1": 0.32456140350877194
-      },
-      {
-        "segment": "SFO",
-        "n": 1197,
-        "actual_delay_rate": 0.1670843776106934,
-        "predicted_delay_rate": 0.5772765246449457,
-        "precision": 0.16353111432706222,
-        "recall": 0.565,
-        "f1": 0.2536475869809203
-      },
-      {
-        "segment": "DTW",
-        "n": 1196,
-        "actual_delay_rate": 0.16220735785953178,
-        "predicted_delay_rate": 0.26505016722408026,
-        "precision": 0.2113564668769716,
-        "recall": 0.34536082474226804,
-        "f1": 0.2622309197651663
+        "n": 154,
+        "actual_delay_rate": 0.13636363636363635,
+        "predicted_delay_rate": 0.43506493506493504,
+        "precision": 0.16417910447761194,
+        "recall": 0.5238095238095238,
+        "f1": 0.25
       },
       {
         "segment": "MCO",
-        "n": 1195,
-        "actual_delay_rate": 0.1489539748953975,
-        "predicted_delay_rate": 0.5774058577405857,
-        "precision": 0.1927536231884058,
-        "recall": 0.7471910112359551,
-        "f1": 0.3064516129032258
+        "n": 146,
+        "actual_delay_rate": 0.1506849315068493,
+        "predicted_delay_rate": 0.5136986301369864,
+        "precision": 0.16,
+        "recall": 0.5454545454545454,
+        "f1": 0.24742268041237114
+      },
+      {
+        "segment": "LGA",
+        "n": 144,
+        "actual_delay_rate": 0.1597222222222222,
+        "predicted_delay_rate": 0.3125,
+        "precision": 0.24444444444444444,
+        "recall": 0.4782608695652174,
+        "f1": 0.3235294117647059
+      },
+      {
+        "segment": "DTW",
+        "n": 132,
+        "actual_delay_rate": 0.18181818181818182,
+        "predicted_delay_rate": 0.38636363636363635,
+        "precision": 0.23529411764705882,
+        "recall": 0.5,
+        "f1": 0.32
+      },
+      {
+        "segment": "SFO",
+        "n": 124,
+        "actual_delay_rate": 0.20161290322580644,
+        "predicted_delay_rate": 0.2903225806451613,
+        "precision": 0.1388888888888889,
+        "recall": 0.2,
+        "f1": 0.16393442622950818
+      },
+      {
+        "segment": "DCA",
+        "n": 119,
+        "actual_delay_rate": 0.19327731092436976,
+        "predicted_delay_rate": 0.35294117647058826,
+        "precision": 0.2857142857142857,
+        "recall": 0.5217391304347826,
+        "f1": 0.36923076923076925
+      },
+      {
+        "segment": "MIA",
+        "n": 115,
+        "actual_delay_rate": 0.1565217391304348,
+        "predicted_delay_rate": 0.6782608695652174,
+        "precision": 0.1794871794871795,
+        "recall": 0.7777777777777778,
+        "f1": 0.2916666666666667
+      },
+      {
+        "segment": "BOS",
+        "n": 110,
+        "actual_delay_rate": 0.14545454545454545,
+        "predicted_delay_rate": 0.5,
+        "precision": 0.2,
+        "recall": 0.6875,
+        "f1": 0.30985915492957744
       },
       {
         "segment": "EWR",
-        "n": 1112,
-        "actual_delay_rate": 0.20053956834532374,
-        "predicted_delay_rate": 0.43345323741007197,
-        "precision": 0.2883817427385892,
-        "recall": 0.6233183856502242,
-        "f1": 0.3943262411347518
-      },
-      {
-        "segment": "MSP",
-        "n": 1100,
-        "actual_delay_rate": 0.14363636363636365,
-        "predicted_delay_rate": 0.34454545454545454,
-        "precision": 0.158311345646438,
-        "recall": 0.379746835443038,
-        "f1": 0.22346368715083798
+        "n": 102,
+        "actual_delay_rate": 0.19607843137254902,
+        "predicted_delay_rate": 0.5490196078431373,
+        "precision": 0.23214285714285715,
+        "recall": 0.65,
+        "f1": 0.34210526315789475
       },
       {
         "segment": "JFK",
-        "n": 1080,
-        "actual_delay_rate": 0.13055555555555556,
-        "predicted_delay_rate": 0.4388888888888889,
-        "precision": 0.16666666666666666,
-        "recall": 0.5602836879432624,
-        "f1": 0.25691056910569104
+        "n": 102,
+        "actual_delay_rate": 0.17647058823529413,
+        "predicted_delay_rate": 0.45098039215686275,
+        "precision": 0.2608695652173913,
+        "recall": 0.6666666666666666,
+        "f1": 0.375
       },
       {
-        "segment": "IAH",
-        "n": 968,
-        "actual_delay_rate": 0.18698347107438015,
-        "predicted_delay_rate": 0.6353305785123967,
-        "precision": 0.23089430894308943,
-        "recall": 0.7845303867403315,
-        "f1": 0.35678391959798994
+        "segment": "MSP",
+        "n": 98,
+        "actual_delay_rate": 0.1836734693877551,
+        "predicted_delay_rate": 0.35714285714285715,
+        "precision": 0.17142857142857143,
+        "recall": 0.3333333333333333,
+        "f1": 0.22641509433962265
       },
       {
         "segment": "SLC",
-        "n": 948,
-        "actual_delay_rate": 0.13291139240506328,
-        "predicted_delay_rate": 0.3069620253164557,
-        "precision": 0.15463917525773196,
-        "recall": 0.35714285714285715,
-        "f1": 0.2158273381294964
+        "n": 96,
+        "actual_delay_rate": 0.125,
+        "predicted_delay_rate": 0.21875,
+        "precision": 0.19047619047619047,
+        "recall": 0.3333333333333333,
+        "f1": 0.24242424242424243
       }
     ],
     "destination": [
       {
         "segment": "ATL",
-        "n": 3009,
-        "actual_delay_rate": 0.12794948487869723,
-        "predicted_delay_rate": 0.3180458624127617,
-        "precision": 0.17136886102403343,
-        "recall": 0.42597402597402595,
-        "f1": 0.2444113263785395
-      },
-      {
-        "segment": "DFW",
-        "n": 2678,
-        "actual_delay_rate": 0.2229275578790142,
-        "predicted_delay_rate": 0.5108289768483943,
-        "precision": 0.2843567251461988,
-        "recall": 0.6515912897822446,
-        "f1": 0.39592875318066156
+        "n": 295,
+        "actual_delay_rate": 0.14576271186440679,
+        "predicted_delay_rate": 0.2271186440677966,
+        "precision": 0.208955223880597,
+        "recall": 0.32558139534883723,
+        "f1": 0.2545454545454545
       },
       {
         "segment": "DEN",
-        "n": 2508,
-        "actual_delay_rate": 0.16985645933014354,
-        "predicted_delay_rate": 0.37320574162679426,
-        "precision": 0.20405982905982906,
-        "recall": 0.44835680751173707,
-        "f1": 0.28046989720998533
+        "n": 280,
+        "actual_delay_rate": 0.17142857142857143,
+        "predicted_delay_rate": 0.28214285714285714,
+        "precision": 0.21518987341772153,
+        "recall": 0.3541666666666667,
+        "f1": 0.2677165354330709
+      },
+      {
+        "segment": "DFW",
+        "n": 257,
+        "actual_delay_rate": 0.1828793774319066,
+        "predicted_delay_rate": 0.36964980544747084,
+        "precision": 0.24210526315789474,
+        "recall": 0.48936170212765956,
+        "f1": 0.323943661971831
       },
       {
         "segment": "ORD",
-        "n": 2445,
-        "actual_delay_rate": 0.15460122699386503,
-        "predicted_delay_rate": 0.3946830265848671,
-        "precision": 0.21968911917098446,
-        "recall": 0.5608465608465608,
-        "f1": 0.31571109456440805
+        "n": 233,
+        "actual_delay_rate": 0.17167381974248927,
+        "predicted_delay_rate": 0.26180257510729615,
+        "precision": 0.26229508196721313,
+        "recall": 0.4,
+        "f1": 0.31683168316831684
       },
       {
         "segment": "CLT",
-        "n": 1910,
-        "actual_delay_rate": 0.16282722513089004,
-        "predicted_delay_rate": 0.45916230366492145,
-        "precision": 0.17559863169897377,
-        "recall": 0.49517684887459806,
-        "f1": 0.25925925925925924
-      },
-      {
-        "segment": "LAX",
-        "n": 1744,
-        "actual_delay_rate": 0.1313073394495413,
-        "predicted_delay_rate": 0.4455275229357798,
-        "precision": 0.1583011583011583,
-        "recall": 0.537117903930131,
-        "f1": 0.24453280318091453
+        "n": 204,
+        "actual_delay_rate": 0.19607843137254902,
+        "predicted_delay_rate": 0.3480392156862745,
+        "precision": 0.22535211267605634,
+        "recall": 0.4,
+        "f1": 0.2882882882882883
       },
       {
         "segment": "PHX",
-        "n": 1715,
-        "actual_delay_rate": 0.14402332361516035,
-        "predicted_delay_rate": 0.3801749271137026,
-        "precision": 0.17791411042944785,
-        "recall": 0.46963562753036436,
-        "f1": 0.25806451612903225
+        "n": 192,
+        "actual_delay_rate": 0.15625,
+        "predicted_delay_rate": 0.421875,
+        "precision": 0.20987654320987653,
+        "recall": 0.5666666666666667,
+        "f1": 0.3063063063063063
       },
       {
         "segment": "LAS",
-        "n": 1692,
-        "actual_delay_rate": 0.15130023640661938,
-        "predicted_delay_rate": 0.5171394799054374,
-        "precision": 0.19085714285714286,
-        "recall": 0.65234375,
-        "f1": 0.2953138815207781
+        "n": 176,
+        "actual_delay_rate": 0.10795454545454546,
+        "predicted_delay_rate": 0.4431818181818182,
+        "precision": 0.14102564102564102,
+        "recall": 0.5789473684210527,
+        "f1": 0.2268041237113402
       },
       {
-        "segment": "LGA",
-        "n": 1558,
-        "actual_delay_rate": 0.17650834403080873,
-        "predicted_delay_rate": 0.3433889602053915,
-        "precision": 0.23925233644859814,
-        "recall": 0.46545454545454545,
-        "f1": 0.3160493827160494
-      },
-      {
-        "segment": "SEA",
-        "n": 1325,
-        "actual_delay_rate": 0.14943396226415095,
-        "predicted_delay_rate": 0.33584905660377357,
-        "precision": 0.17303370786516853,
-        "recall": 0.3888888888888889,
-        "f1": 0.23950233281493002
-      },
-      {
-        "segment": "BOS",
-        "n": 1256,
-        "actual_delay_rate": 0.17436305732484075,
-        "predicted_delay_rate": 0.48089171974522293,
-        "precision": 0.24172185430463577,
-        "recall": 0.6666666666666666,
-        "f1": 0.35479951397326853
-      },
-      {
-        "segment": "DCA",
-        "n": 1251,
-        "actual_delay_rate": 0.18465227817745802,
-        "predicted_delay_rate": 0.3677058353317346,
-        "precision": 0.25217391304347825,
-        "recall": 0.5021645021645021,
-        "f1": 0.3357452966714906
-      },
-      {
-        "segment": "SFO",
-        "n": 1228,
-        "actual_delay_rate": 0.1767100977198697,
-        "predicted_delay_rate": 0.6815960912052117,
-        "precision": 0.1983273596176822,
-        "recall": 0.7649769585253456,
-        "f1": 0.31499051233396586
+        "segment": "LAX",
+        "n": 172,
+        "actual_delay_rate": 0.12790697674418605,
+        "predicted_delay_rate": 0.37209302325581395,
+        "precision": 0.15625,
+        "recall": 0.45454545454545453,
+        "f1": 0.23255813953488372
       },
       {
         "segment": "MCO",
-        "n": 1209,
-        "actual_delay_rate": 0.13647642679900746,
-        "predicted_delay_rate": 0.5409429280397022,
-        "precision": 0.1712538226299694,
-        "recall": 0.6787878787878788,
-        "f1": 0.27350427350427353
+        "n": 146,
+        "actual_delay_rate": 0.1917808219178082,
+        "predicted_delay_rate": 0.4657534246575342,
+        "precision": 0.17647058823529413,
+        "recall": 0.42857142857142855,
+        "f1": 0.25
+      },
+      {
+        "segment": "LGA",
+        "n": 140,
+        "actual_delay_rate": 0.2,
+        "predicted_delay_rate": 0.37857142857142856,
+        "precision": 0.18867924528301888,
+        "recall": 0.35714285714285715,
+        "f1": 0.24691358024691357
+      },
+      {
+        "segment": "SEA",
+        "n": 135,
+        "actual_delay_rate": 0.18518518518518517,
+        "predicted_delay_rate": 0.4148148148148148,
+        "precision": 0.21428571428571427,
+        "recall": 0.48,
+        "f1": 0.2962962962962963
       },
       {
         "segment": "DTW",
-        "n": 1193,
-        "actual_delay_rate": 0.13327745180217937,
-        "predicted_delay_rate": 0.3109807208717519,
-        "precision": 0.18059299191374664,
-        "recall": 0.42138364779874216,
-        "f1": 0.2528301886792453
+        "n": 131,
+        "actual_delay_rate": 0.15267175572519084,
+        "predicted_delay_rate": 0.2748091603053435,
+        "precision": 0.2222222222222222,
+        "recall": 0.4,
+        "f1": 0.2857142857142857
       },
       {
-        "segment": "JFK",
-        "n": 1141,
-        "actual_delay_rate": 0.14899211218229624,
-        "predicted_delay_rate": 0.42769500438212094,
-        "precision": 0.18237704918032788,
-        "recall": 0.5235294117647059,
-        "f1": 0.270516717325228
-      },
-      {
-        "segment": "MSP",
-        "n": 1101,
-        "actual_delay_rate": 0.12443233424159855,
-        "predicted_delay_rate": 0.30154405086285196,
-        "precision": 0.18072289156626506,
-        "recall": 0.43795620437956206,
-        "f1": 0.255863539445629
+        "segment": "BOS",
+        "n": 125,
+        "actual_delay_rate": 0.2,
+        "predicted_delay_rate": 0.432,
+        "precision": 0.37037037037037035,
+        "recall": 0.8,
+        "f1": 0.5063291139240507
       },
       {
         "segment": "EWR",
-        "n": 1067,
-        "actual_delay_rate": 0.246485473289597,
-        "predicted_delay_rate": 0.4020618556701031,
-        "precision": 0.358974358974359,
-        "recall": 0.5855513307984791,
-        "f1": 0.44508670520231214
+        "n": 120,
+        "actual_delay_rate": 0.25,
+        "predicted_delay_rate": 0.43333333333333335,
+        "precision": 0.40384615384615385,
+        "recall": 0.7,
+        "f1": 0.5121951219512195
       },
       {
-        "segment": "SLC",
-        "n": 1016,
-        "actual_delay_rate": 0.1171259842519685,
-        "predicted_delay_rate": 0.24015748031496062,
-        "precision": 0.1680327868852459,
-        "recall": 0.3445378151260504,
-        "f1": 0.22589531680440772
+        "segment": "JFK",
+        "n": 111,
+        "actual_delay_rate": 0.14414414414414414,
+        "predicted_delay_rate": 0.27927927927927926,
+        "precision": 0.12903225806451613,
+        "recall": 0.25,
+        "f1": 0.1702127659574468
+      },
+      {
+        "segment": "DCA",
+        "n": 110,
+        "actual_delay_rate": 0.18181818181818182,
+        "predicted_delay_rate": 0.37272727272727274,
+        "precision": 0.2926829268292683,
+        "recall": 0.6,
+        "f1": 0.39344262295081966
+      },
+      {
+        "segment": "MSP",
+        "n": 104,
+        "actual_delay_rate": 0.15384615384615385,
+        "predicted_delay_rate": 0.28846153846153844,
+        "precision": 0.13333333333333333,
+        "recall": 0.25,
+        "f1": 0.17391304347826086
+      },
+      {
+        "segment": "SFO",
+        "n": 104,
+        "actual_delay_rate": 0.20192307692307693,
+        "predicted_delay_rate": 0.47115384615384615,
+        "precision": 0.20408163265306123,
+        "recall": 0.47619047619047616,
+        "f1": 0.2857142857142857
       },
       {
         "segment": "IAH",
-        "n": 981,
-        "actual_delay_rate": 0.1763506625891947,
-        "predicted_delay_rate": 0.4291539245667686,
-        "precision": 0.24465558194774348,
-        "recall": 0.5953757225433526,
-        "f1": 0.3468013468013468
+        "n": 100,
+        "actual_delay_rate": 0.23,
+        "predicted_delay_rate": 0.51,
+        "precision": 0.23529411764705882,
+        "recall": 0.5217391304347826,
+        "f1": 0.32432432432432434
+      },
+      {
+        "segment": "MIA",
+        "n": 94,
+        "actual_delay_rate": 0.1702127659574468,
+        "predicted_delay_rate": 0.39361702127659576,
+        "precision": 0.13513513513513514,
+        "recall": 0.3125,
+        "f1": 0.18867924528301888
       }
     ],
     "departure_period": [
       {
         "segment": "morning",
-        "n": 25354,
-        "actual_delay_rate": 0.12226867555415319,
-        "predicted_delay_rate": 0.06744497909600063,
-        "precision": 0.17894736842105263,
-        "recall": 0.09870967741935484,
-        "f1": 0.12723492723492724
+        "n": 2506,
+        "actual_delay_rate": 0.13567438148443736,
+        "predicted_delay_rate": 0.007581803671189146,
+        "precision": 0.2631578947368421,
+        "recall": 0.014705882352941176,
+        "f1": 0.027855153203342618
       },
       {
         "segment": "afternoon",
-        "n": 17957,
-        "actual_delay_rate": 0.1739154647212786,
-        "predicted_delay_rate": 0.536726624714596,
-        "precision": 0.20180535380784395,
-        "recall": 0.6227985910983029,
-        "f1": 0.304835044275527
+        "n": 1767,
+        "actual_delay_rate": 0.1765704584040747,
+        "predicted_delay_rate": 0.42614601018675724,
+        "precision": 0.19787516600265603,
+        "recall": 0.4775641025641026,
+        "f1": 0.27981220657276995
       },
       {
         "segment": "evening",
-        "n": 15326,
-        "actual_delay_rate": 0.2091870024794467,
-        "predicted_delay_rate": 0.8494714863630431,
-        "precision": 0.21729779552961057,
-        "recall": 0.8824079850280724,
-        "f1": 0.3487211093990755
+        "n": 1578,
+        "actual_delay_rate": 0.21863117870722434,
+        "predicted_delay_rate": 0.9531051964512041,
+        "precision": 0.21941489361702127,
+        "recall": 0.9565217391304348,
+        "f1": 0.35694970254191455
       },
       {
         "segment": "night",
-        "n": 1844,
-        "actual_delay_rate": 0.16268980477223427,
-        "predicted_delay_rate": 0.6491323210412148,
-        "precision": 0.18379281537176273,
-        "recall": 0.7333333333333333,
-        "f1": 0.2939211756847027
+        "n": 212,
+        "actual_delay_rate": 0.1792452830188679,
+        "predicted_delay_rate": 0.5283018867924528,
+        "precision": 0.25,
+        "recall": 0.7368421052631579,
+        "f1": 0.37333333333333335
       }
     ],
     "distance_band": [
       {
         "segment": "medium_500_1499mi",
-        "n": 31532,
-        "actual_delay_rate": 0.16551439807180007,
-        "predicted_delay_rate": 0.4531904097424838,
-        "precision": 0.21168649405178447,
-        "recall": 0.5796129526729259,
-        "f1": 0.3101132810497719
+        "n": 3194,
+        "actual_delay_rate": 0.1797119599248591,
+        "predicted_delay_rate": 0.42391984971822166,
+        "precision": 0.22378138847858198,
+        "recall": 0.5278745644599303,
+        "f1": 0.31431535269709543
       },
       {
         "segment": "short_<500mi",
-        "n": 21240,
-        "actual_delay_rate": 0.15936911487758945,
-        "predicted_delay_rate": 0.36624293785310735,
-        "precision": 0.21069546214166346,
-        "recall": 0.4841949778434269,
-        "f1": 0.29362235757792904
+        "n": 2087,
+        "actual_delay_rate": 0.15668423574508863,
+        "predicted_delay_rate": 0.3540967896502156,
+        "precision": 0.20568335588633288,
+        "recall": 0.4648318042813456,
+        "f1": 0.2851782363977486
       },
       {
         "segment": "long_1500mi_plus",
-        "n": 7709,
-        "actual_delay_rate": 0.1459333246854326,
-        "predicted_delay_rate": 0.4533661953560773,
-        "precision": 0.18197424892703862,
-        "recall": 0.5653333333333334,
-        "f1": 0.2753246753246753
+        "n": 782,
+        "actual_delay_rate": 0.17135549872122763,
+        "predicted_delay_rate": 0.3772378516624041,
+        "precision": 0.19322033898305085,
+        "recall": 0.4253731343283582,
+        "f1": 0.26573426573426573
       }
     ]
+  },
+  "public_release": {
+    "version": "1.5.0",
+    "name": "Flight Delay Risk",
+    "release_name": "Self-Explaining Product UI Release"
   }
 }

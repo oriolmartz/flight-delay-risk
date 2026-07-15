@@ -1,18 +1,11 @@
-"""
-CLI: read raw BTS CSV files, clean them, and save a processed parquet file.
-
-Usage:
-    python -m scripts.prepare_data --input-dir data/raw --output data/processed/flights_processed.parquet
-"""
+"""Prepare raw BTS monthly CSVs and write an auditable processed dataset."""
 from __future__ import annotations
 
 import argparse
 from pathlib import Path
 
-from src.config import DEFAULT_PROCESSED_PATH, RAW_DATA_DIR
-from src.data.clean import clean_flights
-from src.data.io import write_processed_frame
-from src.data.load_data import load_raw_directory
+from src.config import DATA_MANIFEST_PATH, DEFAULT_PROCESSED_PATH, RAW_DATA_DIR
+from src.data.preparation import prepare_dataset
 from src.utils.logging import get_logger
 
 logger = get_logger(__name__)
@@ -20,21 +13,34 @@ logger = get_logger(__name__)
 
 def main() -> None:
     parser = argparse.ArgumentParser(description="Prepare raw BTS flight data for training.")
-    parser.add_argument("--input-dir", type=Path, default=RAW_DATA_DIR,
-                         help="Directory containing raw BTS CSV files.")
-    parser.add_argument("--output", type=Path, default=DEFAULT_PROCESSED_PATH,
-                         help="Output parquet path.")
+    parser.add_argument("--input-dir", type=Path, default=RAW_DATA_DIR)
+    parser.add_argument("--output", type=Path, default=DEFAULT_PROCESSED_PATH)
+    parser.add_argument("--manifest", type=Path, default=DATA_MANIFEST_PATH)
+    parser.add_argument(
+        "--duplicate-month-policy",
+        choices=["error", "prefer-largest", "prefer-newest", "first"],
+        default="error",
+        help="Fail by default instead of silently concatenating duplicate monthly exports.",
+    )
+    parser.add_argument(
+        "--sample-rows-per-file",
+        type=int,
+        default=None,
+        help="Uniform sample over every complete monthly file. Never takes the first N rows.",
+    )
+    parser.add_argument("--chunksize", type=int, default=100_000)
     args = parser.parse_args()
 
-    logger.info("Loading raw data from %s", args.input_dir)
-    raw_df = load_raw_directory(args.input_dir)
-
-    logger.info("Cleaning and validating data...")
-    clean_df = clean_flights(raw_df)
-
-    args.output.parent.mkdir(parents=True, exist_ok=True)
-    actual_output = write_processed_frame(clean_df, args.output)
-    logger.info("Saved processed data (%d rows) to %s", len(clean_df), actual_output)
+    result = prepare_dataset(
+        args.input_dir,
+        output_path=args.output,
+        manifest_path=args.manifest,
+        duplicate_month_policy=args.duplicate_month_policy,
+        sample_rows_per_file=args.sample_rows_per_file,
+        chunksize=args.chunksize,
+    )
+    logger.info("Processed dataset: %s", result.output_path)
+    logger.info("Data manifest: %s", result.manifest_path)
 
 
 if __name__ == "__main__":

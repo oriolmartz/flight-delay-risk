@@ -24,5 +24,7 @@ def test_run_real_data_demo_help_exposes_validation_selection_flags():
         text=True,
     )
     assert "--selection-metric" in result.stdout
-    assert "--validation-size" in result.stdout
-    assert "--max-rows-per-month" in result.stdout
+    assert "--selection-size" in result.stdout
+    assert "--calibration-size" in result.stdout
+    assert "--sample-rows-per-month" in result.stdout
+    assert "--duplicate-month-policy" in result.stdout

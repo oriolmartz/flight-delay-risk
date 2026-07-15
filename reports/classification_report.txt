@@ -1,20 +1,20 @@
-=== MAIN MODEL (logistic_l1) ===
+=== EXTRA TREES ===
               precision    recall  f1-score   support
 
-           0       0.87      0.60      0.71     50752
-           1       0.21      0.54      0.30      9729
+           0       0.85      0.88      0.86     41830
+           1       0.27      0.22      0.25      8623
 
-    accuracy                           0.59     60481
-   macro avg       0.54      0.57      0.51     60481
-weighted avg       0.77      0.59      0.65     60481
+    accuracy                           0.77     50453
+   macro avg       0.56      0.55      0.55     50453
+weighted avg       0.75      0.77      0.76     50453
 
 
-=== BASELINE MODEL (logistic_regression) ===
+=== LOGISTIC BASELINE ===
               precision    recall  f1-score   support
 
-           0       0.84      1.00      0.91     50752
-           1       0.33      0.00      0.00      9729
+           0       0.83      0.99      0.90     41830
+           1       0.22      0.01      0.02      8623
 
-    accuracy                           0.84     60481
-   macro avg       0.59      0.50      0.46     60481
-weighted avg       0.76      0.84      0.77     60481
+    accuracy                           0.82     50453
+   macro avg       0.52      0.50      0.46     50453
+weighted avg       0.73      0.82      0.75     50453

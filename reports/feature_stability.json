@@ -1,0 +1,371 @@
+{
+  "release": "1.5.0",
+  "protocol": "pre_calibration_expanding_folds_joint_family_permutation",
+  "candidate": "extra_trees",
+  "max_rows": 30000,
+  "n_splits": 3,
+  "repeats": 3,
+  "final_calibration_and_test_consulted": false,
+  "required_positive_folds": 2,
+  "selected_families": [
+    "core_schedule",
+    "calendar",
+    "historical_rates",
+    "historical_support",
+    "recency",
+    "schedule_congestion"
+  ],
+  "selected_feature_count": 112,
+  "selected_features": [
+    "Airline",
+    "Origin",
+    "Dest",
+    "Route",
+    "DepPeriod",
+    "ArrPeriod",
+    "DistanceBand",
+    "Month",
+    "DayOfWeek",
+    "IsWeekend",
+    "DepHour",
+    "ArrHour",
+    "DepMinute",
+    "ArrMinute",
+    "CRSElapsedTime",
+    "Distance",
+    "ScheduledSpeedMph",
+    "LogDistance",
+    "DepHourSin",
+    "DepHourCos",
+    "ArrHourSin",
+    "ArrHourCos",
+    "DepMinuteSin",
+    "DepMinuteCos",
+    "ArrMinuteSin",
+    "ArrMinuteCos",
+    "IsMorningPeak",
+    "IsEveningPeak",
+    "IsPeakHour",
+    "IsRedEye",
+    "IsLongHaul",
+    "IsOvernightSchedule",
+    "Season",
+    "CalendarDateKnown",
+    "DayOfMonth",
+    "DayOfYear",
+    "WeekOfYear",
+    "Quarter",
+    "YearProgress",
+    "MonthSin",
+    "MonthCos",
+    "DayOfWeekSin",
+    "DayOfWeekCos",
+    "YearDaySin",
+    "YearDayCos",
+    "DaysToNearestFederalHoliday",
+    "IsFederalHoliday",
+    "IsHolidayWindow",
+    "CarrierDelayRate",
+    "RouteDelayRate",
+    "OriginDelayRate",
+    "DestDelayRate",
+    "CarrierRouteDelayRate",
+    "AirlineOriginDelayRate",
+    "AirlineDestDelayRate",
+    "OriginHourDelayRate",
+    "DestHourDelayRate",
+    "CarrierDepHourDelayRate",
+    "RouteFlightShare",
+    "CarrierRouteFlightShare",
+    "AirlineOriginFlightShare",
+    "OriginHourFlightShare",
+    "DestHourFlightShare",
+    "CarrierDepHourFlightShare",
+    "CarrierHistoryCount",
+    "CarrierHistoryLogCount",
+    "RouteHistoryCount",
+    "RouteHistoryLogCount",
+    "OriginHistoryCount",
+    "OriginHistoryLogCount",
+    "DestHistoryCount",
+    "DestHistoryLogCount",
+    "CarrierRouteHistoryCount",
+    "CarrierRouteHistoryLogCount",
+    "AirlineOriginHistoryCount",
+    "AirlineOriginHistoryLogCount",
+    "AirlineDestHistoryCount",
+    "AirlineDestHistoryLogCount",
+    "OriginHourHistoryCount",
+    "OriginHourHistoryLogCount",
+    "DestHourHistoryCount",
+    "DestHourHistoryLogCount",
+    "CarrierDepHourHistoryCount",
+    "CarrierDepHourHistoryLogCount",
+    "CarrierDelayRate28d",
+    "CarrierDelayRate90d",
+    "CarrierDelayRateEWMA",
+    "CarrierDelayTrend28d",
+    "RouteDelayRate28d",
+    "RouteDelayRate90d",
+    "RouteDelayRateEWMA",
+    "RouteDelayTrend28d",
+    "OriginDelayRate28d",
+    "OriginDelayRate90d",
+    "OriginDelayRateEWMA",
+    "OriginDelayTrend28d",
+    "DestDelayRate28d",
+    "DestDelayRate90d",
+    "DestDelayRateEWMA",
+    "DestDelayTrend28d",
+    "OriginScheduledDepartures30m",
+    "OriginScheduledDepartures60m",
+    "OriginScheduledDepartures120m",
+    "DestScheduledArrivals30m",
+    "DestScheduledArrivals60m",
+    "DestScheduledArrivals120m",
+    "OriginDailyScheduledFlights",
+    "DestDailyScheduledFlights",
+    "CarrierOriginDailyScheduledFlights",
+    "RouteDailyScheduledFlights",
+    "OriginBankShare60m",
+    "DestBankShare60m"
+  ],
+  "summary": {
+    "core_schedule": {
+      "mean_pr_auc_drop": 0.10812780981643766,
+      "median_pr_auc_drop": 0.10691196305843162,
+      "min_pr_auc_drop": 0.09886957557518372,
+      "max_pr_auc_drop": 0.11860189081569761,
+      "positive_folds": 3,
+      "total_folds": 3,
+      "stable": true
+    },
+    "calendar": {
+      "mean_pr_auc_drop": 0.0023603521472962963,
+      "median_pr_auc_drop": 0.002679822403138077,
+      "min_pr_auc_drop": -0.001705812224722436,
+      "max_pr_auc_drop": 0.006107046263473248,
+      "positive_folds": 2,
+      "total_folds": 3,
+      "stable": true
+    },
+    "historical_rates": {
+      "mean_pr_auc_drop": 0.0018406005024953302,
+      "median_pr_auc_drop": 0.001367666813844648,
+      "min_pr_auc_drop": -0.0006145411191239569,
+      "max_pr_auc_drop": 0.0047686758127652995,
+      "positive_folds": 2,
+      "total_folds": 3,
+      "stable": true
+    },
+    "historical_support": {
+      "mean_pr_auc_drop": 0.001371756544334246,
+      "median_pr_auc_drop": 0.0014611474055371554,
+      "min_pr_auc_drop": -0.003975215778974639,
+      "max_pr_auc_drop": 0.006629338006440222,
+      "positive_folds": 2,
+      "total_folds": 3,
+      "stable": true
+    },
+    "recency": {
+      "mean_pr_auc_drop": 0.0033921505742309788,
+      "median_pr_auc_drop": 0.003258449703881061,
+      "min_pr_auc_drop": 0.002697894993800465,
+      "max_pr_auc_drop": 0.00422010702501141,
+      "positive_folds": 3,
+      "total_folds": 3,
+      "stable": true
+    },
+    "schedule_congestion": {
+      "mean_pr_auc_drop": 0.001472914717337459,
+      "median_pr_auc_drop": 0.0013503549627265077,
+      "min_pr_auc_drop": 0.0011575011186891748,
+      "max_pr_auc_drop": 0.0019108880705966946,
+      "positive_folds": 3,
+      "total_folds": 3,
+      "stable": true
+    }
+  },
+  "folds": [
+    {
+      "fold": 1,
+      "train_dates": [
+        "2024-01-01",
+        "2024-05-07"
+      ],
+      "future_dates": [
+        "2024-05-08",
+        "2024-06-16"
+      ],
+      "train_rows": 10090,
+      "future_rows": 3343,
+      "baseline_pr_auc": 0.3935327109272357,
+      "families": {
+        "core_schedule": {
+          "baseline_pr_auc": 0.3935327109272357,
+          "permuted_pr_auc_mean": 0.29466313535205196,
+          "permuted_pr_auc_std": 0.013501998297918807,
+          "pr_auc_drop": 0.09886957557518372,
+          "repeats": 3
+        },
+        "calendar": {
+          "baseline_pr_auc": 0.3935327109272357,
+          "permuted_pr_auc_mean": 0.3908528885240976,
+          "permuted_pr_auc_std": 0.0017065459631702897,
+          "pr_auc_drop": 0.002679822403138077,
+          "repeats": 3
+        },
+        "historical_rates": {
+          "baseline_pr_auc": 0.3935327109272357,
+          "permuted_pr_auc_mean": 0.39216504411339104,
+          "permuted_pr_auc_std": 0.004272619212282671,
+          "pr_auc_drop": 0.001367666813844648,
+          "repeats": 3
+        },
+        "historical_support": {
+          "baseline_pr_auc": 0.3935327109272357,
+          "permuted_pr_auc_mean": 0.3975079267062103,
+          "permuted_pr_auc_std": 0.0018429662690289147,
+          "pr_auc_drop": -0.003975215778974639,
+          "repeats": 3
+        },
+        "recency": {
+          "baseline_pr_auc": 0.3935327109272357,
+          "permuted_pr_auc_mean": 0.3908348159334352,
+          "permuted_pr_auc_std": 0.004855978933277796,
+          "pr_auc_drop": 0.002697894993800465,
+          "repeats": 3
+        },
+        "schedule_congestion": {
+          "baseline_pr_auc": 0.3935327109272357,
+          "permuted_pr_auc_mean": 0.3921823559645092,
+          "permuted_pr_auc_std": 0.0011359880591034926,
+          "pr_auc_drop": 0.0013503549627265077,
+          "repeats": 3
+        }
+      }
+    },
+    {
+      "fold": 2,
+      "train_dates": [
+        "2024-01-01",
+        "2024-06-16"
+      ],
+      "future_dates": [
+        "2024-06-17",
+        "2024-07-26"
+      ],
+      "train_rows": 13433,
+      "future_rows": 3435,
+      "baseline_pr_auc": 0.4324040119252925,
+      "families": {
+        "core_schedule": {
+          "baseline_pr_auc": 0.4324040119252925,
+          "permuted_pr_auc_mean": 0.3138021211095949,
+          "permuted_pr_auc_std": 0.010586068990241457,
+          "pr_auc_drop": 0.11860189081569761,
+          "repeats": 3
+        },
+        "calendar": {
+          "baseline_pr_auc": 0.4324040119252925,
+          "permuted_pr_auc_mean": 0.4341098241500149,
+          "permuted_pr_auc_std": 0.0007096510620182886,
+          "pr_auc_drop": -0.001705812224722436,
+          "repeats": 3
+        },
+        "historical_rates": {
+          "baseline_pr_auc": 0.4324040119252925,
+          "permuted_pr_auc_mean": 0.43301855304441644,
+          "permuted_pr_auc_std": 0.0034718184202456323,
+          "pr_auc_drop": -0.0006145411191239569,
+          "repeats": 3
+        },
+        "historical_support": {
+          "baseline_pr_auc": 0.4324040119252925,
+          "permuted_pr_auc_mean": 0.43094286451975533,
+          "permuted_pr_auc_std": 0.001428092366110928,
+          "pr_auc_drop": 0.0014611474055371554,
+          "repeats": 3
+        },
+        "recency": {
+          "baseline_pr_auc": 0.4324040119252925,
+          "permuted_pr_auc_mean": 0.4281839049002811,
+          "permuted_pr_auc_std": 0.0034429904299044015,
+          "pr_auc_drop": 0.00422010702501141,
+          "repeats": 3
+        },
+        "schedule_congestion": {
+          "baseline_pr_auc": 0.4324040119252925,
+          "permuted_pr_auc_mean": 0.4312465108066033,
+          "permuted_pr_auc_std": 0.002551366215773586,
+          "pr_auc_drop": 0.0011575011186891748,
+          "repeats": 3
+        }
+      }
+    },
+    {
+      "fold": 3,
+      "train_dates": [
+        "2024-01-01",
+        "2024-07-26"
+      ],
+      "future_dates": [
+        "2024-07-27",
+        "2024-09-04"
+      ],
+      "train_rows": 16868,
+      "future_rows": 3368,
+      "baseline_pr_auc": 0.3277919586420389,
+      "families": {
+        "core_schedule": {
+          "baseline_pr_auc": 0.3277919586420389,
+          "permuted_pr_auc_mean": 0.2208799955836073,
+          "permuted_pr_auc_std": 0.0029306820365832546,
+          "pr_auc_drop": 0.10691196305843162,
+          "repeats": 3
+        },
+        "calendar": {
+          "baseline_pr_auc": 0.3277919586420389,
+          "permuted_pr_auc_mean": 0.32168491237856567,
+          "permuted_pr_auc_std": 0.0017248265096380582,
+          "pr_auc_drop": 0.006107046263473248,
+          "repeats": 3
+        },
+        "historical_rates": {
+          "baseline_pr_auc": 0.3277919586420389,
+          "permuted_pr_auc_mean": 0.3230232828292736,
+          "permuted_pr_auc_std": 0.001993614836362281,
+          "pr_auc_drop": 0.0047686758127652995,
+          "repeats": 3
+        },
+        "historical_support": {
+          "baseline_pr_auc": 0.3277919586420389,
+          "permuted_pr_auc_mean": 0.3211626206355987,
+          "permuted_pr_auc_std": 0.005280717408697543,
+          "pr_auc_drop": 0.006629338006440222,
+          "repeats": 3
+        },
+        "recency": {
+          "baseline_pr_auc": 0.3277919586420389,
+          "permuted_pr_auc_mean": 0.32453350893815786,
+          "permuted_pr_auc_std": 0.0013770228095747643,
+          "pr_auc_drop": 0.003258449703881061,
+          "repeats": 3
+        },
+        "schedule_congestion": {
+          "baseline_pr_auc": 0.3277919586420389,
+          "permuted_pr_auc_mean": 0.3258810705714422,
+          "permuted_pr_auc_std": 0.0018300250321532303,
+          "pr_auc_drop": 0.0019108880705966946,
+          "repeats": 3
+        }
+      }
+    }
+  ],
+  "guardrail": "A family is marked stable only when its joint permutation reduces PR-AUC in at least two thirds of pre-calibration folds and the median drop is positive.",
+  "public_release": {
+    "version": "1.5.0",
+    "name": "Flight Delay Risk",
+    "release_name": "Self-Explaining Product UI Release"
+  }
+}

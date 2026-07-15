@@ -108,7 +108,7 @@ class TestModelCardEndpoint:
         response = client.get("/model/card")
         assert response.status_code == 200
         body = response.json()
-        assert body["name"] == "FlightRisk"
+        assert body["name"] == "Flight Delay Risk"
         assert body["decision_threshold"] == 0.42
         assert len(body["leakage_controls"]) >= 3
 

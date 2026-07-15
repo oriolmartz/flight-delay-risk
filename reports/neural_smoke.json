@@ -1,0 +1,22 @@
+{
+  "release": "1.5.0",
+  "status": "passed",
+  "models": {
+    "mlp_embeddings": {
+      "status": "passed",
+      "rows_train": 1200,
+      "rows_test": 96,
+      "epochs_trained": 2,
+      "best_validation_loss": 0.9402207136154175,
+      "elapsed_seconds": 2.7687328989995876
+    },
+    "ft_transformer": {
+      "status": "passed",
+      "rows_train": 1200,
+      "rows_test": 96,
+      "epochs_trained": 2,
+      "best_validation_loss": 0.9263384342193604,
+      "elapsed_seconds": 3.394757228999879
+    }
+  }
+}

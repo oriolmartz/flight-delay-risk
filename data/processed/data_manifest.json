@@ -1,0 +1,450 @@
+{
+  "manifest_version": "1.0",
+  "generated_at_utc": "2026-07-13T16:28:41.981269+00:00",
+  "git_commit": "6bb06d62bb86b6439c76315dee687b9a2c5423d4",
+  "input_directory": "/mnt/data/flight-risk-layer1/flight-risk/data/raw",
+  "output_path": "/mnt/data/flight-risk-layer1/flight-risk/data/processed/flights_processed.parquet",
+  "output_sha256": "29974b3128b976bcf49b47772bab78a34cfcc0b4a2a33a413a488bd8b3ec0432",
+  "preparation": {
+    "duplicate_month_policy": "error",
+    "sample_rows_per_file": null,
+    "chunksize": 100000,
+    "random_seed": 42,
+    "processed_columns": [
+      "FlightDate",
+      "Year",
+      "Month",
+      "DayOfWeek",
+      "Airline",
+      "Origin",
+      "Dest",
+      "CRSDepTime",
+      "CRSArrTime",
+      "CRSElapsedTime",
+      "Distance",
+      "ArrDel15"
+    ]
+  },
+  "preparation_config_sha256": "a47277595a9a3796b9c916ad2d299f089d172097dee9eecbb7eb94446400025b",
+  "sources": [
+    {
+      "path": "/mnt/data/flight-risk-layer1/flight-risk/data/raw/bts_2024_01.csv",
+      "name": "bts_2024_01.csv",
+      "size_bytes": 46112034,
+      "sha256": "c418e95290456fed909a8b037a5f13e5b2fe198510384d36cb7e33759ddc1633",
+      "year": 2024,
+      "month": 1,
+      "selected": true,
+      "selection_reason": "unique_month",
+      "raw_rows_read": 547271,
+      "cleaned_rows_written": 525370,
+      "cleaning": {
+        "input_rows": 547271,
+        "missing_target_rows": 0,
+        "cancelled_or_diverted_rows": 21901,
+        "invalid_date_rows": 0,
+        "invalid_numeric_rows": 0,
+        "invalid_schedule_rows": 0,
+        "output_rows": 525370,
+        "exact_duplicate_rows_observed": 2
+      }
+    },
+    {
+      "path": "/mnt/data/flight-risk-layer1/flight-risk/data/raw/bts_2024_02.csv",
+      "name": "bts_2024_02.csv",
+      "size_bytes": 43802628,
+      "sha256": "b4c1e4e9539531291ef37675aa514361e3d3a92b9dcee5342b97c01c6fee65c8",
+      "year": 2024,
+      "month": 2,
+      "selected": true,
+      "selection_reason": "unique_month",
+      "raw_rows_read": 519221,
+      "cleaned_rows_written": 515269,
+      "cleaning": {
+        "input_rows": 519221,
+        "missing_target_rows": 0,
+        "cancelled_or_diverted_rows": 3952,
+        "invalid_date_rows": 0,
+        "invalid_numeric_rows": 0,
+        "invalid_schedule_rows": 0,
+        "output_rows": 515269,
+        "exact_duplicate_rows_observed": 6
+      }
+    },
+    {
+      "path": "/mnt/data/flight-risk-layer1/flight-risk/data/raw/bts_2024_03.csv",
+      "name": "bts_2024_03.csv",
+      "size_bytes": 49949569,
+      "sha256": "d0d0205125358e78d53f333e49a611629d01e3f9b833523a99e2d220bca39f0d",
+      "year": 2024,
+      "month": 3,
+      "selected": true,
+      "selection_reason": "unique_month",
+      "raw_rows_read": 591767,
+      "cleaned_rows_written": 585413,
+      "cleaning": {
+        "input_rows": 591767,
+        "missing_target_rows": 0,
+        "cancelled_or_diverted_rows": 6354,
+        "invalid_date_rows": 0,
+        "invalid_numeric_rows": 0,
+        "invalid_schedule_rows": 0,
+        "output_rows": 585413,
+        "exact_duplicate_rows_observed": 12
+      }
+    },
+    {
+      "path": "/mnt/data/flight-risk-layer1/flight-risk/data/raw/bts_2024_04.csv",
+      "name": "bts_2024_04.csv",
+      "size_bytes": 49109442,
+      "sha256": "96b01c78b074340f662579fe70d3677d838653c352cb783d18a7c4888c5b5568",
+      "year": 2024,
+      "month": 4,
+      "selected": true,
+      "selection_reason": "unique_month",
+      "raw_rows_read": 582205,
+      "cleaned_rows_written": 576935,
+      "cleaning": {
+        "input_rows": 582205,
+        "missing_target_rows": 0,
+        "cancelled_or_diverted_rows": 5270,
+        "invalid_date_rows": 0,
+        "invalid_numeric_rows": 0,
+        "invalid_schedule_rows": 0,
+        "output_rows": 576935,
+        "exact_duplicate_rows_observed": 0
+      }
+    },
+    {
+      "path": "/mnt/data/flight-risk-layer1/flight-risk/data/raw/bts_2024_05.csv",
+      "name": "bts_2024_05.csv",
+      "size_bytes": 51420568,
+      "sha256": "b1d077143f173e1c72876060948a601eabdee1e4b81b1356e8d5d4cb74ce9ead",
+      "year": 2024,
+      "month": 5,
+      "selected": true,
+      "selection_reason": "unique_month",
+      "raw_rows_read": 609743,
+      "cleaned_rows_written": 599226,
+      "cleaning": {
+        "input_rows": 609743,
+        "missing_target_rows": 0,
+        "cancelled_or_diverted_rows": 10517,
+        "invalid_date_rows": 0,
+        "invalid_numeric_rows": 0,
+        "invalid_schedule_rows": 0,
+        "output_rows": 599226,
+        "exact_duplicate_rows_observed": 0
+      }
+    },
+    {
+      "path": "/mnt/data/flight-risk-layer1/flight-risk/data/raw/bts_2024_06.csv",
+      "name": "bts_2024_06.csv",
+      "size_bytes": 51539459,
+      "sha256": "7a67c5ba9dd4d9f35094e84993bc8c7d0d59d75b0dd8b2d4c5167edf079bec42",
+      "year": 2024,
+      "month": 6,
+      "selected": true,
+      "selection_reason": "unique_month",
+      "raw_rows_read": 611132,
+      "cleaned_rows_written": 601272,
+      "cleaning": {
+        "input_rows": 611132,
+        "missing_target_rows": 0,
+        "cancelled_or_diverted_rows": 9860,
+        "invalid_date_rows": 0,
+        "invalid_numeric_rows": 0,
+        "invalid_schedule_rows": 0,
+        "output_rows": 601272,
+        "exact_duplicate_rows_observed": 8
+      }
+    },
+    {
+      "path": "/mnt/data/flight-risk-layer1/flight-risk/data/raw/bts_2024_07.csv",
+      "name": "bts_2024_07.csv",
+      "size_bytes": 53496036,
+      "sha256": "d3b7c00a8dfe4a92972631dc997c95e19187e1dcb669b2ed6fd3a5fbe64b683a",
+      "year": 2024,
+      "month": 7,
+      "selected": true,
+      "selection_reason": "unique_month",
+      "raw_rows_read": 634613,
+      "cleaned_rows_written": 613938,
+      "cleaning": {
+        "input_rows": 634613,
+        "missing_target_rows": 0,
+        "cancelled_or_diverted_rows": 20675,
+        "invalid_date_rows": 0,
+        "invalid_numeric_rows": 0,
+        "invalid_schedule_rows": 0,
+        "output_rows": 613938,
+        "exact_duplicate_rows_observed": 6
+      }
+    },
+    {
+      "path": "/mnt/data/flight-risk-layer1/flight-risk/data/raw/bts_2024_08.csv",
+      "name": "bts_2024_08.csv",
+      "size_bytes": 52169135,
+      "sha256": "f9bd84f5e13448c4617a9202bea31aeac04d58127f3e7822c0a4d277209c6d32",
+      "year": 2024,
+      "month": 8,
+      "selected": true,
+      "selection_reason": "unique_month",
+      "raw_rows_read": 619025,
+      "cleaned_rows_written": 604303,
+      "cleaning": {
+        "input_rows": 619025,
+        "missing_target_rows": 0,
+        "cancelled_or_diverted_rows": 14722,
+        "invalid_date_rows": 0,
+        "invalid_numeric_rows": 0,
+        "invalid_schedule_rows": 0,
+        "output_rows": 604303,
+        "exact_duplicate_rows_observed": 12
+      }
+    },
+    {
+      "path": "/mnt/data/flight-risk-layer1/flight-risk/data/raw/bts_2024_09.csv",
+      "name": "bts_2024_09.csv",
+      "size_bytes": 49133492,
+      "sha256": "0c389dbd0adbf7f82bc018daa2f0f37101cafd86e44ce7c97ccdf481bb0c9c60",
+      "year": 2024,
+      "month": 9,
+      "selected": true,
+      "selection_reason": "unique_month",
+      "raw_rows_read": 582622,
+      "cleaned_rows_written": 578262,
+      "cleaning": {
+        "input_rows": 582622,
+        "missing_target_rows": 0,
+        "cancelled_or_diverted_rows": 4360,
+        "invalid_date_rows": 0,
+        "invalid_numeric_rows": 0,
+        "invalid_schedule_rows": 0,
+        "output_rows": 578262,
+        "exact_duplicate_rows_observed": 4
+      }
+    },
+    {
+      "path": "/mnt/data/flight-risk-layer1/flight-risk/data/raw/bts_2024_10.csv",
+      "name": "bts_2024_10.csv",
+      "size_bytes": 53141172,
+      "sha256": "a199c08aa5a6fc6d9cf2123a827c2a58286ba2fab7c8dd467b2b7954816fb12d",
+      "year": 2024,
+      "month": 10,
+      "selected": true,
+      "selection_reason": "unique_month",
+      "raw_rows_read": 615497,
+      "cleaned_rows_written": 608514,
+      "cleaning": {
+        "input_rows": 615497,
+        "missing_target_rows": 0,
+        "cancelled_or_diverted_rows": 6983,
+        "invalid_date_rows": 0,
+        "invalid_numeric_rows": 0,
+        "invalid_schedule_rows": 0,
+        "output_rows": 608514,
+        "exact_duplicate_rows_observed": 0
+      }
+    },
+    {
+      "path": "/mnt/data/flight-risk-layer1/flight-risk/data/raw/bts_2024_11.csv",
+      "name": "bts_2024_11.csv",
+      "size_bytes": 49702390,
+      "sha256": "cab29fff29164aac0210100db01bd724cb0596f151b60d87875eae1a1fcade75",
+      "year": 2024,
+      "month": 11,
+      "selected": true,
+      "selection_reason": "unique_month",
+      "raw_rows_read": 575404,
+      "cleaned_rows_written": 571933,
+      "cleaning": {
+        "input_rows": 575404,
+        "missing_target_rows": 0,
+        "cancelled_or_diverted_rows": 3471,
+        "invalid_date_rows": 0,
+        "invalid_numeric_rows": 0,
+        "invalid_schedule_rows": 0,
+        "output_rows": 571933,
+        "exact_duplicate_rows_observed": 30
+      }
+    },
+    {
+      "path": "/mnt/data/flight-risk-layer1/flight-risk/data/raw/bts_2024_12.csv",
+      "name": "bts_2024_12.csv",
+      "size_bytes": 51020300,
+      "sha256": "df6ea2ae085d5d671c945631a5eae74889fd772891de01db8eaf79e71993c671",
+      "year": 2024,
+      "month": 12,
+      "selected": true,
+      "selection_reason": "unique_month",
+      "raw_rows_read": 590581,
+      "cleaned_rows_written": 584832,
+      "cleaning": {
+        "input_rows": 590581,
+        "missing_target_rows": 0,
+        "cancelled_or_diverted_rows": 5749,
+        "invalid_date_rows": 0,
+        "invalid_numeric_rows": 0,
+        "invalid_schedule_rows": 0,
+        "output_rows": 584832,
+        "exact_duplicate_rows_observed": 6
+      }
+    }
+  ],
+  "dataset": {
+    "rows": 6965267,
+    "columns": [
+      "FlightDate",
+      "Year",
+      "Month",
+      "DayOfWeek",
+      "Airline",
+      "Origin",
+      "Dest",
+      "CRSDepTime",
+      "CRSArrTime",
+      "CRSElapsedTime",
+      "Distance",
+      "ArrDel15"
+    ],
+    "dtypes": {
+      "FlightDate": "datetime64[ns]",
+      "Year": "int16",
+      "Month": "int8",
+      "DayOfWeek": "int8",
+      "Airline": "string",
+      "Origin": "string",
+      "Dest": "string",
+      "CRSDepTime": "int16",
+      "CRSArrTime": "int16",
+      "CRSElapsedTime": "float32",
+      "Distance": "float32",
+      "ArrDel15": "int8"
+    },
+    "date_start": "2024-01-01",
+    "date_end": "2024-12-31",
+    "target_positive_rate": 0.20817177575532997,
+    "cleaning_totals": {
+      "input_rows": 7079081,
+      "missing_target_rows": 0,
+      "cancelled_or_diverted_rows": 113814,
+      "invalid_date_rows": 0,
+      "invalid_numeric_rows": 0,
+      "invalid_schedule_rows": 0,
+      "output_rows": 6965267,
+      "exact_duplicate_rows_observed": 86
+    },
+    "month_coverage": [
+      {
+        "year": 2024,
+        "month": 1,
+        "observed_days": 31,
+        "expected_calendar_days": 31,
+        "complete_calendar_coverage": true,
+        "first_date": "2024-01-01",
+        "last_date": "2024-01-31"
+      },
+      {
+        "year": 2024,
+        "month": 2,
+        "observed_days": 29,
+        "expected_calendar_days": 29,
+        "complete_calendar_coverage": true,
+        "first_date": "2024-02-01",
+        "last_date": "2024-02-29"
+      },
+      {
+        "year": 2024,
+        "month": 3,
+        "observed_days": 31,
+        "expected_calendar_days": 31,
+        "complete_calendar_coverage": true,
+        "first_date": "2024-03-01",
+        "last_date": "2024-03-31"
+      },
+      {
+        "year": 2024,
+        "month": 4,
+        "observed_days": 30,
+        "expected_calendar_days": 30,
+        "complete_calendar_coverage": true,
+        "first_date": "2024-04-01",
+        "last_date": "2024-04-30"
+      },
+      {
+        "year": 2024,
+        "month": 5,
+        "observed_days": 31,
+        "expected_calendar_days": 31,
+        "complete_calendar_coverage": true,
+        "first_date": "2024-05-01",
+        "last_date": "2024-05-31"
+      },
+      {
+        "year": 2024,
+        "month": 6,
+        "observed_days": 30,
+        "expected_calendar_days": 30,
+        "complete_calendar_coverage": true,
+        "first_date": "2024-06-01",
+        "last_date": "2024-06-30"
+      },
+      {
+        "year": 2024,
+        "month": 7,
+        "observed_days": 31,
+        "expected_calendar_days": 31,
+        "complete_calendar_coverage": true,
+        "first_date": "2024-07-01",
+        "last_date": "2024-07-31"
+      },
+      {
+        "year": 2024,
+        "month": 8,
+        "observed_days": 31,
+        "expected_calendar_days": 31,
+        "complete_calendar_coverage": true,
+        "first_date": "2024-08-01",
+        "last_date": "2024-08-31"
+      },
+      {
+        "year": 2024,
+        "month": 9,
+        "observed_days": 30,
+        "expected_calendar_days": 30,
+        "complete_calendar_coverage": true,
+        "first_date": "2024-09-01",
+        "last_date": "2024-09-30"
+      },
+      {
+        "year": 2024,
+        "month": 10,
+        "observed_days": 31,
+        "expected_calendar_days": 31,
+        "complete_calendar_coverage": true,
+        "first_date": "2024-10-01",
+        "last_date": "2024-10-31"
+      },
+      {
+        "year": 2024,
+        "month": 11,
+        "observed_days": 30,
+        "expected_calendar_days": 30,
+        "complete_calendar_coverage": true,
+        "first_date": "2024-11-01",
+        "last_date": "2024-11-30"
+      },
+      {
+        "year": 2024,
+        "month": 12,
+        "observed_days": 31,
+        "expected_calendar_days": 31,
+        "complete_calendar_coverage": true,
+        "first_date": "2024-12-01",
+        "last_date": "2024-12-31"
+      }
+    ],
+    "all_selected_months_complete": true
+  }
+}

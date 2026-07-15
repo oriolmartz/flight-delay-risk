@@ -1,60 +1,150 @@
 {
-  "name": "FlightRisk",
-  "version": "1.0.0",
-  "release_name": "Public Release",
+  "name": "Flight Delay Risk",
+  "version": "1.5.0",
+  "release_name": "Self-Explaining Product UI Release",
   "status": "stable_public_portfolio_release",
-  "generated_at_utc": "2026-07-10T02:18:06.950174+00:00",
-  "artifact_schema_version": "2",
+  "generated_at_utc": "2026-07-13T22:15:14.820539+00:00",
+  "artifact_schema_version": "7",
   "interfaces": [
     "streamlit_en_es",
     "fastapi",
     "pdf_reports_en_es"
   ],
   "quality": {
-    "temporal_backtest_folds": 4,
+    "canonical_dataset_rows": 6965267,
+    "complete_calendar_coverage": true,
+    "data_sha256": "29974b3128b976bcf49b47772bab78a34cfcc0b4a2a33a413a488bd8b3ec0432",
+    "training_protocol": "frozen_finalists_scaled_refit_calibration_test",
+    "selected_model": "extra_trees",
+    "temporal_backtest_folds": 3,
+    "backtest_selected_models": {
+      "mlp_embeddings": 1,
+      "ft_transformer": 1,
+      "extra_trees": 1
+    },
     "calibration": "isotonic",
-    "historical_encoding": "strictly_prior_flight_date"
+    "calibration_protocol": "chronological_holdout_method_selection_then_full_calibration_refit",
+    "historical_encoding": "strictly_prior_flight_date",
+    "explanation_method": "tree_path_probability_decomposition_rescaled_to_log_odds",
+    "operational_policy": {
+      "policy_name": "top_10pct_capacity",
+      "capacity_fraction": 0.1,
+      "probability_cutoff": 0.2302271426499157,
+      "cutoff_role": "single-flight reference; batch decisions use exact top-k capacity"
+    },
+    "policy_backtest_mean_lift": 1.5033875662020737,
+    "weekly_block_bootstrap_samples": 100,
+    "paired_pr_auc_advantage_excludes_zero": true,
+    "drift_status": "high",
+    "stable_feature_families": [
+      "core_schedule",
+      "calendar",
+      "historical_rates",
+      "historical_support",
+      "recency",
+      "schedule_congestion"
+    ]
   },
   "files": {
     "models/flightrisk_model.joblib": {
-      "sha256": "53f13d78d69ab19fd7ff4a14f04fdcd4f9e8dab1d2cb2f704eff83eb55c72ad7",
-      "size_bytes": 1295699
+      "sha256": "9481790c65ee8875e89a6ddbaf7967d02627a9222619a87fbe08f7c5bde4b284",
+      "size_bytes": 20323417
+    },
+    "data/processed/data_manifest.json": {
+      "sha256": "d68ec0fd0e78e55361e0e48e42fd318dc9005e8971ed1eaddb67c0c6dba61f48",
+      "size_bytes": 13688
+    },
+    "data/processed/schedule_context.joblib": {
+      "sha256": "5eb53af1813c92adf56c2ed83cff4508220ff201a0e38be464768e3ee432c87a",
+      "size_bytes": 997838
     },
     "reports/metrics.json": {
-      "sha256": "67faa59ee9a3aba4401ca9c4d2c7f7e98a4f01adc27bdd1ea6e16b9a55bed9d6",
-      "size_bytes": 9853
+      "sha256": "343329ec4a8b1f33646c50d5201edfb51a105dbda3bbfeecbca90b24138d7347",
+      "size_bytes": 13707
     },
     "reports/temporal_backtest.json": {
-      "sha256": "0d4b00ffa9c059084b6dfc706057fa8043ee3122a036687aa60b0f8cc0288976",
-      "size_bytes": 13306
+      "sha256": "4fbe63176aeeb5b79f00c7381007ff6ce4cb944dfa916843e7f47c14b48599d4",
+      "size_bytes": 35537
     },
     "reports/calibration_report.json": {
-      "sha256": "a418a011a1f64c3f727d58db893591ec0ce00d0cf4bf078cc0b88b25b461c59e",
-      "size_bytes": 1872
+      "sha256": "379b23440552ac076b4d1e73d8be8e5fd2be3057a795acf4afbc1362744fd7da",
+      "size_bytes": 2443
     },
     "reports/candidate_benchmark.json": {
-      "sha256": "f715dd26f5cb9e9cbb5dfc76c1faccf54e11a5bbbc70aac2e7905a1d63828209",
-      "size_bytes": 5356
+      "sha256": "9130ee3046bc6be899c66f01abf29fa7041dca9a019b74d8b086ad2ab31f8b98",
+      "size_bytes": 9782
     },
     "reports/performance_benchmark.json": {
-      "sha256": "514d1d637591e1a64cecb08225a480331b10370064dba886f5e04d51a3e55c34",
-      "size_bytes": 652
+      "sha256": "3524904ac7523652202070750bcc8696cbada6def1d7033af964742f407b5dc0",
+      "size_bytes": 798
     },
     "reports/ui_smoke.json": {
-      "sha256": "0cbcf6509398e45c6bbd4a2d2917b76578ec0a083b6c83dacb8f5a55ac49918e",
+      "sha256": "23cc9241e98bd15161960cadf558fd886ea5e3ce6ace1c0875a5395b6d545769",
       "size_bytes": 200
     },
+    "reports/neural_smoke.json": {
+      "sha256": "88ce74268d387ee793163d4c9420586c8a414814a1311391d5d4bf299464b869",
+      "size_bytes": 517
+    },
+    "reports/feature_ablation.json": {
+      "sha256": "fccf8a79283147d0923cea6b45fb8452499d2620941048a9644c08225189137c",
+      "size_bytes": 24623
+    },
+    "reports/feature_stability.json": {
+      "sha256": "a1dd9b1b8edef07e4d0d0e3e1a81d5cf91225b6cde059d65b0e6a5b7bf41ec40",
+      "size_bytes": 11099
+    },
+    "reports/operational_policy.json": {
+      "sha256": "b3169a0832e745448172d5b84e3f5d9207412f7c6dda34d91a94539f17cabacd",
+      "size_bytes": 6627
+    },
+    "reports/policy_backtest.json": {
+      "sha256": "9ab9992aea27623748914b669cc32b242a8b8415cdbc8d3e3105779fd893f06a",
+      "size_bytes": 4823
+    },
+    "reports/robustness_audit.json": {
+      "sha256": "be1f89fda1556351b892c25a2bd5f543f32aaeb25fd63d3b1c806daf43ee5587",
+      "size_bytes": 4944
+    },
+    "reports/drift_analysis.json": {
+      "sha256": "f83b0e9de738c16ea70688e1251c0ce5154866bc97716dfa4eb11805ace21964",
+      "size_bytes": 18061
+    },
+    "reports/scale_refit.json": {
+      "sha256": "dd992a72eb35b09172ddd34cafc204a93605e6b7b6e3273ef40301da74f39cc7",
+      "size_bytes": 1917
+    },
+    "reports/production_smoke.json": {
+      "sha256": "59c318531e2e4899114989631d28d83800d571f40b1407be3281aabd044b9189",
+      "size_bytes": 1144
+    },
+    "docs/openapi.json": {
+      "sha256": "32a738e4049847ea74412af376ce99db9684ba38e65e6d3e8ed745fc9c6a7671",
+      "size_bytes": 53644
+    },
+    "reports/test_results.json": {
+      "sha256": "ae7004cfc75328611c58235aa452d000c10562f6f6586f76b574314382bc23c0",
+      "size_bytes": 436
+    },
+    "LICENSE": {
+      "sha256": "85b612763b8eaae4d20cebca20a27940f7d20a52735fc3b7a9d351fc3421fce0",
+      "size_bytes": 1072
+    },
     "README.md": {
-      "sha256": "9b0ee4c61dac31ab1a8afae5958c5d75c5129073294cbf644d6df831d3f33031",
-      "size_bytes": 12348
+      "sha256": "d1cd921c4c0792da320dbf8e183067aae3bd2c5d9753a5858bf6d72a413276dd",
+      "size_bytes": 17767
     },
     "README_ES.md": {
-      "sha256": "e717b33592e295e98a69685faa7c3d5cfd4d23b9ecfa91edb530bf7414f08c74",
-      "size_bytes": 5758
+      "sha256": "c67886ae81454dcf26c21762580d7816096db33a7c8cabc43ab5fd153efc610c",
+      "size_bytes": 7686
     },
     "requirements.txt": {
       "sha256": "f4466e2b26768a759446db8630a7c46cdf877d819f8e60c3c3a29b80d6f47964",
       "size_bytes": 744
+    },
+    "requirements-advanced.txt": {
+      "sha256": "de1fd115eb7e5100bcc68213d5be1ac6a74d55313a49b6811cf7be611b29a098",
+      "size_bytes": 160
     }
   }
 }

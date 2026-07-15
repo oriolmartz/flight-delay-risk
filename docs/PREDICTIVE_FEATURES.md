@@ -1,85 +1,97 @@
-# FlightRisk predictive feature system
+# Flight Delay Risk predictive feature system
 
-FlightRisk v1.0.0 uses only schedule-time information and historical evidence available before the prediction date.
+Flight Delay Risk v1.3.0 uses **112 pre-departure features** grouped into six auditable families. Every target-derived value is computed from strictly earlier flight dates; scheduled-congestion features are target-free and are fitted from the complete published 2024 timetable.
 
-## Raw inputs
+## Feature families
 
-- airline;
-- origin and destination;
-- month and day of week;
-- scheduled departure and arrival time;
-- scheduled elapsed time;
-- route distance.
+| Family | Features | Role |
+|---|---:|---|
+| Core schedule | 32 | Carrier, airports, route, scheduled times, duration, distance, peak/red-eye flags and cyclic time representations |
+| Calendar | 16 | Exact calendar position, season, quarter, annual cycles and U.S. federal-holiday proximity |
+| Historical rates | 16 | Smoothed long-run delay rates and target-free frequency shares for operational cohorts |
+| Historical support | 20 | Exact and log support counts so the model can distinguish sparse from mature cohort estimates |
+| Recency | 16 | 28-day, 90-day, EWMA and recent-vs-long trend signals for carrier, route, origin and destination |
+| Scheduled congestion | 12 | Target-free departure/arrival density, daily timetable volume and 60-minute bank concentration |
 
-## Derived schedule features
+The canonical lists live in `src/config.py` as `FEATURE_FAMILIES`. The model artifact records the complete schema and feature-set identifier.
 
-- `Route`, `DepPeriod`, `ArrPeriod`, `DistanceBand`;
-- `IsMorningPeak`, `IsEveningPeak`, `IsPeakHour`;
-- `IsRedEye`, `IsWeekend`, `IsLongHaul`;
-- `ScheduledSpeedMph`, `LogDistance`;
-- cyclic departure and arrival hour encodings.
+## Core schedule
 
-## Historical rate features
+The core family contains the natural schedule inputs and deterministic transformations available before departure:
 
-- carrier;
-- route;
-- origin and destination;
-- carrier-route;
-- airline-origin and airline-destination;
-- origin-hour and destination-hour;
-- carrier-departure-hour.
+- airline, origin, destination and route;
+- month, weekday and weekend flag;
+- scheduled departure/arrival hour and minute;
+- duration, distance, scheduled speed and log distance;
+- departure/arrival period and distance band;
+- cyclic hour/minute encodings;
+- morning/evening peak, red-eye, long-haul and overnight-schedule flags.
 
-## Historical frequency features
+## Calendar intelligence
 
-- route share;
-- carrier-route share;
-- airline-origin share;
-- origin-hour and destination-hour shares;
-- carrier-departure-hour share.
+When `flight_date` is available, Flight Delay Risk derives exact day-of-month, day-of-year, week, quarter, year progress, season and holiday-distance features. API requests may omit the date for backward compatibility; the artifact then uses a documented month/weekday fallback and sets `CalendarDateKnown = 0`.
 
-## Ordered training behavior
+## Strictly prior historical evidence
 
-Target-derived features for a training row use only outcomes from strictly earlier `FlightDate` values. Same-day observations are transformed before their targets enter the state.
+Historical maps are built in complete-date order:
 
-This prevents:
+1. transform every row dated `t` using targets from dates `< t`;
+2. expose no same-day outcomes;
+3. update the state only after all rows on date `t` have been transformed.
 
-- self-target leakage;
-- same-day cross-row leakage;
-- future-date leakage inside the model-training partition.
+Long-run rates use empirical-Bayes smoothing toward the global prior. Exact counts and `log1p(count)` are separate model features, not only UI metadata.
 
-## Smoothing and support
+## Recency system
 
-Every historical rate uses empirical-Bayes smoothing toward the global model-training rate. The release smoothing strength is 50 rows.
+For carrier, route, origin and destination, Flight Delay Risk computes:
 
-Rate maps and exact count maps are both serialized. Count features are used as product evidence rather than direct classifier inputs, allowing the UI to say whether a route rate is based on 20 or 2,000 observations.
+- smoothed delay rate over the previous 28 days;
+- smoothed delay rate over the previous 90 days;
+- exponentially weighted delay rate with a 28-day half-life;
+- 28-day rate minus the corresponding long-run rate.
 
-## Unseen categories
+All windows exclude the current flight date. Selection, calibration, test and backtest folds receive frozen or fold-local maps from permitted prior partitions only.
 
-Unseen rate keys receive the global smoothed fallback and zero support. Frequency-share keys receive zero. Categorical one-hot features use unknown-category-safe preprocessing.
+## Target-free scheduled congestion
 
-## Models
+`data/processed/schedule_context.joblib` is fitted from the complete canonical timetable without using `ArrDel15`. It supplies expected schedule density by weekday, airport and time slot:
 
-The release supports these candidate families:
+- origin departures within ±30, ±60 and ±120 minutes;
+- destination arrivals within ±30, ±60 and ±120 minutes;
+- expected origin/destination daily scheduled volume;
+- carrier-origin and route daily volume;
+- origin and destination 60-minute bank share.
 
-- Logistic Regression;
-- L1 Logistic Regression;
-- Random Forest;
-- Extra Trees;
-- optional Gradient Boosting.
+The same serialized reference is used during training and serving, preventing train/serve skew. Its source-row count and date range are embedded in artifact metadata and the release manifest.
 
-The committed artifact uses L1 Logistic Regression because it was selected in all four expanding temporal folds.
+## Candidate-specific representations
 
-## Product metrics
+The `flagship` profile compares seven candidates through family-appropriate representations:
 
-FlightRisk reports:
+- Logistic Regression: scaled numerical features plus sparse one-hot categories;
+- Random Forest and Extra Trees: sparse engineered matrix for the release benchmark;
+- XGBoost and LightGBM: sparse engineered matrix with histogram-based tree growth;
+- MLP and FT-Transformer: learned categorical embeddings plus normalized numerical features.
 
-- ROC-AUC and PR-AUC;
-- Precision, Recall and F1;
-- Precision@Top5/10/20%;
-- Lift@Top5/10/20%;
-- Brier score;
-- log loss;
-- expected calibration error;
-- calibration-curve bins.
+The deployed scaled Extra Trees artifact uses a compact ordinal `float32` representation to control memory use at 250,000 sampled flights. The public benchmark remains a fixed selection experiment and is not reused to reselect the deployed model after test evaluation.
 
-Ranking metrics answer whether the model concentrates real delays in the flights it places at the top of the review queue. Calibration metrics answer whether the displayed probabilities are numerically credible.
+## Feature ablation
+
+The committed ablation retrains Extra Trees on the same chronological model-training and selection blocks, changing only the feature scope.
+
+| Scope | Features | PR-AUC | Δ PR-AUC | Lift@10% | Δ Lift |
+|---|---:|---:|---:|---:|---:|
+| Full system | 112 | **0.3728** | — | 1.784× | — |
+| Without core schedule | 80 | 0.3385 | -0.0342 | 1.606× | -0.177× |
+| Without calendar | 96 | 0.3667 | -0.0061 | 1.764× | -0.020× |
+| Without historical rates | 96 | 0.3686 | -0.0041 | 1.705× | -0.079× |
+| Without historical support | 92 | 0.3679 | -0.0048 | 1.803× | +0.020× |
+| Without recency | 96 | 0.3704 | -0.0023 | 1.833× | +0.049× |
+| Without scheduled congestion | 100 | 0.3689 | -0.0038 | 1.754× | -0.030× |
+| Core only | 32 | 0.3602 | -0.0125 | 1.725× | -0.059× |
+
+The full system wins the declared PR-AUC criterion on the selection period. Support and recency lower PR-AUC when removed but their removal improves point Lift@10%; that trade-off is retained rather than relabelled as a universal feature win.
+
+## Availability and causality guardrail
+
+The following are never model inputs: actual departure/arrival times, observed delays, taxi/air time, delay causes, cancellation outcomes or diversion outcomes. Historical and congestion features are associative operational context, not causal explanations.

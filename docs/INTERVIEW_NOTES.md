@@ -1,8 +1,8 @@
 # Interview notes
 
-## How to describe FlightRisk
+## How to describe Flight Delay Risk
 
-FlightRisk is an end-to-end ML engineering system for ranking flight delay risk using real aviation datasets.
+Flight Delay Risk is an end-to-end ML engineering system for ranking flight delay risk using real aviation datasets.
 
 - U.S. path: real BTS flight-level data and `ArrDel15` prediction.
 - Europe path: real UK CAA aggregate punctuality modeling.

@@ -1,32 +1,23 @@
-"""
-Load raw BTS Reporting Carrier On-Time Performance CSV files.
-
-BTS TranStats exports use inconsistent column naming across years
-(e.g. ``Reporting_Airline`` vs ``Operating_Airline`` vs ``UniqueCarrier``,
-or a trailing unnamed index column). This module normalizes column names
-so the rest of the pipeline can rely on a single stable schema.
-"""
+"""Load and normalize BTS Reporting Carrier On-Time Performance CSV files."""
 from __future__ import annotations
 
 import re
 from pathlib import Path
 
+import numpy as np
 import pandas as pd
 
-from src.config import RAW_DATA_DIR
+from src.config import RANDOM_SEED, RAW_DATA_DIR
 from src.utils.logging import get_logger
 
 logger = get_logger(__name__)
 
-# Maps many possible raw BTS column spellings -> our canonical column name.
-# Keys are normalized by lowercasing and removing spaces/underscores/punctuation,
-# so BTS names like ``CRS_DEP_TIME`` and portfolio names like ``CRSDepTime``
-# resolve to the same canonical field.
 COLUMN_ALIASES: dict[str, str] = {
     "flightdate": "FlightDate",
     "fldate": "FlightDate",
     "year": "Year",
     "month": "Month",
+    "dayofmonth": "DayOfMonth",
     "dayofweek": "DayOfWeek",
     "reportingairline": "Airline",
     "operatingairline": "Airline",
@@ -67,81 +58,96 @@ COLUMN_ALIASES: dict[str, str] = {
 
 
 def _normalize_column_name(col: str) -> str:
-    """Normalize raw BTS/export column names for alias matching.
-
-    BTS exports may use names such as ``CRS_DEP_TIME``, while the sample
-    data and older exports may use ``CRSDepTime``. Removing all non
-    alphanumeric characters makes both variants become ``crsdeptime``.
-    """
     return re.sub(r"[^a-z0-9]+", "", str(col).strip().lower())
 
 
 def normalize_columns(df: pd.DataFrame) -> pd.DataFrame:
-    """Rename raw BTS columns to our canonical schema.
+    rename_map = {
+        col: COLUMN_ALIASES[key]
+        for col in df.columns
+        if (key := _normalize_column_name(col)) in COLUMN_ALIASES
+    }
+    frame = df.rename(columns=rename_map)
+    unnamed_cols = [c for c in frame.columns if str(c).lower().startswith("unnamed")]
+    return frame.drop(columns=unnamed_cols) if unnamed_cols else frame
 
-    Unknown columns are left untouched (rather than dropped) so nothing
-    is silently lost; unused columns are simply ignored downstream.
+
+def _uniform_sample_csv(
+    path: Path,
+    n_rows: int,
+    *,
+    chunksize: int = 100_000,
+    random_seed: int = RANDOM_SEED,
+) -> pd.DataFrame:
+    """Uniformly sample the complete CSV instead of taking its first rows.
+
+    Random priorities are generated for every row while streaming the file. The
+    ``n_rows`` smallest priorities form an exact reservoir sample, so sorted BTS
+    exports retain coverage across the whole month.
     """
-    rename_map = {}
-    for col in df.columns:
-        key = _normalize_column_name(col)
-        if key in COLUMN_ALIASES:
-            rename_map[col] = COLUMN_ALIASES[key]
-    df = df.rename(columns=rename_map)
+    if n_rows <= 0:
+        raise ValueError("max_rows must be positive")
+    rng = np.random.default_rng(random_seed)
+    reservoir: pd.DataFrame | None = None
+    source_offset = 0
+    for chunk in pd.read_csv(path, low_memory=False, chunksize=chunksize):
+        chunk = chunk.copy()
+        chunk["__sample_priority"] = rng.random(len(chunk))
+        chunk["__source_row"] = np.arange(source_offset, source_offset + len(chunk))
+        source_offset += len(chunk)
+        reservoir = chunk if reservoir is None else pd.concat([reservoir, chunk], ignore_index=True)
+        if len(reservoir) > n_rows:
+            reservoir = reservoir.nsmallest(n_rows, "__sample_priority", keep="first")
+    if reservoir is None:
+        return pd.DataFrame()
+    return (
+        reservoir.sort_values("__source_row", kind="stable")
+        .drop(columns=["__sample_priority", "__source_row"])
+        .reset_index(drop=True)
+    )
 
-    # BTS exports frequently include a trailing "Unnamed: 27"-style index column.
-    unnamed_cols = [c for c in df.columns if str(c).lower().startswith("unnamed")]
-    if unnamed_cols:
-        df = df.drop(columns=unnamed_cols)
 
-    return df
-
-
-def load_raw_csv(path: Path, max_rows: int | None = None) -> pd.DataFrame:
-    """Load a single BTS CSV file and normalize its columns.
-
-    Args:
-        path: CSV path to load.
-        max_rows: Optional row cap applied at read time. This is useful for
-            fast local experiments with large monthly BTS files because pandas
-            does not need to load the entire month before sampling.
-    """
+def load_raw_csv(
+    path: Path,
+    max_rows: int | None = None,
+    *,
+    chunksize: int = 100_000,
+    random_seed: int = RANDOM_SEED,
+) -> pd.DataFrame:
     logger.info("Loading raw CSV: %s", path)
-    if max_rows is not None:
-        logger.info("Applying read-time row cap: max %d rows from %s", max_rows, path.name)
-    df = pd.read_csv(path, low_memory=False, nrows=max_rows)
-    df = normalize_columns(df)
-    logger.info("Loaded %d rows, %d columns from %s", len(df), df.shape[1], path.name)
-    return df
+    if max_rows is None:
+        frame = pd.read_csv(path, low_memory=False)
+    else:
+        logger.info("Uniformly sampling %d rows across %s", max_rows, Path(path).name)
+        frame = _uniform_sample_csv(
+            Path(path), max_rows, chunksize=chunksize, random_seed=random_seed
+        )
+    frame = normalize_columns(frame)
+    logger.info("Loaded %d rows, %d columns from %s", len(frame), frame.shape[1], Path(path).name)
+    return frame
 
 
-def load_raw_directory(input_dir: Path = RAW_DATA_DIR, max_rows_per_file: int | None = None) -> pd.DataFrame:
-    """Load and concatenate every CSV file found in ``input_dir``.
-
-    Raises:
-        FileNotFoundError: if no CSV files are found in the directory.
-    """
+def load_raw_directory(
+    input_dir: Path = RAW_DATA_DIR,
+    max_rows_per_file: int | None = None,
+    *,
+    duplicate_month_policy: str | None = None,
+) -> pd.DataFrame:
+    """Load all raw CSVs, optionally enforcing one explicit source per month."""
     input_dir = Path(input_dir)
-    csv_paths = sorted(input_dir.glob("*.csv"))
+    if duplicate_month_policy is None:
+        csv_paths = sorted(input_dir.glob("*.csv"))
+    else:
+        from src.data.manifest import resolve_monthly_sources
 
+        csv_paths, _ = resolve_monthly_sources(
+            input_dir, duplicate_month_policy=duplicate_month_policy
+        )
     if not csv_paths:
         raise FileNotFoundError(
-            f"No CSV files found in {input_dir}. "
-            "Download monthly Reporting Carrier On-Time Performance CSVs from "
-            "BTS TranStats and place them in this folder. "
-            "See docs/DATA.md for instructions, or run "
-            "'python -m scripts.run_local_demo' to use the bundled sample data instead."
+            f"No CSV files found in {input_dir}. See docs/DATA.md or run the local demo."
         )
-
-    frames = [load_raw_csv(p, max_rows=max_rows_per_file) for p in csv_paths]
+    frames = [load_raw_csv(path, max_rows=max_rows_per_file) for path in csv_paths]
     combined = pd.concat(frames, ignore_index=True, sort=False)
-    if max_rows_per_file is not None:
-        logger.info(
-            "Combined %d files into %d total rows with max_rows_per_file=%d",
-            len(csv_paths),
-            len(combined),
-            max_rows_per_file,
-        )
-    else:
-        logger.info("Combined %d files into %d total rows", len(csv_paths), len(combined))
+    logger.info("Combined %d files into %d rows", len(csv_paths), len(combined))
     return combined

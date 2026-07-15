@@ -1,0 +1,369 @@
+{
+  "release": "1.3.0",
+  "main_model": {
+    "model_name": "extra_trees",
+    "metrics": {
+      "roc_auc": 0.5848802262883408,
+      "pr_auc": 0.2073125090103798,
+      "f1": 0.2522202486678508,
+      "precision": 0.23336072308956451,
+      "recall": 0.2743961352657005,
+      "positive_rate_actual": 0.1707075705096487,
+      "positive_rate_predicted": 0.20072571334322942,
+      "n_samples": 6063,
+      "baseline_positive_rate": 0.1707075705096487,
+      "precision_at_top_5pct": 0.21122112211221122,
+      "recall_at_top_5pct": 0.06183574879227053,
+      "lift_at_top_5pct": 1.2373272109819677,
+      "n_at_top_5pct": 303,
+      "precision_at_top_10pct": 0.23267326732673269,
+      "recall_at_top_10pct": 0.13623188405797101,
+      "lift_at_top_10pct": 1.362993255847324,
+      "n_at_top_10pct": 606,
+      "precision_at_top_20pct": 0.2341302555647156,
+      "recall_at_top_20pct": 0.2743961352657005,
+      "lift_at_top_20pct": 1.3715282507138846,
+      "n_at_top_20pct": 1213,
+      "brier_score": 0.14089005496308898,
+      "log_loss": 0.45755757355228976,
+      "expected_calibration_error": 0.030432641716271146,
+      "mean_predicted_probability": 0.154618465734344,
+      "observed_positive_rate": 0.1707075705096487
+    },
+    "confidence_intervals": {
+      "roc_auc": {
+        "mean": 0.5855897065623765,
+        "lower": 0.5690661292335791,
+        "upper": 0.6000002610911567,
+        "samples": 500,
+        "frequency": "week",
+        "blocks": 12
+      },
+      "pr_auc": {
+        "mean": 0.20815225335112728,
+        "lower": 0.1726324354576016,
+        "upper": 0.2470004942176637,
+        "samples": 500,
+        "frequency": "week",
+        "blocks": 12
+      },
+      "brier_score": {
+        "mean": 0.14069691870555223,
+        "lower": 0.12060403414409443,
+        "upper": 0.1631128870978954,
+        "samples": 500,
+        "frequency": "week",
+        "blocks": 12
+      },
+      "expected_calibration_error": {
+        "mean": 0.03058522820159538,
+        "lower": 0.016493479327939934,
+        "upper": 0.04672265566622538,
+        "samples": 500,
+        "frequency": "week",
+        "blocks": 12
+      },
+      "lift_at_top_10pct": {
+        "mean": 1.3295821780927455,
+        "lower": 1.1608913062085247,
+        "upper": 1.4848479589530226,
+        "samples": 500,
+        "frequency": "week",
+        "blocks": 12
+      }
+    }
+  },
+  "baseline_model": {
+    "model_name": "logistic_regression",
+    "metrics": {
+      "roc_auc": 0.4559821521220297,
+      "pr_auc": 0.15738722760106433,
+      "f1": 0.0,
+      "precision": 0.0,
+      "recall": 0.0,
+      "positive_rate_actual": 0.1707075705096487,
+      "positive_rate_predicted": 0.0,
+      "n_samples": 6063,
+      "baseline_positive_rate": 0.1707075705096487,
+      "precision_at_top_5pct": 0.1485148514851485,
+      "recall_at_top_5pct": 0.043478260869565216,
+      "lift_at_top_5pct": 0.8699956952216961,
+      "n_at_top_5pct": 303,
+      "precision_at_top_10pct": 0.15676567656765678,
+      "recall_at_top_10pct": 0.09178743961352658,
+      "lift_at_top_10pct": 0.9183287894006793,
+      "n_at_top_10pct": 606,
+      "precision_at_top_20pct": 0.15828524319868095,
+      "recall_at_top_20pct": 0.1855072463768116,
+      "lift_at_top_20pct": 0.9272303666798093,
+      "n_at_top_20pct": 1213,
+      "brier_score": 0.16559127298022241,
+      "log_loss": 0.8647466429313768,
+      "expected_calibration_error": 0.15047896379043252,
+      "mean_predicted_probability": 0.02110097931673324,
+      "observed_positive_rate": 0.1707075705096487
+    }
+  },
+  "operational_policy": {
+    "release": "1.3.0",
+    "model_family_frozen_from": "v1.2.0 candidate selection",
+    "selected_model_key": "extra_trees",
+    "selected_model_name": "extra_trees",
+    "selected_policy": {
+      "policy_name": "top_10pct_capacity",
+      "capacity_fraction": 0.1,
+      "probability_cutoff": 0.2549800796812749,
+      "cutoff_role": "single-flight reference; batch decisions use exact top-k capacity"
+    },
+    "calibration": {
+      "selected_method": "isotonic",
+      "candidate_metrics_on_later_holdout": {
+        "identity": {
+          "brier_score": 0.22068029148059498,
+          "log_loss": 0.632627527249694,
+          "expected_calibration_error": 0.3099492006559161,
+          "mean_predicted_probability": 0.4598952632233379,
+          "observed_positive_rate": 0.1499460625674218
+        },
+        "sigmoid": {
+          "brier_score": 0.12386776714891042,
+          "log_loss": 0.4085731807253039,
+          "expected_calibration_error": 0.019124530126974824,
+          "mean_predicted_probability": 0.15530588674390822,
+          "observed_positive_rate": 0.1499460625674218
+        },
+        "isotonic": {
+          "brier_score": 0.12356708093396744,
+          "log_loss": 0.4073726814763963,
+          "expected_calibration_error": 0.011000772615008795,
+          "mean_predicted_probability": 0.15594855777514316,
+          "observed_positive_rate": 0.1499460625674218
+        }
+      },
+      "fit_dates": [
+        "2024-09-05",
+        "2024-09-26"
+      ],
+      "selection_dates": [
+        "2024-09-27",
+        "2024-10-18"
+      ],
+      "full_dates": [
+        "2024-09-05",
+        "2024-10-18"
+      ],
+      "fit_rows": 1847,
+      "selection_rows": 1854,
+      "full_rows": 3701,
+      "capacity_fraction": 0.1,
+      "probability_cutoff": 0.2549800796812749,
+      "capacity_policy_on_holdout": {
+        "policy_name": "top_10pct_capacity",
+        "threshold": 0.25468164794007486,
+        "selected_count": 186,
+        "selected_share": 0.10032362459546926,
+        "precision": 0.25806451612903225,
+        "recall": 0.17266187050359713,
+        "lift": 1.7210489672777907,
+        "true_positives": 48,
+        "false_positives": 138,
+        "false_negatives": 230,
+        "true_negatives": 1438,
+        "net_utility": -202.7,
+        "utility_per_flight": -0.10933117583603019
+      },
+      "cost_sensitive_policy_on_holdout": {
+        "policy_name": "cost_sensitive_threshold",
+        "threshold": 0.25468164794007486,
+        "selected_count": 377,
+        "selected_share": 0.20334412081984898,
+        "precision": 0.2625994694960212,
+        "recall": 0.35611510791366907,
+        "lift": 1.751292864912314,
+        "true_positives": 99,
+        "false_positives": 278,
+        "false_negatives": 179,
+        "true_negatives": 1298,
+        "net_utility": -121.69999999999999,
+        "utility_per_flight": -0.06564185544768068
+      },
+      "policy_frontier_on_holdout": [
+        {
+          "policy_name": "top_1pct_capacity",
+          "threshold": 0.2815533980582524,
+          "selected_count": 19,
+          "selected_share": 0.010248112189859764,
+          "precision": 0.15789473684210525,
+          "recall": 0.01079136690647482,
+          "lift": 1.0530102234002272,
+          "true_positives": 3,
+          "false_positives": 16,
+          "false_negatives": 275,
+          "true_negatives": 1560,
+          "net_utility": -274.4,
+          "utility_per_flight": -0.14800431499460626
+        },
+        {
+          "policy_name": "top_5pct_capacity",
+          "threshold": 0.2815533980582524,
+          "selected_count": 93,
+          "selected_share": 0.05016181229773463,
+          "precision": 0.23655913978494625,
+          "recall": 0.07913669064748201,
+          "lift": 1.5776282200046414,
+          "true_positives": 22,
+          "false_positives": 71,
+          "false_negatives": 256,
+          "true_negatives": 1505,
+          "net_utility": -244.65,
+          "utility_per_flight": -0.131957928802589
+        },
+        {
+          "policy_name": "top_10pct_capacity",
+          "threshold": 0.25468164794007486,
+          "selected_count": 186,
+          "selected_share": 0.10032362459546926,
+          "precision": 0.25806451612903225,
+          "recall": 0.17266187050359713,
+          "lift": 1.7210489672777907,
+          "true_positives": 48,
+          "false_positives": 138,
+          "false_negatives": 230,
+          "true_negatives": 1438,
+          "net_utility": -202.7,
+          "utility_per_flight": -0.10933117583603019
+        },
+        {
+          "policy_name": "top_15pct_capacity",
+          "threshold": 0.25468164794007486,
+          "selected_count": 279,
+          "selected_share": 0.15048543689320387,
+          "precision": 0.25806451612903225,
+          "recall": 0.2589928057553957,
+          "lift": 1.7210489672777907,
+          "true_positives": 72,
+          "false_positives": 207,
+          "false_negatives": 206,
+          "true_negatives": 1369,
+          "net_utility": -165.05,
+          "utility_per_flight": -0.08902373247033442
+        },
+        {
+          "policy_name": "top_20pct_capacity",
+          "threshold": 0.25468164794007486,
+          "selected_count": 371,
+          "selected_share": 0.2001078748651564,
+          "precision": 0.261455525606469,
+          "recall": 0.3489208633093525,
+          "lift": 1.743663829044581,
+          "true_positives": 97,
+          "false_positives": 274,
+          "false_negatives": 181,
+          "true_negatives": 1302,
+          "net_utility": -125.1,
+          "utility_per_flight": -0.06747572815533981
+        },
+        {
+          "policy_name": "top_30pct_capacity",
+          "threshold": 0.17928286852589642,
+          "selected_count": 557,
+          "selected_share": 0.3004314994606257,
+          "precision": 0.236983842010772,
+          "recall": 0.4748201438848921,
+          "lift": 1.5804605866473787,
+          "true_positives": 132,
+          "false_positives": 425,
+          "false_negatives": 146,
+          "true_negatives": 1151,
+          "net_utility": -77.75,
+          "utility_per_flight": -0.04193635382955771
+        }
+      ],
+      "costs": {
+        "true_positive_value": 1.0,
+        "false_positive_cost": 0.15,
+        "false_negative_cost": 1.0,
+        "true_negative_value": 0.0
+      },
+      "guardrail": "Calibration family and policy evidence use the later calibration holdout. The final capacity cutoff is a label-free quantile after refitting the chosen calibrator."
+    },
+    "cost_sensitive_alternative": {
+      "policy_name": "cost_sensitive_threshold",
+      "threshold": 0.25468164794007486,
+      "selected_count": 377,
+      "selected_share": 0.20334412081984898,
+      "precision": 0.2625994694960212,
+      "recall": 0.35611510791366907,
+      "lift": 1.751292864912314,
+      "true_positives": 99,
+      "false_positives": 278,
+      "false_negatives": 179,
+      "true_negatives": 1298,
+      "net_utility": -121.69999999999999,
+      "utility_per_flight": -0.06564185544768068
+    },
+    "untouched_test": {
+      "policy_name": "top_10pct_capacity",
+      "threshold": 0.2549800796812749,
+      "selected_count": 607,
+      "selected_share": 0.10011545439551377,
+      "precision": 0.23393739703459637,
+      "recall": 0.13719806763285025,
+      "lift": 1.3703984910345486,
+      "true_positives": 142,
+      "false_positives": 465,
+      "false_negatives": 893,
+      "true_negatives": 4563,
+      "net_utility": -820.75,
+      "utility_per_flight": -0.13537027873989774,
+      "rows": 6063
+    },
+    "test_dates": [
+      "2024-10-19",
+      "2024-12-31"
+    ],
+    "guardrail": "Final-test labels are used only for reporting policy performance."
+  },
+  "paired_comparison": {
+    "pr_auc": {
+      "mean": 0.045696321822920154,
+      "lower": 0.022427153225119883,
+      "upper": 0.06774865266460692,
+      "samples": 500,
+      "frequency": "week",
+      "blocks": 12,
+      "difference": "first_minus_second",
+      "excludes_zero": true
+    },
+    "roc_auc": {
+      "mean": 0.11720407215021049,
+      "lower": 0.05934231701245841,
+      "upper": 0.1619908270338738,
+      "samples": 500,
+      "frequency": "week",
+      "blocks": 12,
+      "difference": "first_minus_second",
+      "excludes_zero": true
+    },
+    "brier_score": {
+      "mean": -0.024276154617397492,
+      "lower": -0.03579390347967179,
+      "upper": -0.013057474614307918,
+      "samples": 500,
+      "frequency": "week",
+      "blocks": 12,
+      "difference": "first_minus_second",
+      "excludes_zero": true
+    },
+    "lift_at_top_10pct": {
+      "mean": 0.40124588013435447,
+      "lower": 0.12258453483753773,
+      "upper": 0.6520617030869599,
+      "samples": 500,
+      "frequency": "week",
+      "blocks": 12,
+      "difference": "first_minus_second",
+      "excludes_zero": true
+    }
+  }
+}

@@ -1,6 +1,6 @@
 <svg width="1200" height="420" viewBox="0 0 1200 420" xmlns="http://www.w3.org/2000/svg">
   <rect width="1200" height="420" rx="26" fill="#F8FAFC"/>
-  <text x="56" y="64" font-family="Inter,Arial" font-size="31" font-weight="800" fill="#0B1F4D">FlightRisk v2 architecture</text>
+  <text x="56" y="64" font-family="Inter,Arial" font-size="31" font-weight="800" fill="#0B1F4D">Flight Delay Risk v2 architecture</text>
   <g font-family="Inter,Arial" font-size="17" font-weight="700">
     <rect x="58" y="112" width="155" height="76" rx="16" fill="#DBEAFE" stroke="#2563EB"/>
     <text x="86" y="158" fill="#0B1F4D">BTS CSVs</text>

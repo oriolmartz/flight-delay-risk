@@ -108,3 +108,65 @@ def fit_calibration_candidates(
         metrics[method] = probability_metrics(y_true, calibrated)
     selected = min(methods, key=lambda method: metrics[method]["brier_score"])
     return candidates[selected], metrics
+
+
+def select_calibrator_on_holdout(
+    raw_fit_probabilities: Any,
+    y_fit: Any,
+    raw_selection_probabilities: Any,
+    y_selection: Any,
+    *,
+    methods: tuple[str, ...] = ("identity", "sigmoid", "isotonic"),
+    refit_raw_probabilities: Any | None = None,
+    refit_y: Any | None = None,
+) -> tuple[ProbabilityCalibrator, dict[str, Any]]:
+    """Select calibration method on a later holdout, then refit it.
+
+    Candidate calibrators are fitted only on ``raw_fit_probabilities`` and are
+    compared on the chronologically later ``raw_selection_probabilities``. The
+    winning method is then refitted on the complete calibration period supplied
+    by ``refit_*`` (or the concatenation of fit and selection blocks).
+    """
+    fit_p = _as_probability_array(raw_fit_probabilities)
+    fit_y = np.asarray(y_fit, dtype=int).reshape(-1)
+    selection_p = _as_probability_array(raw_selection_probabilities)
+    selection_y = np.asarray(y_selection, dtype=int).reshape(-1)
+    if len(fit_p) != len(fit_y) or len(selection_p) != len(selection_y):
+        raise ValueError("Calibration probabilities and targets must have matching lengths")
+    if len(fit_y) == 0 or len(selection_y) == 0:
+        raise ValueError("Calibration fit and selection blocks must both be non-empty")
+
+    candidate_metrics: dict[str, dict[str, Any]] = {}
+    successful_methods: list[str] = []
+    for method in methods:
+        try:
+            candidate = ProbabilityCalibrator(method=method).fit(fit_p, fit_y)
+            candidate_metrics[method] = probability_metrics(
+                selection_y, candidate.transform(selection_p)
+            )
+            successful_methods.append(method)
+        except ValueError as exc:
+            candidate_metrics[method] = {"error": str(exc)}
+    if not successful_methods:
+        raise ValueError("No calibration candidate could be fitted")
+    selected_method = min(
+        successful_methods,
+        key=lambda method: candidate_metrics[method]["brier_score"],
+    )
+
+    if refit_raw_probabilities is None or refit_y is None:
+        refit_p = np.concatenate([fit_p, selection_p])
+        refit_targets = np.concatenate([fit_y, selection_y])
+    else:
+        refit_p = _as_probability_array(refit_raw_probabilities)
+        refit_targets = np.asarray(refit_y, dtype=int).reshape(-1)
+    selected = ProbabilityCalibrator(method=selected_method).fit(refit_p, refit_targets)
+    report: dict[str, Any] = {
+        "selected_method": selected_method,
+        "selection_metric": "brier_score",
+        "fit_rows": int(len(fit_y)),
+        "selection_rows": int(len(selection_y)),
+        "refit_rows": int(len(refit_targets)),
+        "candidate_metrics_on_holdout": candidate_metrics,
+    }
+    return selected, report

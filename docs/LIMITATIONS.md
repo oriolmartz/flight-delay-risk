@@ -1,55 +1,37 @@
-# FlightRisk limitations
+# Flight Delay Risk limitations
 
-FlightRisk is an ML engineering portfolio product, not an operational aviation system.
+Flight Delay Risk is a portfolio-grade pre-departure risk-ranking system, not an operational airline decision engine.
 
-## 1. Missing real-time causes
+## Data and scope
 
-The model does not include live weather, ATC restrictions, aircraft rotation, crew status or airport queues.
+- The canonical dataset covers U.S. domestic BTS records for one calendar year, 2024.
+- The committed release benchmark uses a deterministic 30,000-row proportional sample; it is not a full-data hyperparameter search.
+- Cancelled, diverted and target-missing flights are excluded from the supervised target population.
+- Transfer to European operations is not validated or calibrated.
 
-**Impact:** discrimination is moderate and individual-flight errors are unavoidable.
+## Missing live operational state
 
-## 2. One data year
+The model does not receive live weather, ATC restrictions, aircraft tail rotation, inbound delay propagation, crew legality, gate availability, maintenance state or real-time airport operations. Scheduled-congestion features are a timetable-density proxy, not observed congestion.
 
-The current evidence is limited to BTS 2024.
+## Non-stationarity
 
-**Impact:** multi-year structural shifts, unusual seasons and long-term carrier/network changes are not tested.
+Feature families improved PR-AUC on the July–September selection block, but the selected v1.3.0 model achieved lower ranking metrics on the October–December untouched test than the prior feature release. This is evidence of temporal drift and feature-period interaction, not a claim of monotonic model improvement.
 
-## 3. Public-size release artifact
+## Feature ablation boundaries
 
-The full processed source contains 2.36 million rows, while the release artifact uses a deterministic 300,000-row sample across the complete date range.
+- Ablation conclusions are specific to Extra Trees, the fixed release configuration and the declared selection period.
+- A family can improve PR-AUC while reducing point Lift@10%, or vice versa.
+- Correlated families can mask one another; drop-one ablation is not causal attribution.
+- Historical rates, support and recency are associative and can reflect structural differences between routes, carriers and airports.
 
-**Impact:** rare cohort coverage is lower than in a full-data production run.
+## Probability and threshold
 
-## 4. Temporal instability
+Calibration improves probability quality on the held-out period but can drift when base rates or operations change. The F1-derived release threshold is an experimental default, not an operational capacity or cost policy.
 
-PR-AUC and calibration vary across the four backtest periods.
+## Explanation
 
-**Impact:** one headline metric cannot describe all operating conditions.
+Local contributions describe how the selected estimator moved its pre-calibration log-odds. They do not establish why a flight will be delayed or identify an intervention.
 
-## 5. Calibration drift
+## Production gaps
 
-Isotonic calibration is fitted on one validation period. A later change in delay prevalence can make probabilities less reliable.
-
-**Required production control:** monitor outcomes, Brier score and ECE over time and recalibrate when necessary.
-
-## 6. Historical association is not causation
-
-Carrier, route and airport rates capture historical association and potentially unobserved confounding.
-
-**Impact:** context signals must not be interpreted as causal blame.
-
-## 7. Sparse cohorts
-
-Rare or unseen groups are smoothed toward the global prior.
-
-**Impact:** predictions for low-support routes rely more on broad schedule features than route-specific history.
-
-## 8. Regional transfer
-
-The experimental European layer overlays aggregate context on a U.S.-trained model.
-
-**Impact:** it is not a calibrated individual-flight model for Europe.
-
-## 9. Deployment scope
-
-Docker, CI and monitoring hooks are included, but the release does not include a durable production outcome-join pipeline, authentication, autoscaling or persistent telemetry.
+A real deployment would require outcome joins, calibration and performance monitoring, data-quality alerts, secure persistence, authentication, service-level objectives, retraining policy and governance review.

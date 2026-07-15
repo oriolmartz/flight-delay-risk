@@ -1,0 +1,157 @@
+{
+  "release": "1.5.0",
+  "protocol": "paired_week_block_bootstrap_on_scaled_untouched_test",
+  "bootstrap_samples": 100,
+  "point_metrics": {
+    "roc_auc": 0.6178689018347625,
+    "pr_auc": 0.23857755817689355,
+    "brier_score": 0.13845021442812538,
+    "expected_calibration_error": 0.012977091706419383,
+    "lift_at_top_10pct": 1.638738285731099
+  },
+  "weekly_block_confidence_intervals": {
+    "roc_auc": {
+      "mean": 0.6170480353930516,
+      "lower": 0.6038081077797635,
+      "upper": 0.627638716258858,
+      "samples": 100,
+      "frequency": "week",
+      "blocks": 12
+    },
+    "pr_auc": {
+      "mean": 0.23970306123441149,
+      "lower": 0.2035658252199813,
+      "upper": 0.2813037234927336,
+      "samples": 100,
+      "frequency": "week",
+      "blocks": 12
+    },
+    "brier_score": {
+      "mean": 0.13820497470217882,
+      "lower": 0.12155900545628828,
+      "upper": 0.1558438291196454,
+      "samples": 100,
+      "frequency": "week",
+      "blocks": 12
+    },
+    "expected_calibration_error": {
+      "mean": 0.016892558673250388,
+      "lower": 0.00437556495390315,
+      "upper": 0.03903608530385402,
+      "samples": 100,
+      "frequency": "week",
+      "blocks": 12
+    },
+    "lift_at_top_10pct": {
+      "mean": 1.6345620937479324,
+      "lower": 1.5095970606759468,
+      "upper": 1.7510134439707592,
+      "samples": 100,
+      "frequency": "week",
+      "blocks": 12
+    }
+  },
+  "paired_difference_vs_baseline": {
+    "pr_auc": {
+      "mean": 0.03318908498836344,
+      "lower": 0.011187719814958974,
+      "upper": 0.05651255674813711,
+      "samples": 100,
+      "frequency": "week",
+      "blocks": 12,
+      "difference": "first_minus_second",
+      "excludes_zero": true
+    },
+    "roc_auc": {
+      "mean": 0.04633501226645812,
+      "lower": 0.02093410196340848,
+      "upper": 0.07234288503870029,
+      "samples": 100,
+      "frequency": "week",
+      "blocks": 12,
+      "difference": "first_minus_second",
+      "excludes_zero": true
+    },
+    "brier_score": {
+      "mean": -0.007886153940955883,
+      "lower": -0.0135662568419434,
+      "upper": -0.003073314345874199,
+      "samples": 100,
+      "frequency": "week",
+      "blocks": 12,
+      "difference": "first_minus_second",
+      "excludes_zero": true
+    },
+    "lift_at_top_10pct": {
+      "mean": 0.2783317519195905,
+      "lower": 0.08577771244325358,
+      "upper": 0.47227448701587094,
+      "samples": 100,
+      "frequency": "week",
+      "blocks": 12,
+      "difference": "first_minus_second",
+      "excludes_zero": true
+    }
+  },
+  "selected_model_metrics": {
+    "roc_auc": 0.6178689018347625,
+    "pr_auc": 0.23857755817689355,
+    "f1": 0.24603629417383,
+    "precision": 0.2728042925727196,
+    "recall": 0.22405195407630754,
+    "positive_rate_actual": 0.1709115414346025,
+    "positive_rate_predicted": 0.14036826353239648,
+    "n_samples": 50453,
+    "baseline_positive_rate": 0.1709115414346025,
+    "precision_at_top_5pct": 0.2893380895759017,
+    "recall_at_top_5pct": 0.08465731184042677,
+    "lift_at_top_5pct": 1.6929113572275274,
+    "n_at_top_5pct": 2523,
+    "precision_at_top_10pct": 0.2800792864222002,
+    "recall_at_top_10pct": 0.163864084425374,
+    "lift_at_top_10pct": 1.638738285731099,
+    "n_at_top_10pct": 5045,
+    "precision_at_top_20pct": 0.26261024675453376,
+    "recall_at_top_20pct": 0.3073176388727821,
+    "lift_at_top_20pct": 1.5365272851103435,
+    "n_at_top_20pct": 10091,
+    "brier_score": 0.13845021442812538,
+    "log_loss": 0.4461387844998992,
+    "expected_calibration_error": 0.012977091706419383,
+    "mean_predicted_probability": 0.1586329225926881,
+    "observed_positive_rate": 0.1709115414346025
+  },
+  "baseline_metrics": {
+    "roc_auc": 0.5672730175919833,
+    "pr_auc": 0.2031601187363715,
+    "f1": 0.019079312257348862,
+    "precision": 0.2193877551020408,
+    "recall": 0.00997332714832425,
+    "positive_rate_actual": 0.1709115414346025,
+    "positive_rate_predicted": 0.007769607357342477,
+    "n_samples": 50453,
+    "baseline_positive_rate": 0.1709115414346025,
+    "precision_at_top_5pct": 0.22711058263971462,
+    "recall_at_top_5pct": 0.06645019134871855,
+    "lift_at_top_5pct": 1.3288194625909222,
+    "n_at_top_5pct": 2523,
+    "precision_at_top_10pct": 0.22576808721506442,
+    "recall_at_top_10pct": 0.13208860025513164,
+    "lift_at_top_10pct": 1.3209645487952737,
+    "n_at_top_10pct": 5045,
+    "precision_at_top_20pct": 0.21821425032206918,
+    "recall_at_top_20pct": 0.2553635625652325,
+    "lift_at_top_20pct": 1.276767200684142,
+    "n_at_top_20pct": 10091,
+    "brier_score": 0.1461791916599609,
+    "log_loss": 0.48376937524492564,
+    "expected_calibration_error": 0.07367784698051016,
+    "mean_predicted_probability": 0.09769695293494271,
+    "observed_positive_rate": 0.1709115414346025
+  },
+  "public_release": {
+    "version": "1.5.0",
+    "name": "Flight Delay Risk",
+    "release_name": "Self-Explaining Product UI Release"
+  }
+}

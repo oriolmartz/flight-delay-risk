@@ -1,0 +1,7 @@
+-r requirements.txt
+
+# Layer 2 model zoo: install only for advanced/flagship experiments.
+torch>=2.4,<3.0
+xgboost>=2.1,<4.0
+lightgbm>=4.3,<5.0
+optuna>=4.0,<5.0

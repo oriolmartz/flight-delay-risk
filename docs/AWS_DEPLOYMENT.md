@@ -1,6 +1,6 @@
 # AWS Deployment Guide (v1)
 
-A practical, minimal-cost path to deploy the FlightRisk FastAPI service to
+A practical, minimal-cost path to deploy the Flight Delay Risk FastAPI service to
 AWS. This is intentionally a "v1" path -- solid enough for a portfolio demo
 or small internal tool, not a fully hardened production architecture.
 

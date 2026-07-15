@@ -1,0 +1,700 @@
+{
+  "release": "1.5.0",
+  "reference_dates": [
+    "2024-01-01",
+    "2024-09-04"
+  ],
+  "current_dates": [
+    "2024-10-19",
+    "2024-12-31"
+  ],
+  "sampled_reference_rows": 25000,
+  "sampled_current_rows": 25000,
+  "feature_drift": {
+    "status": "high",
+    "feature_count": 112,
+    "high_drift_features": [
+      "AirlineDestHistoryCount",
+      "AirlineDestHistoryLogCount",
+      "AirlineOriginHistoryCount",
+      "AirlineOriginHistoryLogCount",
+      "CarrierDelayRate",
+      "CarrierDelayRate28d",
+      "CarrierDelayRate90d",
+      "CarrierDelayRateEWMA",
+      "CarrierDelayTrend28d",
+      "CarrierDepHourHistoryCount",
+      "CarrierDepHourHistoryLogCount",
+      "CarrierHistoryCount",
+      "CarrierHistoryLogCount",
+      "CarrierRouteHistoryCount",
+      "CarrierRouteHistoryLogCount",
+      "DayOfYear",
+      "DaysToNearestFederalHoliday",
+      "DestDelayRate",
+      "DestDelayRate28d",
+      "DestDelayRate90d",
+      "DestDelayRateEWMA",
+      "DestDelayTrend28d",
+      "DestHistoryCount",
+      "DestHistoryLogCount",
+      "DestHourHistoryCount",
+      "DestHourHistoryLogCount",
+      "Month",
+      "MonthCos",
+      "MonthSin",
+      "OriginDelayRate",
+      "OriginDelayRate28d",
+      "OriginDelayRate90d",
+      "OriginDelayRateEWMA",
+      "OriginDelayTrend28d",
+      "OriginHistoryCount",
+      "OriginHistoryLogCount",
+      "OriginHourHistoryCount",
+      "OriginHourHistoryLogCount",
+      "Quarter",
+      "Route",
+      "RouteDelayRate28d",
+      "RouteDelayRate90d",
+      "RouteDelayRateEWMA",
+      "RouteDelayTrend28d",
+      "RouteHistoryCount",
+      "RouteHistoryLogCount",
+      "Season",
+      "WeekOfYear",
+      "YearDayCos",
+      "YearDaySin",
+      "YearProgress"
+    ],
+    "moderate_drift_features": [
+      "AirlineDestDelayRate",
+      "CarrierDepHourDelayRate",
+      "CarrierRouteDelayRate",
+      "DestHourDelayRate",
+      "OriginHourDelayRate",
+      "RouteDelayRate"
+    ],
+    "features": {
+      "Month": {
+        "metric": "psi",
+        "value": 11.680957254075636,
+        "level": "high"
+      },
+      "DayOfWeek": {
+        "metric": "psi",
+        "value": 0.0051641150183558936,
+        "level": "low"
+      },
+      "IsWeekend": {
+        "metric": "psi",
+        "value": 0.0022420444846422945,
+        "level": "low"
+      },
+      "DepHour": {
+        "metric": "psi",
+        "value": 0.0018907292986414005,
+        "level": "low"
+      },
+      "ArrHour": {
+        "metric": "psi",
+        "value": 0.002074540257324349,
+        "level": "low"
+      },
+      "DepMinute": {
+        "metric": "psi",
+        "value": 0.001011050365278087,
+        "level": "low"
+      },
+      "ArrMinute": {
+        "metric": "psi",
+        "value": 0.001844822812775194,
+        "level": "low"
+      },
+      "CRSElapsedTime": {
+        "metric": "psi",
+        "value": 0.0014688723451647535,
+        "level": "low"
+      },
+      "Distance": {
+        "metric": "psi",
+        "value": 0.0005145839674241474,
+        "level": "low"
+      },
+      "ScheduledSpeedMph": {
+        "metric": "psi",
+        "value": 0.004131780793079609,
+        "level": "low"
+      },
+      "LogDistance": {
+        "metric": "psi",
+        "value": 0.0005145839674241474,
+        "level": "low"
+      },
+      "DepHourSin": {
+        "metric": "psi",
+        "value": 0.0007243728704750162,
+        "level": "low"
+      },
+      "DepHourCos": {
+        "metric": "psi",
+        "value": 0.001752717185738655,
+        "level": "low"
+      },
+      "ArrHourSin": {
+        "metric": "psi",
+        "value": 0.0005456111781595945,
+        "level": "low"
+      },
+      "ArrHourCos": {
+        "metric": "psi",
+        "value": 0.0012089743412238311,
+        "level": "low"
+      },
+      "DepMinuteSin": {
+        "metric": "psi",
+        "value": 0.0005560305939055858,
+        "level": "low"
+      },
+      "DepMinuteCos": {
+        "metric": "psi",
+        "value": 0.0009444151021607554,
+        "level": "low"
+      },
+      "ArrMinuteSin": {
+        "metric": "psi",
+        "value": 0.001848674535013444,
+        "level": "low"
+      },
+      "ArrMinuteCos": {
+        "metric": "psi",
+        "value": 0.0015456283272594963,
+        "level": "low"
+      },
+      "IsMorningPeak": {
+        "metric": "psi",
+        "value": 0.00028996062228299355,
+        "level": "low"
+      },
+      "IsEveningPeak": {
+        "metric": "psi",
+        "value": 3.9730745490854406e-05,
+        "level": "low"
+      },
+      "IsPeakHour": {
+        "metric": "psi",
+        "value": 0.0004161845094056726,
+        "level": "low"
+      },
+      "IsRedEye": {
+        "metric": "psi",
+        "value": 0.00041960086508410565,
+        "level": "low"
+      },
+      "IsLongHaul": {
+        "metric": "psi",
+        "value": 8.579786525528104e-05,
+        "level": "low"
+      },
+      "IsOvernightSchedule": {
+        "metric": "psi",
+        "value": 0.0002395506775757347,
+        "level": "low"
+      },
+      "CalendarDateKnown": {
+        "metric": "psi",
+        "value": 0.0,
+        "level": "low"
+      },
+      "DayOfMonth": {
+        "metric": "psi",
+        "value": 0.054298404360673964,
+        "level": "low"
+      },
+      "DayOfYear": {
+        "metric": "psi",
+        "value": 12.371417609597104,
+        "level": "high"
+      },
+      "WeekOfYear": {
+        "metric": "psi",
+        "value": 10.6997059291715,
+        "level": "high"
+      },
+      "Quarter": {
+        "metric": "psi",
+        "value": 4.509898791628178,
+        "level": "high"
+      },
+      "YearProgress": {
+        "metric": "psi",
+        "value": 12.371417609597104,
+        "level": "high"
+      },
+      "MonthSin": {
+        "metric": "psi",
+        "value": 12.983450213220353,
+        "level": "high"
+      },
+      "MonthCos": {
+        "metric": "psi",
+        "value": 6.762353360473496,
+        "level": "high"
+      },
+      "DayOfWeekSin": {
+        "metric": "psi",
+        "value": 0.004102580639302925,
+        "level": "low"
+      },
+      "DayOfWeekCos": {
+        "metric": "psi",
+        "value": 0.0024885923695054132,
+        "level": "low"
+      },
+      "YearDaySin": {
+        "metric": "psi",
+        "value": 9.025282330939538,
+        "level": "high"
+      },
+      "YearDayCos": {
+        "metric": "psi",
+        "value": 8.872025275894298,
+        "level": "high"
+      },
+      "DaysToNearestFederalHoliday": {
+        "metric": "psi",
+        "value": 5.0364186063376835,
+        "level": "high"
+      },
+      "IsFederalHoliday": {
+        "metric": "psi",
+        "value": 0.0010582267689911303,
+        "level": "low"
+      },
+      "IsHolidayWindow": {
+        "metric": "psi",
+        "value": 0.06219368536874434,
+        "level": "low"
+      },
+      "CarrierDelayRate": {
+        "metric": "psi",
+        "value": 4.0030627335866384,
+        "level": "high"
+      },
+      "RouteDelayRate": {
+        "metric": "psi",
+        "value": 0.14381418797056938,
+        "level": "moderate"
+      },
+      "OriginDelayRate": {
+        "metric": "psi",
+        "value": 0.334003074989318,
+        "level": "high"
+      },
+      "DestDelayRate": {
+        "metric": "psi",
+        "value": 0.6718318900867625,
+        "level": "high"
+      },
+      "CarrierRouteDelayRate": {
+        "metric": "psi",
+        "value": 0.1752038556393574,
+        "level": "moderate"
+      },
+      "AirlineOriginDelayRate": {
+        "metric": "psi",
+        "value": 0.08510826371246817,
+        "level": "low"
+      },
+      "AirlineDestDelayRate": {
+        "metric": "psi",
+        "value": 0.10985154698160592,
+        "level": "moderate"
+      },
+      "OriginHourDelayRate": {
+        "metric": "psi",
+        "value": 0.1020637745659348,
+        "level": "moderate"
+      },
+      "DestHourDelayRate": {
+        "metric": "psi",
+        "value": 0.11514762603269076,
+        "level": "moderate"
+      },
+      "CarrierDepHourDelayRate": {
+        "metric": "psi",
+        "value": 0.11122795389565572,
+        "level": "moderate"
+      },
+      "RouteFlightShare": {
+        "metric": "psi",
+        "value": 0.02598319440119983,
+        "level": "low"
+      },
+      "CarrierRouteFlightShare": {
+        "metric": "psi",
+        "value": 0.03453578586812322,
+        "level": "low"
+      },
+      "AirlineOriginFlightShare": {
+        "metric": "psi",
+        "value": 0.003832639068023193,
+        "level": "low"
+      },
+      "OriginHourFlightShare": {
+        "metric": "psi",
+        "value": 0.0039020044886248734,
+        "level": "low"
+      },
+      "DestHourFlightShare": {
+        "metric": "psi",
+        "value": 0.007092672373962496,
+        "level": "low"
+      },
+      "CarrierDepHourFlightShare": {
+        "metric": "psi",
+        "value": 0.09481088645202343,
+        "level": "low"
+      },
+      "CarrierHistoryCount": {
+        "metric": "psi",
+        "value": 5.800809186312871,
+        "level": "high"
+      },
+      "CarrierHistoryLogCount": {
+        "metric": "psi",
+        "value": 5.800809186312871,
+        "level": "high"
+      },
+      "RouteHistoryCount": {
+        "metric": "psi",
+        "value": 0.7357415014418998,
+        "level": "high"
+      },
+      "RouteHistoryLogCount": {
+        "metric": "psi",
+        "value": 0.7357415014418998,
+        "level": "high"
+      },
+      "OriginHistoryCount": {
+        "metric": "psi",
+        "value": 0.6367493200986833,
+        "level": "high"
+      },
+      "OriginHistoryLogCount": {
+        "metric": "psi",
+        "value": 0.6367493200986833,
+        "level": "high"
+      },
+      "DestHistoryCount": {
+        "metric": "psi",
+        "value": 0.654369012418234,
+        "level": "high"
+      },
+      "DestHistoryLogCount": {
+        "metric": "psi",
+        "value": 0.654369012418234,
+        "level": "high"
+      },
+      "CarrierRouteHistoryCount": {
+        "metric": "psi",
+        "value": 0.6724873703403065,
+        "level": "high"
+      },
+      "CarrierRouteHistoryLogCount": {
+        "metric": "psi",
+        "value": 0.6724873703403065,
+        "level": "high"
+      },
+      "AirlineOriginHistoryCount": {
+        "metric": "psi",
+        "value": 0.4011617961033387,
+        "level": "high"
+      },
+      "AirlineOriginHistoryLogCount": {
+        "metric": "psi",
+        "value": 0.4011617961033387,
+        "level": "high"
+      },
+      "AirlineDestHistoryCount": {
+        "metric": "psi",
+        "value": 0.4177851568490807,
+        "level": "high"
+      },
+      "AirlineDestHistoryLogCount": {
+        "metric": "psi",
+        "value": 0.4177851568490807,
+        "level": "high"
+      },
+      "OriginHourHistoryCount": {
+        "metric": "psi",
+        "value": 0.4921457027028846,
+        "level": "high"
+      },
+      "OriginHourHistoryLogCount": {
+        "metric": "psi",
+        "value": 0.4921457027028846,
+        "level": "high"
+      },
+      "DestHourHistoryCount": {
+        "metric": "psi",
+        "value": 0.5142597099732542,
+        "level": "high"
+      },
+      "DestHourHistoryLogCount": {
+        "metric": "psi",
+        "value": 0.5142597099732542,
+        "level": "high"
+      },
+      "CarrierDepHourHistoryCount": {
+        "metric": "psi",
+        "value": 1.2987680227986735,
+        "level": "high"
+      },
+      "CarrierDepHourHistoryLogCount": {
+        "metric": "psi",
+        "value": 1.2987680227986735,
+        "level": "high"
+      },
+      "CarrierDelayRate28d": {
+        "metric": "psi",
+        "value": 2.9494528355276604,
+        "level": "high"
+      },
+      "CarrierDelayRate90d": {
+        "metric": "psi",
+        "value": 3.087201081399526,
+        "level": "high"
+      },
+      "CarrierDelayRateEWMA": {
+        "metric": "psi",
+        "value": 3.042643922328817,
+        "level": "high"
+      },
+      "CarrierDelayTrend28d": {
+        "metric": "psi",
+        "value": 3.4535106839497245,
+        "level": "high"
+      },
+      "RouteDelayRate28d": {
+        "metric": "psi",
+        "value": 0.5365413131372831,
+        "level": "high"
+      },
+      "RouteDelayRate90d": {
+        "metric": "psi",
+        "value": 0.364805790772163,
+        "level": "high"
+      },
+      "RouteDelayRateEWMA": {
+        "metric": "psi",
+        "value": 0.8344686630713529,
+        "level": "high"
+      },
+      "RouteDelayTrend28d": {
+        "metric": "psi",
+        "value": 0.2875731899361913,
+        "level": "high"
+      },
+      "OriginDelayRate28d": {
+        "metric": "psi",
+        "value": 0.2791782715260811,
+        "level": "high"
+      },
+      "OriginDelayRate90d": {
+        "metric": "psi",
+        "value": 0.45064784494129784,
+        "level": "high"
+      },
+      "OriginDelayRateEWMA": {
+        "metric": "psi",
+        "value": 0.2963112549057052,
+        "level": "high"
+      },
+      "OriginDelayTrend28d": {
+        "metric": "psi",
+        "value": 0.839871291436765,
+        "level": "high"
+      },
+      "DestDelayRate28d": {
+        "metric": "psi",
+        "value": 1.2993498638227639,
+        "level": "high"
+      },
+      "DestDelayRate90d": {
+        "metric": "psi",
+        "value": 0.9648999144472411,
+        "level": "high"
+      },
+      "DestDelayRateEWMA": {
+        "metric": "psi",
+        "value": 0.47896708593407306,
+        "level": "high"
+      },
+      "DestDelayTrend28d": {
+        "metric": "psi",
+        "value": 1.0299370546776294,
+        "level": "high"
+      },
+      "OriginScheduledDepartures30m": {
+        "metric": "psi",
+        "value": 0.00048400511645226615,
+        "level": "low"
+      },
+      "OriginScheduledDepartures60m": {
+        "metric": "psi",
+        "value": 0.0008589899398003418,
+        "level": "low"
+      },
+      "OriginScheduledDepartures120m": {
+        "metric": "psi",
+        "value": 0.000319071078518289,
+        "level": "low"
+      },
+      "DestScheduledArrivals30m": {
+        "metric": "psi",
+        "value": 0.001093032785157581,
+        "level": "low"
+      },
+      "DestScheduledArrivals60m": {
+        "metric": "psi",
+        "value": 0.0011469497731125143,
+        "level": "low"
+      },
+      "DestScheduledArrivals120m": {
+        "metric": "psi",
+        "value": 0.0014162981827210875,
+        "level": "low"
+      },
+      "OriginDailyScheduledFlights": {
+        "metric": "psi",
+        "value": 0.0007651995710970179,
+        "level": "low"
+      },
+      "DestDailyScheduledFlights": {
+        "metric": "psi",
+        "value": 0.0006679174567268189,
+        "level": "low"
+      },
+      "CarrierOriginDailyScheduledFlights": {
+        "metric": "psi",
+        "value": 0.0017330345998879965,
+        "level": "low"
+      },
+      "RouteDailyScheduledFlights": {
+        "metric": "psi",
+        "value": 0.0012813631908599509,
+        "level": "low"
+      },
+      "OriginBankShare60m": {
+        "metric": "psi",
+        "value": 0.0014592180057009245,
+        "level": "low"
+      },
+      "DestBankShare60m": {
+        "metric": "psi",
+        "value": 0.001185702159301279,
+        "level": "low"
+      },
+      "Airline": {
+        "metric": "js_distance",
+        "value": 0.024599214263618465,
+        "level": "low"
+      },
+      "Origin": {
+        "metric": "js_distance",
+        "value": 0.07812188406681908,
+        "level": "low"
+      },
+      "Dest": {
+        "metric": "js_distance",
+        "value": 0.08025872579679108,
+        "level": "low"
+      },
+      "Route": {
+        "metric": "js_distance",
+        "value": 0.31386956261875054,
+        "level": "high"
+      },
+      "DepPeriod": {
+        "metric": "js_distance",
+        "value": 0.012593516803280356,
+        "level": "low"
+      },
+      "ArrPeriod": {
+        "metric": "js_distance",
+        "value": 0.011688135892299703,
+        "level": "low"
+      },
+      "DistanceBand": {
+        "metric": "js_distance",
+        "value": 0.005371801619098966,
+        "level": "low"
+      },
+      "Season": {
+        "metric": "js_distance",
+        "value": 0.8075182745944903,
+        "level": "high"
+      }
+    }
+  },
+  "monthly_performance": [
+    {
+      "period": "2024-10-31",
+      "start": "2024-10-19",
+      "end": "2024-10-31",
+      "rows": 8934,
+      "prevalence": 0.12446832325945825,
+      "mean_probability": 0.15206509695153594,
+      "brier_score": 0.10773460358774636,
+      "expected_calibration_error": 0.027596773692077695,
+      "roc_auc": 0.6231241802773582,
+      "pr_auc": 0.18036632501558397,
+      "baseline_positive_rate": 0.12446832325945825,
+      "precision_at_top_10pct": 0.2116461366181411,
+      "recall_at_top_10pct": 0.16996402877697842,
+      "lift_at_top_10pct": 1.7004016048079789,
+      "n_at_top_10pct": 893
+    },
+    {
+      "period": "2024-11-30",
+      "start": "2024-11-01",
+      "end": "2024-11-30",
+      "rows": 20528,
+      "prevalence": 0.14633671083398286,
+      "mean_probability": 0.15141166338206347,
+      "brier_score": 0.12302002389186459,
+      "expected_calibration_error": 0.009046547149434652,
+      "roc_auc": 0.6078504074001917,
+      "pr_auc": 0.19425379044044688,
+      "baseline_positive_rate": 0.14633671083398286,
+      "precision_at_top_10pct": 0.22113979542133463,
+      "recall_at_top_10pct": 0.1511318242343542,
+      "lift_at_top_10pct": 1.5111710121202253,
+      "n_at_top_10pct": 2053
+    },
+    {
+      "period": "2024-12-31",
+      "start": "2024-12-01",
+      "end": "2024-12-31",
+      "rows": 20991,
+      "prevalence": 0.2147110666476109,
+      "mean_probability": 0.16849024065060603,
+      "brier_score": 0.16661296125182634,
+      "expected_calibration_error": 0.04622082599700479,
+      "roc_auc": 0.6090251530863016,
+      "pr_auc": 0.28793491788860165,
+      "baseline_positive_rate": 0.2147110666476109,
+      "precision_at_top_10pct": 0.3244402096236303,
+      "recall_at_top_10pct": 0.15109829154648324,
+      "lift_at_top_10pct": 1.51105490131121,
+      "n_at_top_10pct": 2099
+    }
+  ],
+  "prevalence_change": -0.058516594265229566,
+  "probability_prevalence_gap": -0.01227861884191439,
+  "public_release": {
+    "version": "1.5.0",
+    "name": "Flight Delay Risk",
+    "release_name": "Self-Explaining Product UI Release"
+  }
+}
