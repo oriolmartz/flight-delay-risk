@@ -1,4 +1,4 @@
-# FlightRisk v1.0.0 public release
+# Flight Delay Risk v1.3.0 public release
 
 ## Deployment checklist
 
@@ -9,7 +9,7 @@
 5. Generate one flight PDF and one schedule PDF in both languages.
 6. Add the public dashboard and API URLs to `README.md`, `README_ES.md` and the GitHub repository description.
 7. Configure the GitHub social preview with `docs/assets/product_preview.svg` or an exported PNG.
-8. Create the annotated Git tag `v1.0.0` and GitHub Release.
+8. Create the annotated Git tag `v1.3.0` and GitHub Release.
 
 ## Suggested release links
 

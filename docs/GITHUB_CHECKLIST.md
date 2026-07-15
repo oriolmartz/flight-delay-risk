@@ -1,6 +1,6 @@
 # GitHub release checklist
 
-Before pushing FlightRisk, run:
+Before pushing Flight Delay Risk, run:
 
 ```bash
 python -m compileall -q app src scripts tests

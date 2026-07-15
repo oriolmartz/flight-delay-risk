@@ -1,6 +1,6 @@
-# FlightRisk MLOps Notes
+# Flight Delay Risk MLOps Notes
 
-FlightRisk includes production-oriented ML engineering around the core model:
+Flight Delay Risk includes production-oriented ML engineering around the core model:
 
 - optional MLflow experiment tracking
 - validation-based model selection

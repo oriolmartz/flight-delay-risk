@@ -1,60 +1,124 @@
-# FlightRisk data guide
+# Flight Delay Risk data guide
 
 ## Primary source
 
-FlightRisk is designed for the **U.S. DOT / Bureau of Transportation Statistics (BTS) TranStats — Reporting Carrier On-Time Performance (1987-present)** dataset.
+Flight Delay Risk uses the **U.S. DOT / Bureau of Transportation Statistics (BTS) TranStats — Reporting Carrier On-Time Performance** dataset.
 
-The target is:
+The supervised target is:
 
 ```text
 ArrDel15 = 1 if the flight arrived 15+ minutes late, otherwise 0
 ```
 
-The repo does not commit full BTS monthly CSVs because they are large and change over time. Keep raw data under `data/raw/`, which is ignored by Git.
+Raw monthly CSVs belong under `data/raw/` and remain ignored by Git.
 
-## Option A — reliable manual download from TranStats
+## Canonical 2024 dataset
 
-Use BTS TranStats and select:
+The current canonical parquet contains:
 
-- Database: On-Time
-- Table: Reporting Carrier On-Time Performance (1987-present)
-- Year: desired year
-- Period: desired month
-- Download as CSV / prezipped file
+- **7,079,081** source rows read from 12 monthly files;
+- **113,814** cancelled or diverted rows excluded;
+- **6,965,267** supervised rows written;
+- complete coverage from **2024-01-01 through 2024-12-31**;
+- all **366 calendar days** represented;
+- target positive rate of approximately **20.82%**.
 
-Place downloaded CSV files in:
+The auditable manifest is written to:
 
 ```text
-data/raw/
+data/processed/data_manifest.json
 ```
 
-Then run the full real-data pipeline:
+It records:
+
+- SHA-256 for every raw source;
+- selected/non-selected duplicate-month files;
+- preparation configuration and its fingerprint;
+- row-level cleaning totals;
+- processed dataset SHA-256;
+- schema and dtypes;
+- date range and monthly calendar coverage.
+
+
+## Target-free schedule context
+
+Layer 3 builds a reusable timetable-density reference from the complete canonical parquet:
 
 ```bash
-python -m scripts.run_real_data_demo
+python -m scripts.build_schedule_context
 ```
 
-Or run each stage manually:
+The resulting `data/processed/schedule_context.joblib` contains no delay labels. It stores expected departure/arrival density by weekday, airport and schedule slot, plus daily carrier-route volumes. The same cache is loaded by training, backtesting, ablation and serving so congestion features do not depend on the release sample and do not drift between train and inference code.
+
+The artifact metadata records the context source row count, date range and scope. The release manifest fingerprints the cache.
+
+## Prepare the data
 
 ```bash
-python -m scripts.prepare_data --input-dir data/raw --output data/processed/flights_processed.parquet
-python -m scripts.train_model --data data/processed/flights_processed.parquet --output models/flightrisk_model.joblib
-python -m scripts.evaluate_model --model models/flightrisk_model.joblib --data data/processed/flights_processed.parquet
+python -m scripts.prepare_data \
+  --input-dir data/raw \
+  --output data/processed/flights_processed.parquet \
+  --manifest data/processed/data_manifest.json
 ```
 
-## Option B — best-effort direct download
+Preparation is chunked, so the full year does not need to fit in memory.
 
-TranStats monthly downloads are generated through the official web UI; the `/PREZIP/` filename can be session/generated and may return 404. The project includes a best-effort helper, but manual download is the reliable route:
+## Duplicate-month protection
+
+Two files claiming the same `(Year, Month)` are rejected by default before the full dataset is read:
 
 ```bash
-python -m scripts.run_real_data_demo --download --year 2024 --months 1 2 3 --max-rows-per-month 50000
+python -m scripts.prepare_data --duplicate-month-policy error
 ```
 
-If it fails, the script prints exact manual instructions and exits cleanly.
+Explicit alternatives exist for recovery workflows:
 
-## Recommended fields
+```text
+prefer-largest
+prefer-newest
+first
+```
 
-The downloader keeps a compact schema. If downloading manually, include at least:
+They should only be used deliberately. The manifest preserves which file was selected and why.
+
+## Sampling without head bias
+
+A development sample must represent the complete source file. Flight Delay Risk therefore uses a deterministic uniform sample over each monthly CSV instead of `nrows`, which would retain only the first days of every month.
+
+```bash
+python -m scripts.prepare_data --sample-rows-per-file 50000
+```
+
+The training command also supports deterministic proportional sampling across all observed months:
+
+```bash
+python -m scripts.train_model --max-rows 30000 --candidate-profile flagship
+```
+
+The sampled frame is sorted chronologically before partitioning.
+
+## Download options
+
+### Manual TranStats download
+
+Select:
+
+- Database: On-Time;
+- Table: Reporting Carrier On-Time Performance;
+- Year and month;
+- CSV/prezipped export.
+
+Place one file per month in `data/raw/`.
+
+### Best-effort helper
+
+```bash
+python -m scripts.run_real_data_demo --download --year 2024 --months 1 2 3
+```
+
+TranStats download URLs can be session-generated, so manual download remains the reliable fallback.
+
+## Required fields
 
 ```text
 FlightDate
@@ -73,48 +137,22 @@ Cancelled
 Diverted
 ```
 
+Official uppercase/snake-case names such as `FL_DATE`, `OP_UNIQUE_CARRIER`, `CRS_DEP_TIME` and `ARR_DEL15` are normalized automatically.
 
-### Real BTS column-name compatibility
+## Validation and cleaning
 
-Official TranStats CSV exports may use uppercase/snake-case names such as:
+The cleaner:
 
-```text
-FL_DATE
-OP_UNIQUE_CARRIER
-CRS_DEP_TIME
-CRS_ARR_TIME
-CRS_ELAPSED_TIME
-ARR_DEL15
-```
-
-FlightRisk normalizes these names automatically to the internal schema:
-
-```text
-FlightDate
-Airline
-CRSDepTime
-CRSArrTime
-CRSElapsedTime
-ArrDel15
-```
-
-So both manually downloaded BTS CSVs and the bundled sample schema are supported.
-
-## Why these fields
-
-These fields are available before or at scheduling time, except `ArrDel15`, which is the training target, and `Cancelled`/`Diverted`, which are used only to filter rows during cleaning and are then dropped.
-
-Allowed feature families:
-
-- Calendar: `Month`, `DayOfWeek`, weekend flag
-- Schedule: `CRSDepTime`, `CRSArrTime`, scheduled departure/arrival hour
-- Flight plan: `CRSElapsedTime`, `Distance`, route
-- Categorical identity: carrier, origin airport, destination airport
-- Historical aggregate features computed from the training split only
+- parses `FlightDate` during ingestion;
+- validates binary target values;
+- filters cancelled/diverted rows before supervised modeling;
+- validates numeric ranges and HHMM schedule fields;
+- verifies year, month and day-of-week consistency against `FlightDate`;
+- rejects missing carrier/origin/destination identifiers;
+- drops post-flight leakage columns;
+- records exact duplicate observations for audit.
 
 ## Leakage columns that must not be features
-
-The following are post-flight or actual-operation columns and are forbidden as model features:
 
 ```text
 ArrDelay
@@ -139,32 +177,14 @@ Diverted
 CancellationCode
 ```
 
-`Cancelled` and `Diverted` are allowed only as filtering columns inside `src/data/clean.py`; they are dropped before feature engineering.
+`Cancelled` and `Diverted` are filtering fields only.
 
 ## Processed files
 
-Preferred processed format:
+Preferred output:
 
 ```text
 data/processed/flights_processed.parquet
 ```
 
-If a Parquet engine such as `pyarrow` is not installed, the project can write/read a CSV fallback:
-
-```text
-data/processed/flights_processed.csv
-```
-
-## What not to commit
-
-Do not commit:
-
-```text
-data/raw/*.csv
-data/raw/*.zip
-data/processed/*.parquet
-data/processed/*.csv
-models/*.joblib
-```
-
-Commit only code, docs, tests and lightweight sample/demo assets.
+CSV output is supported for small workflows, but the canonical full-year build uses chunked Parquet with Zstandard compression.
