@@ -21,7 +21,7 @@
     </marker>
   </defs>
   <rect width="1180" height="520" fill="url(#bg)"/>
-  <text x="42" y="52" class="title">FlightRisk v4 — End-to-End Deployed ML System</text>
+  <text x="42" y="52" class="title">Flight Delay Risk v4 — End-to-End Deployed ML System</text>
   <text x="42" y="82" class="subtitle">Real BTS data pipeline · leakage-safe features · model selection · threshold tuning · monitoring · drift checks · AWS-ready deployment</text>
 
   <rect class="box" x="42" y="130" width="180" height="120"/>

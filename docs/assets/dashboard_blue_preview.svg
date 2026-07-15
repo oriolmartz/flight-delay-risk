@@ -1,7 +1,7 @@
 <svg width="1200" height="680" viewBox="0 0 1200 680" fill="none" xmlns="http://www.w3.org/2000/svg">
   <rect width="1200" height="680" rx="28" fill="#EFF6FF"/>
   <rect x="48" y="42" width="1104" height="168" rx="26" fill="url(#g1)"/>
-  <text x="82" y="105" fill="white" font-family="Inter,Arial" font-size="44" font-weight="800">✈️ FlightRisk</text>
+  <text x="82" y="105" fill="white" font-family="Inter,Arial" font-size="44" font-weight="800">✈️ Flight Delay Risk</text>
   <text x="82" y="146" fill="#DBEAFE" font-family="Inter,Arial" font-size="21">End-to-end ML system for flight delay risk prediction</text>
   <rect x="82" y="166" width="142" height="28" rx="14" fill="white" fill-opacity="0.16" stroke="white" stroke-opacity="0.35"/>
   <text x="99" y="185" fill="white" font-family="Inter,Arial" font-size="13">Leakage-safe</text>

@@ -5,33 +5,33 @@
     <style>.t{font-family:Inter,Arial,sans-serif;fill:#101b2d}.m{font-family:Inter,Arial,sans-serif;fill:#5d6673}.b{fill:#fbfaf7;stroke:#d9d2c5;stroke-width:2}.h{font-size:18px;font-weight:800}.p{font-size:12.5px}.arrow{stroke:#bb7a24;stroke-width:3;marker-end:url(#a)}</style>
   </defs>
   <rect width="1280" height="610" fill="#f3efe6"/>
-  <text x="55" y="58" class="t" font-size="30" font-weight="900">FlightRisk v1.0.0 · public ML product architecture</text>
-  <text x="55" y="86" class="m" font-size="15">Prior-date features → calibration → explanation → bilingual product and report surfaces</text>
+  <text x="55" y="58" class="t" font-size="30" font-weight="900">Flight Delay Risk v1.5.0 · public ML product architecture</text>
+  <text x="55" y="86" class="m" font-size="15">112 leakage-safe features → ablation → calibration → bilingual product and report surfaces</text>
 
   <rect x="55" y="130" width="180" height="120" rx="12" class="b"/>
   <text x="77" y="168" class="t h">BTS records</text><text x="77" y="197" class="m p">normalize · clean</text><text x="77" y="219" class="m p">remove leakage</text>
   <line x1="238" y1="190" x2="275" y2="190" class="arrow"/>
 
   <rect x="282" y="130" width="205" height="120" rx="12" class="b"/>
-  <text x="304" y="168" class="t h">Temporal split</text><text x="304" y="197" class="m p">complete dates</text><text x="304" y="219" class="m p">train → val → test</text>
+  <text x="304" y="168" class="t h">Temporal split</text><text x="304" y="197" class="m p">complete dates</text><text x="304" y="219" class="m p">train → select → calibrate → test</text>
   <line x1="490" y1="190" x2="527" y2="190" class="arrow"/>
 
   <rect x="534" y="130" width="220" height="120" rx="12" class="b"/>
-  <text x="556" y="168" class="t h">Ordered features</text><text x="556" y="197" class="m p">strictly prior dates</text><text x="556" y="219" class="m p">smoothed rates + support</text>
+  <text x="556" y="168" class="t h">Feature intelligence</text><text x="556" y="197" class="m p">112 features · 6 families</text><text x="556" y="219" class="m p">prior history + schedule density</text>
   <line x1="757" y1="190" x2="794" y2="190" class="arrow"/>
 
   <rect x="801" y="130" width="205" height="120" rx="12" class="b"/>
-  <text x="823" y="168" class="t h">Candidate models</text><text x="823" y="197" class="m p">linear + tree benchmark</text><text x="823" y="219" class="m p">validation selection</text>
+  <text x="823" y="168" class="t h">Candidate models</text><text x="823" y="197" class="m p">9 candidate models</text><text x="823" y="219" class="m p">separate selection block</text>
   <line x1="1009" y1="190" x2="1046" y2="190" class="arrow"/>
 
   <rect x="1053" y="130" width="172" height="120" rx="12" fill="#17304f"/>
-  <text x="1075" y="168" font-family="Inter,Arial,sans-serif" fill="#fbfaf7" font-size="18" font-weight="800">Calibration</text><text x="1075" y="197" font-family="Inter,Arial,sans-serif" fill="#c9d2dc" font-size="12.5">isotonic · validation only</text><text x="1075" y="219" font-family="Inter,Arial,sans-serif" fill="#c9d2dc" font-size="12.5">threshold + artifact</text>
+  <text x="1075" y="168" font-family="Inter,Arial,sans-serif" fill="#fbfaf7" font-size="18" font-weight="800">Calibration</text><text x="1075" y="197" font-family="Inter,Arial,sans-serif" fill="#c9d2dc" font-size="12.5">holdout-selected method</text><text x="1075" y="219" font-family="Inter,Arial,sans-serif" fill="#c9d2dc" font-size="12.5">refit + threshold</text>
 
   <rect x="95" y="335" width="250" height="135" rx="12" class="b"/>
-  <text x="119" y="374" class="t h">Temporal evidence</text><text x="119" y="403" class="m p">4 expanding folds</text><text x="119" y="425" class="m p">ranking + calibration metrics</text><text x="119" y="447" class="m p">committed JSON / Markdown</text>
+  <text x="119" y="374" class="t h">Temporal evidence</text><text x="119" y="403" class="m p">3 expanding folds</text><text x="119" y="425" class="m p">drop-family ablation</text><text x="119" y="447" class="m p">ranking + calibration evidence</text>
 
   <rect x="393" y="335" width="250" height="135" rx="12" fill="#17304f"/>
-  <text x="417" y="374" font-family="Inter,Arial,sans-serif" fill="#fbfaf7" font-size="18" font-weight="800">Versioned artifact</text><text x="417" y="403" font-family="Inter,Arial,sans-serif" fill="#c9d2dc" font-size="12.5">pipeline + cohort maps</text><text x="417" y="425" font-family="Inter,Arial,sans-serif" fill="#c9d2dc" font-size="12.5">calibrator + threshold</text><text x="417" y="447" font-family="Inter,Arial,sans-serif" fill="#c9d2dc" font-size="12.5">schema + lineage metadata</text>
+  <text x="417" y="374" font-family="Inter,Arial,sans-serif" fill="#fbfaf7" font-size="18" font-weight="800">Versioned artifact</text><text x="417" y="403" font-family="Inter,Arial,sans-serif" fill="#c9d2dc" font-size="12.5">pipeline + feature maps</text><text x="417" y="425" font-family="Inter,Arial,sans-serif" fill="#c9d2dc" font-size="12.5">schedule context + calibrator</text><text x="417" y="447" font-family="Inter,Arial,sans-serif" fill="#c9d2dc" font-size="12.5">schema + lineage metadata</text>
 
   <rect x="691" y="335" width="230" height="135" rx="12" class="b"/>
   <text x="715" y="374" class="t h">Prediction service</text><text x="715" y="403" class="m p">single + vectorized batch</text><text x="715" y="425" class="m p">calibrated + raw score</text><text x="715" y="447" class="m p">cohort + local explanation</text>

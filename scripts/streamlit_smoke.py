@@ -7,6 +7,8 @@ from pathlib import Path
 
 from streamlit.testing.v1 import AppTest
 
+from src.version import APP_VERSION
+
 ROOT = Path(__file__).resolve().parent.parent
 
 
@@ -28,7 +30,7 @@ def main() -> int:
     if "Descargar informe del horario (PDF)" not in download_labels:
         raise RuntimeError("Spanish schedule PDF export is missing")
     report = {
-        "release": "1.0.0",
+        "release": APP_VERSION,
         "status": "passed",
         "languages": ["en", "es"],
         "sample_schedule": "passed",
