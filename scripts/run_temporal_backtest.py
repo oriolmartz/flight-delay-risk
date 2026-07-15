@@ -1,9 +1,4 @@
-"""Expanding-window temporal backtest for FlightRisk v1.0.
-
-Every fold recreates historical features inside the fold, selects a candidate
-on a later validation block, fits post-hoc calibration on that validation
-block and evaluates once on the next unseen time block.
-"""
+"""Expanding-window temporal backtest with fold-local features and calibration."""
 from __future__ import annotations
 
 import argparse
@@ -14,72 +9,25 @@ from typing import Any
 
 import pandas as pd
 
-from src.config import DEFAULT_PROCESSED_PATH, REPORTS_DIR
-from src.data.io import read_processed_frame
-from src.data.split import split_train_test
-from src.models.calibration import fit_calibration_candidates
+from scripts.build_schedule_context import load_or_fit_schedule_context_from_parquet
+from src.config import DEFAULT_PROCESSED_PATH, REPORTS_DIR, SCHEDULE_CONTEXT_PATH
+from src.data.release_sampling import read_release_frame
+from src.data.split import time_aware_split
+from src.data.temporal import make_expanding_time_folds
+from src.models.calibration import select_calibrator_on_holdout
 from src.models.evaluate import evaluate_model
 from src.models.thresholding import tune_threshold_for_f1
-from src.models.train import prepare_eval_frame, train_models
+from src.models.train import (
+    PROFILE_CHOICES,
+    candidate_keys_for_profile,
+    prepare_eval_frame,
+    train_candidate,
+    train_models,
+)
 from src.utils.logging import get_logger
 from src.version import APP_VERSION
 
 logger = get_logger(__name__)
-
-
-def make_expanding_time_folds(
-    df: pd.DataFrame,
-    n_splits: int = 3,
-    min_train_fraction: float = 0.5,
-) -> list[tuple[pd.DataFrame, pd.DataFrame]]:
-    """Create expanding folds without sharing a FlightDate boundary."""
-    if "FlightDate" not in df.columns:
-        raise KeyError("Expected FlightDate column for temporal backtesting.")
-    if n_splits < 1:
-        raise ValueError("n_splits must be positive")
-    if not 0 < min_train_fraction < 1:
-        raise ValueError("min_train_fraction must be between 0 and 1")
-
-    ordered = df.copy()
-    ordered["FlightDate"] = pd.to_datetime(ordered["FlightDate"], errors="coerce", format="mixed")
-    ordered = ordered.dropna(subset=["FlightDate"]).sort_values("FlightDate").reset_index(drop=True)
-    if len(ordered) < 100:
-        raise ValueError("Need at least 100 rows for a meaningful temporal backtest.")
-
-    unique_dates = pd.Index(ordered["FlightDate"].drop_duplicates())
-    initial_date_count = max(1, int(len(unique_dates) * min_train_fraction))
-    remaining_dates = len(unique_dates) - initial_date_count
-    if remaining_dates < n_splits:
-        raise ValueError("Not enough distinct dates for the requested number of folds.")
-
-    date_blocks = [block for block in _split_index(unique_dates[initial_date_count:], n_splits) if len(block)]
-    folds: list[tuple[pd.DataFrame, pd.DataFrame]] = []
-    for block in date_blocks:
-        test_start = block[0]
-        test_end = block[-1]
-        train = ordered[ordered["FlightDate"] < test_start].copy().reset_index(drop=True)
-        test = ordered[
-            (ordered["FlightDate"] >= test_start) & (ordered["FlightDate"] <= test_end)
-        ].copy().reset_index(drop=True)
-        if train.empty or test.empty:
-            continue
-        if train["FlightDate"].max() >= test["FlightDate"].min():
-            raise AssertionError("Temporal boundary overlap detected in backtest")
-        folds.append((train, test))
-    return folds
-
-
-def _split_index(index: pd.Index, n_splits: int) -> list[pd.Index]:
-    """Dependency-free equivalent of numpy.array_split for a pandas Index."""
-    n = len(index)
-    base, remainder = divmod(n, n_splits)
-    blocks: list[pd.Index] = []
-    start = 0
-    for block_id in range(n_splits):
-        size = base + (1 if block_id < remainder else 0)
-        blocks.append(index[start : start + size])
-        start += size
-    return blocks
 
 
 def summarize_backtest(fold_results: list[dict[str, Any]]) -> dict[str, Any]:
@@ -119,23 +67,29 @@ def summarize_backtest(fold_results: list[dict[str, Any]]) -> dict[str, Any]:
     return summary
 
 
+def _date_range(frame: pd.DataFrame) -> tuple[str, str]:
+    dates = pd.to_datetime(frame["FlightDate"], errors="raise", format="mixed")
+    return str(dates.min().date()), str(dates.max().date())
+
+
 def _markdown_report(output: dict[str, Any]) -> str:
-    summary = output["summary"]
     lines = [
         "# FlightRisk temporal backtest",
         "",
         f"Release: **v{APP_VERSION}**",
         "",
-        "Each fold trains on earlier dates, selects and calibrates on a later validation block, then evaluates on the next unseen block.",
+        "Every fold rebuilds target-derived features, selects the model on a later block, "
+        "calibrates on a separate block and evaluates on the next unseen period.",
         "",
         "## Aggregate results",
         "",
         "| Metric | Mean | Std | Min | Max |",
         "|---|---:|---:|---:|---:|",
     ]
-    for metric, values in summary.get("metrics", {}).items():
+    for metric, values in output["summary"].get("metrics", {}).items():
         lines.append(
-            f"| `{metric}` | {values['mean']:.4f} | {values['std']:.4f} | {values['min']:.4f} | {values['max']:.4f} |"
+            f"| `{metric}` | {values['mean']:.4f} | {values['std']:.4f} | "
+            f"{values['min']:.4f} | {values['max']:.4f} |"
         )
     lines.extend(["", "## Fold evidence", ""])
     for fold in output["folds"]:
@@ -144,15 +98,15 @@ def _markdown_report(output: dict[str, Any]) -> str:
             [
                 f"### Fold {fold['fold']}",
                 "",
-                f"- Train: {fold['train_start']} → {fold['train_end']} ({fold['train_rows']:,} rows)",
-                f"- Validation: {fold['validation_start']} → {fold['validation_end']} ({fold['validation_rows']:,} rows)",
+                f"- Model train: {fold['train_start']} → {fold['train_end']} ({fold['train_rows']:,} rows)",
+                f"- Selection: {fold['selection_start']} → {fold['selection_end']} ({fold['selection_rows']:,} rows)",
+                f"- Calibration: {fold['calibration_start']} → {fold['calibration_end']} ({fold['calibration_rows']:,} rows)",
                 f"- Test: {fold['test_start']} → {fold['test_end']} ({fold['test_rows']:,} rows)",
                 f"- Selected model: `{fold['selected_model']}`",
                 f"- Calibration: `{fold['calibration_method']}`",
                 f"- PR-AUC: {metrics['pr_auc']:.4f}",
                 f"- Lift@10%: {metrics['lift_at_top_10pct']:.3f}×",
                 f"- Brier score: {metrics['brier_score']:.4f}",
-                f"- ECE: {metrics['expected_calibration_error']:.4f}",
                 "",
             ]
         )
@@ -167,34 +121,37 @@ def run_backtest(
     selection_metric: str,
     candidate_profile: str,
     smoothing_strength: float,
+    include_gradient_boosting: bool = False,
+    schedule_context=None,
 ) -> dict[str, Any]:
     folds = make_expanding_time_folds(
         df, n_splits=n_splits, min_train_fraction=min_train_fraction
     )
     results: list[dict[str, Any]] = []
 
-    for fold_id, (train_df, test_df) in enumerate(folds, start=1):
-        logger.info(
-            "Temporal fold %d/%d: train=%d test=%d",
-            fold_id,
-            len(folds),
-            len(train_df),
-            len(test_df),
-        )
-        model_train_df, validation_df = split_train_test(train_df, test_size=0.2)
-        models, aggregates, _, _ = train_models(
-            model_train_df.copy(),
+    for fold_id, (development_df, test_df) in enumerate(folds, start=1):
+        pre_calibration, calibration_df = time_aware_split(development_df, test_size=0.15)
+        model_train_df, selection_df = time_aware_split(pre_calibration, test_size=0.20)
+        models, selection_aggregates, _, _ = train_models(
+            model_train_df,
             ordered_historical_encoding=True,
             smoothing_strength=smoothing_strength,
             candidate_profile=candidate_profile,
+            include_gradient_boosting=include_gradient_boosting,
+            schedule_context=schedule_context,
         )
-        X_val, y_val = prepare_eval_frame(validation_df.copy(), aggregates)
-        X_test, y_test = prepare_eval_frame(test_df.copy(), aggregates)
-
-        candidate_keys = [key for key in models if key != "main"]
+        X_selection, y_selection = prepare_eval_frame(selection_df, selection_aggregates)
+        candidate_keys = candidate_keys_for_profile(
+            candidate_profile,
+            include_gradient_boosting=include_gradient_boosting,
+        )
         validation_results = {
             key: evaluate_model(
-                models[key].pipeline, models[key].name, X_val, y_val, threshold=0.5
+                models[key].pipeline,
+                models[key].name,
+                X_selection,
+                y_selection,
+                threshold=0.5,
             )
             for key in candidate_keys
         }
@@ -202,13 +159,43 @@ def run_backtest(
             candidate_keys,
             key=lambda key: validation_results[key]["metrics"][selection_metric],
         )
-        selected_model = models[selected_key]
-        validation_raw = selected_model.pipeline.predict_proba(X_val)[:, 1]
-        calibrator, calibration_candidates = fit_calibration_candidates(
-            validation_raw, y_val
+
+        refit_df = (
+            pd.concat([model_train_df, selection_df], ignore_index=True)
+            .sort_values(["FlightDate", "CRSDepTime"], kind="stable")
+            .reset_index(drop=True)
         )
-        validation_probability = calibrator.transform(validation_raw)
-        threshold = tune_threshold_for_f1(y_val, validation_probability).threshold
+        selected_model, aggregates, _, _ = train_candidate(
+            refit_df,
+            selected_key,
+            smoothing_strength=smoothing_strength,
+            schedule_context=schedule_context,
+        )
+
+        calibration_fit, calibration_selection = time_aware_split(
+            calibration_df, test_size=0.5
+        )
+        X_cal_fit, y_cal_fit = prepare_eval_frame(calibration_fit, aggregates)
+        X_cal_selection, y_cal_selection = prepare_eval_frame(
+            calibration_selection, aggregates
+        )
+        X_cal_full, y_cal_full = prepare_eval_frame(calibration_df, aggregates)
+        raw_fit = selected_model.pipeline.predict_proba(X_cal_fit)[:, 1]
+        raw_selection = selected_model.pipeline.predict_proba(X_cal_selection)[:, 1]
+        raw_full = selected_model.pipeline.predict_proba(X_cal_full)[:, 1]
+        calibrator, calibration_report = select_calibrator_on_holdout(
+            raw_fit,
+            y_cal_fit,
+            raw_selection,
+            y_cal_selection,
+            refit_raw_probabilities=raw_full,
+            refit_y=y_cal_full,
+        )
+        threshold = tune_threshold_for_f1(
+            y_cal_full, calibrator.transform(raw_full)
+        ).threshold
+
+        X_test, y_test = prepare_eval_frame(test_df, aggregates)
         result = evaluate_model(
             selected_model.pipeline,
             selected_model.name,
@@ -217,26 +204,33 @@ def run_backtest(
             threshold=threshold,
             calibrator=calibrator,
         )
-
-        train_dates = pd.to_datetime(model_train_df["FlightDate"])
-        val_dates = pd.to_datetime(validation_df["FlightDate"])
-        test_dates = pd.to_datetime(test_df["FlightDate"])
+        train_start, train_end = _date_range(model_train_df)
+        selection_start, selection_end = _date_range(selection_df)
+        calibration_start, calibration_end = _date_range(calibration_df)
+        test_start, test_end = _date_range(test_df)
         results.append(
             {
                 "fold": fold_id,
                 "selected_model": selected_model.name,
+                "selected_model_key": selected_key,
+                "selection_metrics": {
+                    key: value["metrics"] for key, value in validation_results.items()
+                },
                 "calibration_method": calibrator.method,
-                "calibration_candidates": calibration_candidates,
+                "calibration_selection": calibration_report,
                 "threshold": threshold,
                 "train_rows": len(model_train_df),
-                "validation_rows": len(validation_df),
+                "selection_rows": len(selection_df),
+                "calibration_rows": len(calibration_df),
                 "test_rows": len(test_df),
-                "train_start": str(train_dates.min().date()),
-                "train_end": str(train_dates.max().date()),
-                "validation_start": str(val_dates.min().date()),
-                "validation_end": str(val_dates.max().date()),
-                "test_start": str(test_dates.min().date()),
-                "test_end": str(test_dates.max().date()),
+                "train_start": train_start,
+                "train_end": train_end,
+                "selection_start": selection_start,
+                "selection_end": selection_end,
+                "calibration_start": calibration_start,
+                "calibration_end": calibration_end,
+                "test_start": test_start,
+                "test_end": test_end,
                 "metrics": result["metrics"],
                 "raw_probability_metrics": result.get("raw_probability_metrics"),
             }
@@ -245,14 +239,21 @@ def run_backtest(
     return {
         "protocol": {
             "release": APP_VERSION,
-            "strategy": "expanding_window",
+            "strategy": "expanding_window_train_selection_calibration_test",
             "n_splits": n_splits,
             "min_train_fraction": min_train_fraction,
             "selection_metric": selection_metric,
             "candidate_profile": candidate_profile,
-            "historical_encoding": "strictly_prior_flight_date",
+            "candidate_scope": candidate_keys_for_profile(
+                candidate_profile,
+                include_gradient_boosting=include_gradient_boosting,
+            ),
+            "historical_encoding": "fold_local_strictly_prior_flight_date",
+            "schedule_context": "complete_target_free_published_timetable",
+            "recency_windows_days": [28, 90],
+            "ewma_half_life_days": 28,
             "smoothing_strength": smoothing_strength,
-            "calibration_fit": "fold_validation_only",
+            "calibration_selection": "later_holdout_then_refit_on_complete_calibration_block",
         },
         "summary": summarize_backtest(results),
         "folds": results,
@@ -262,27 +263,21 @@ def run_backtest(
 def main() -> None:
     parser = argparse.ArgumentParser(description="Run FlightRisk temporal backtesting.")
     parser.add_argument("--data", type=Path, default=DEFAULT_PROCESSED_PATH)
+    parser.add_argument("--schedule-context", type=Path, default=SCHEDULE_CONTEXT_PATH)
     parser.add_argument("--n-splits", type=int, default=4)
     parser.add_argument("--min-train-fraction", type=float, default=0.5)
     parser.add_argument("--max-rows", type=int, default=None)
-    parser.add_argument(
-        "--selection-metric", choices=["roc_auc", "pr_auc", "f1"], default="pr_auc"
-    )
-    parser.add_argument(
-        "--candidate-profile", choices=["baseline", "linear", "full"], default="linear"
-    )
+    parser.add_argument("--selection-metric", choices=["roc_auc", "pr_auc", "f1"], default="pr_auc")
+    parser.add_argument("--candidate-profile", choices=list(PROFILE_CHOICES), default="full")
+    parser.add_argument("--include-gradient-boosting", action="store_true")
     parser.add_argument("--smoothing-strength", type=float, default=50.0)
-    parser.add_argument(
-        "--output", type=Path, default=REPORTS_DIR / "temporal_backtest.json"
-    )
+    parser.add_argument("--output", type=Path, default=REPORTS_DIR / "temporal_backtest.json")
     args = parser.parse_args()
 
-    df = read_processed_frame(args.data)
-    if args.max_rows is not None and len(df) > args.max_rows:
-        sampled = df.sample(n=args.max_rows, random_state=42).copy()
-        sampled["__date"] = pd.to_datetime(sampled["FlightDate"], errors="coerce", format="mixed")
-        df = sampled.sort_values("__date").drop(columns="__date").reset_index(drop=True)
-
+    schedule_context = load_or_fit_schedule_context_from_parquet(
+        args.data, args.schedule_context
+    )
+    df = read_release_frame(args.data, args.max_rows)
     output = run_backtest(
         df,
         n_splits=args.n_splits,
@@ -290,6 +285,8 @@ def main() -> None:
         selection_metric=args.selection_metric,
         candidate_profile=args.candidate_profile,
         smoothing_strength=args.smoothing_strength,
+        include_gradient_boosting=args.include_gradient_boosting,
+        schedule_context=schedule_context,
     )
     args.output.parent.mkdir(parents=True, exist_ok=True)
     args.output.write_text(json.dumps(output, indent=2), encoding="utf-8")
