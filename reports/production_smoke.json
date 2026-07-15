@@ -1,0 +1,46 @@
+{
+  "release": "1.5.0",
+  "status": "passed",
+  "checks": {
+    "live_status": true,
+    "live_version_header": true,
+    "live_request_id": true,
+    "ready_status": true,
+    "ready_version_header": true,
+    "ready_request_id": true,
+    "model_info_status": true,
+    "model_info_version_header": true,
+    "model_info_request_id": true,
+    "predict_status": true,
+    "predict_version_header": true,
+    "predict_request_id": true,
+    "rank_status": true,
+    "rank_version_header": true,
+    "rank_request_id": true,
+    "openapi_status": true,
+    "openapi_version_header": true,
+    "openapi_request_id": true,
+    "live_payload": true,
+    "ready_payload": true,
+    "artifact_schema_v7": true,
+    "release_version_match": true,
+    "scaled_refit_rows": true,
+    "valid_probability": true,
+    "ranked_two_flights": true,
+    "openapi_contract": true
+  },
+  "timings_ms": {
+    "live": 24.799,
+    "ready": 5886.257,
+    "model_info": 9.735,
+    "predict": 1333.64,
+    "rank": 1282.061,
+    "openapi": 212.951
+  },
+  "model": {
+    "name": "extra_trees",
+    "trained_rows": 168519,
+    "test_rows": 50453,
+    "schema": "7"
+  }
+}

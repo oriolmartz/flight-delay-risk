@@ -1,0 +1,171 @@
+{
+  "release": "1.5.0",
+  "protocol": "fixed_model_family_expanding_window_calibration_then_exact_top_k",
+  "selected_model_key": "extra_trees",
+  "capacity_fraction": 0.1,
+  "n_splits": 3,
+  "calibration_method_counts": {
+    "sigmoid": 2,
+    "isotonic": 1
+  },
+  "summary": {
+    "precision": {
+      "mean": 0.296648988518316,
+      "std": 0.11043223653989215,
+      "min": 0.21370967741935484,
+      "max": 0.422
+    },
+    "recall": {
+      "mean": 0.15042708733710952,
+      "std": 0.01368994966800653,
+      "min": 0.13904982618771727,
+      "max": 0.16562009419152277
+    },
+    "lift": {
+      "mean": 1.5033875662020737,
+      "std": 0.13542972395199995,
+      "min": 1.3904982618771726,
+      "max": 1.6535510204081634
+    },
+    "utility_per_flight": {
+      "mean": -0.14578449521421263,
+      "std": 0.03234806793018279,
+      "min": -0.17935697115384616,
+      "max": -0.11481854838709678
+    }
+  },
+  "folds": [
+    {
+      "fold": 1,
+      "train_dates": [
+        "2024-01-01",
+        "2024-06-09"
+      ],
+      "calibration_dates": [
+        "2024-06-10",
+        "2024-07-08"
+      ],
+      "test_dates": [
+        "2024-07-09",
+        "2024-09-05"
+      ],
+      "train_rows": 12808,
+      "calibration_rows": 2520,
+      "test_rows": 4992,
+      "calibration_method": "sigmoid",
+      "probability_cutoff": 0.40224986936046697,
+      "policy": {
+        "policy_name": "top_10pct_capacity",
+        "threshold": 0.38828148168925497,
+        "selected_count": 500,
+        "selected_share": 0.10016025641025642,
+        "precision": 0.422,
+        "recall": 0.16562009419152277,
+        "lift": 1.6535510204081634,
+        "true_positives": 211,
+        "false_positives": 289,
+        "false_negatives": 1063,
+        "true_negatives": 3429,
+        "net_utility": -895.35,
+        "utility_per_flight": -0.17935697115384616
+      },
+      "ranking_metrics": {
+        "roc_auc": 0.6606390228537312,
+        "pr_auc": 0.36993001772716916,
+        "brier_score": 0.17907242637813844,
+        "expected_calibration_error": 0.01047442389092887,
+        "lift_at_top_10pct": 1.6568647499079792
+      }
+    },
+    {
+      "fold": 2,
+      "train_dates": [
+        "2024-01-01",
+        "2024-07-29"
+      ],
+      "calibration_dates": [
+        "2024-07-30",
+        "2024-09-05"
+      ],
+      "test_dates": [
+        "2024-09-06",
+        "2024-11-03"
+      ],
+      "train_rows": 17147,
+      "calibration_rows": 3173,
+      "test_rows": 4960,
+      "calibration_method": "isotonic",
+      "probability_cutoff": 0.3716216216216216,
+      "policy": {
+        "policy_name": "top_10pct_capacity",
+        "threshold": 0.33974358974358976,
+        "selected_count": 496,
+        "selected_share": 0.1,
+        "precision": 0.21370967741935484,
+        "recall": 0.14661134163208853,
+        "lift": 1.4661134163208853,
+        "true_positives": 106,
+        "false_positives": 390,
+        "false_negatives": 617,
+        "true_negatives": 3847,
+        "net_utility": -569.5,
+        "utility_per_flight": -0.11481854838709678
+      },
+      "ranking_metrics": {
+        "roc_auc": 0.6184650404083633,
+        "pr_auc": 0.1933587398938202,
+        "brier_score": 0.12568157166704477,
+        "expected_calibration_error": 0.04667178292847381,
+        "lift_at_top_10pct": 1.4661134163208853
+      }
+    },
+    {
+      "fold": 3,
+      "train_dates": [
+        "2024-01-01",
+        "2024-09-17"
+      ],
+      "calibration_dates": [
+        "2024-09-18",
+        "2024-11-03"
+      ],
+      "test_dates": [
+        "2024-11-04",
+        "2024-12-31"
+      ],
+      "train_rows": 21316,
+      "calibration_rows": 3964,
+      "test_rows": 4720,
+      "calibration_method": "sigmoid",
+      "probability_cutoff": 0.22309874309635658,
+      "policy": {
+        "policy_name": "top_10pct_capacity",
+        "threshold": 0.2449328712026719,
+        "selected_count": 472,
+        "selected_share": 0.1,
+        "precision": 0.2542372881355932,
+        "recall": 0.13904982618771727,
+        "lift": 1.3904982618771726,
+        "true_positives": 120,
+        "false_positives": 352,
+        "false_negatives": 743,
+        "true_negatives": 3505,
+        "net_utility": -675.8,
+        "utility_per_flight": -0.1431779661016949
+      },
+      "ranking_metrics": {
+        "roc_auc": 0.5914558141868436,
+        "pr_auc": 0.23067505262888893,
+        "brier_score": 0.14775320929742147,
+        "expected_calibration_error": 0.019917794742001817,
+        "lift_at_top_10pct": 1.3904982618771726
+      }
+    }
+  ],
+  "guardrail": "Every fold refits the frozen model family and calibration using only earlier dates. The future fold is used once for policy reporting.",
+  "public_release": {
+    "version": "1.5.0",
+    "name": "Flight Delay Risk",
+    "release_name": "Self-Explaining Product UI Release"
+  }
+}

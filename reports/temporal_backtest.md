@@ -1,67 +1,58 @@
-# FlightRisk temporal backtest
+# Flight Delay Risk temporal backtest
 
-Release: **v1.0.0 — Temporal Validation**
+Release: **v1.3.0**
 
-Each fold trains on earlier dates, selects and calibrates on a later validation block, then evaluates on the next unseen block.
+Every fold rebuilds target-derived features, selects the model on a later block, calibrates on a separate block and evaluates on the next unseen period.
 
 ## Aggregate results
 
 | Metric | Mean | Std | Min | Max |
 |---|---:|---:|---:|---:|
-| `roc_auc` | 0.6317 | 0.0307 | 0.5912 | 0.6655 |
-| `pr_auc` | 0.2659 | 0.0811 | 0.1975 | 0.3798 |
-| `f1` | 0.3534 | 0.0796 | 0.2847 | 0.4642 |
-| `precision_at_top_10pct` | 0.3116 | 0.0970 | 0.2377 | 0.4471 |
-| `lift_at_top_10pct` | 1.6569 | 0.1719 | 1.4010 | 1.7645 |
-| `brier_score` | 0.1498 | 0.0234 | 0.1221 | 0.1785 |
-| `expected_calibration_error` | 0.0550 | 0.0350 | 0.0128 | 0.0842 |
+| `roc_auc` | 0.6163 | 0.0537 | 0.5821 | 0.6783 |
+| `pr_auc` | 0.2835 | 0.1137 | 0.1942 | 0.4115 |
+| `f1` | 0.3573 | 0.1051 | 0.2888 | 0.4784 |
+| `precision_at_top_10pct` | 0.3402 | 0.1192 | 0.2614 | 0.4774 |
+| `lift_at_top_10pct` | 1.7173 | 0.1321 | 1.5773 | 1.8396 |
+| `brier_score` | 0.1523 | 0.0237 | 0.1331 | 0.1787 |
+| `expected_calibration_error` | 0.0379 | 0.0310 | 0.0135 | 0.0727 |
 
 ## Fold evidence
 
 ### Fold 1
 
-- Train: 2024-01-01 → 2024-05-06 (76,777 rows)
-- Validation: 2024-05-07 → 2024-06-09 (21,985 rows)
-- Test: 2024-06-10 → 2024-08-05 (26,482 rows)
-- Selected model: `logistic_l1`
-- Calibration: `isotonic`
-- PR-AUC: 0.3798
-- Lift@10%: 1.749×
-- Brier score: 0.1785
-- ECE: 0.0128
+- Model train: 2024-01-01 → 2024-05-03 (2,911 rows)
+- Selection: 2024-05-04 → 2024-06-03 (778 rows)
+- Calibration: 2024-06-04 → 2024-07-01 (735 rows)
+- Test: 2024-07-02 → 2024-08-31 (1,549 rows)
+- Selected model: `mlp_embeddings`
+- Calibration: `sigmoid`
+- PR-AUC: 0.4115
+- Lift@10%: 1.840×
+- Brier score: 0.1787
 
 ### Fold 2
 
-- Train: 2024-01-01 → 2024-06-09 (98,762 rows)
-- Validation: 2024-06-10 → 2024-08-05 (26,482 rows)
-- Test: 2024-08-06 → 2024-10-01 (25,955 rows)
-- Selected model: `logistic_l1`
+- Model train: 2024-01-01 → 2024-06-13 (3,947 rows)
+- Selection: 2024-06-14 → 2024-07-25 (1,085 rows)
+- Calibration: 2024-07-26 → 2024-08-31 (941 rows)
+- Test: 2024-09-01 → 2024-10-31 (1,533 rows)
+- Selected model: `ft_transformer`
 - Calibration: `isotonic`
-- PR-AUC: 0.2660
-- Lift@10%: 1.713×
-- Brier score: 0.1544
-- ECE: 0.0835
+- PR-AUC: 0.1942
+- Lift@10%: 1.735×
+- Brier score: 0.1331
 
 ### Fold 3
 
-- Train: 2024-01-01 → 2024-08-02 (120,454 rows)
-- Validation: 2024-08-03 → 2024-10-01 (30,745 rows)
-- Test: 2024-10-02 → 2024-11-06 (24,315 rows)
-- Selected model: `logistic_l1`
-- Calibration: `isotonic`
-- PR-AUC: 0.1975
-- Lift@10%: 1.765×
-- Brier score: 0.1221
-- ECE: 0.0842
+- Model train: 2024-01-01 → 2024-07-25 (5,032 rows)
+- Selection: 2024-07-26 → 2024-09-15 (1,306 rows)
+- Calibration: 2024-09-16 → 2024-10-31 (1,168 rows)
+- Test: 2024-11-01 → 2024-12-31 (1,494 rows)
+- Selected model: `extra_trees`
+- Calibration: `sigmoid`
+- PR-AUC: 0.2448
+- Lift@10%: 1.577×
+- Brier score: 0.1451
 
-### Fold 4
 
-- Train: 2024-01-01 → 2024-09-04 (139,091 rows)
-- Validation: 2024-09-05 → 2024-11-06 (36,423 rows)
-- Test: 2024-11-07 → 2024-12-11 (24,486 rows)
-- Selected model: `logistic_l1`
-- Calibration: `isotonic`
-- PR-AUC: 0.2204
-- Lift@10%: 1.401×
-- Brier score: 0.1442
-- ECE: 0.0395
+> **Layer 4 guardrail:** Core model-selection evidence was carried forward from v1.2.0. The model family remained frozen while policy, uncertainty and drift were evaluated.

@@ -1,0 +1,18 @@
+{
+  "release": "1.5.0",
+  "status": "passed",
+  "collected": 108,
+  "passed": 108,
+  "failed": 0,
+  "execution": {
+    "core_suite": 106,
+    "neural_contract_suite": 2,
+    "strategy": "separate_test_groups_to_isolate_native_pools"
+  },
+  "checked_at_utc": "2026-07-13T22:10:03.088033+00:00",
+  "public_release": {
+    "version": "1.5.0",
+    "name": "Flight Delay Risk",
+    "release_name": "Self-Explaining Product UI Release"
+  }
+}
