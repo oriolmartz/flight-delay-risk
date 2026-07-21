@@ -120,6 +120,33 @@ def input_catalog() -> dict:
     return {"carriers": carriers, "airports": airports}
 
 
+def airport_historical_summary() -> list[dict]:
+    """Return artifact-backed airport rates and support for spatial exploration.
+
+    ``origin_rate`` is the historical share of flights departing an airport
+    that arrived at least 15 minutes late. ``destination_rate`` applies the
+    same target to flights arriving at that airport. Rates are the smoothed,
+    training-fitted values used by the deployed feature pipeline.
+    """
+    artifact = get_artifact()
+    aggregates = artifact.historical_aggregates
+    airports = sorted(
+        {str(value) for value in aggregates.origin_rates}
+        | {str(value) for value in aggregates.dest_rates}
+    )
+    fallback = float(aggregates.global_fallback)
+    return [
+        {
+            "airport": airport,
+            "origin_rate": float(aggregates.origin_rates.get(airport, fallback)),
+            "origin_support": int(aggregates.origin_counts.get(airport, 0)),
+            "destination_rate": float(aggregates.dest_rates.get(airport, fallback)),
+            "destination_support": int(aggregates.dest_counts.get(airport, 0)),
+        }
+        for airport in airports
+    ]
+
+
 def prediction_context(payload: PredictionInput) -> dict:
     """Expose historical cohort context without claiming causal attribution."""
     artifact = get_artifact()

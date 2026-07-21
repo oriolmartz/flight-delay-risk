@@ -6,7 +6,7 @@ Extra Trees was frozen before this layer; the scale baseline uses log-loss SGD f
 
 ## Scale
 
-- Sampled flights: **250,000** of 0 canonical rows
+- Sampled flights: **250,000** of 6,965,267 canonical rows
 - Finalist refit rows: **168,519**
 - Calibration rows: **31,028**
 - Untouched test rows: **50,453**

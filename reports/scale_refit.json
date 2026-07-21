@@ -1,7 +1,7 @@
 {
   "release": "1.5.0",
   "protocol": "frozen_finalists_scaled_refit_same_chronological_boundaries",
-  "canonical_rows": 0,
+  "canonical_rows": 6965267,
   "sample_rows": 250000,
   "scale_factor_vs_v1_3": 8.333333333333334,
   "split_rows": {

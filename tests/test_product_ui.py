@@ -36,10 +36,10 @@ def test_dashboard_uses_personal_visual_system():
 
 def test_readme_is_product_and_recruiter_friendly():
     readme = Path("README.md").read_text(encoding="utf-8")
-    assert "Pre-departure flight-delay risk workbench" in readme
-    assert "Product tour" in readme
-    assert "Leakage contract" in readme
-    assert "Honest result" in readme
+    assert "Pre-departure decision support for limited airline operations capacity" in readme
+    assert "Product workflow" in readme
+    assert "Validation design" in readme
+    assert "Operational result" in readme
     assert "Built by **Oriol Martínez**" in readme
 
 
