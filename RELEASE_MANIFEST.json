@@ -3,7 +3,7 @@
   "version": "1.5.0",
   "release_name": "Self-Explaining Product UI Release",
   "status": "stable_public_portfolio_release",
-  "generated_at_utc": "2026-07-21T10:10:42.592178+00:00",
+  "generated_at_utc": "2026-07-21T22:13:56.910873+00:00",
   "artifact_schema_version": "7",
   "interfaces": [
     "streamlit_en_es",
@@ -115,12 +115,12 @@
       "size_bytes": 1923
     },
     "reports/production_smoke.json": {
-      "sha256": "3e78eb889df8594eb621b1f595a8bac345d8ec6bddd5f3c9149a5eb70e0c0ce0",
-      "size_bytes": 1188
+      "sha256": "59c318531e2e4899114989631d28d83800d571f40b1407be3281aabd044b9189",
+      "size_bytes": 1144
     },
     "docs/openapi.json": {
-      "sha256": "4a101b7e95f68f697418663c3052c735d42d454b335bfbd97509b10a65dfd46b",
-      "size_bytes": 55675
+      "sha256": "32a738e4049847ea74412af376ce99db9684ba38e65e6d3e8ed745fc9c6a7671",
+      "size_bytes": 53644
     },
     "reports/test_results.json": {
       "sha256": "ae7004cfc75328611c58235aa452d000c10562f6f6586f76b574314382bc23c0",
@@ -131,12 +131,40 @@
       "size_bytes": 1072
     },
     "README.md": {
-      "sha256": "b1db6d0bb93dc92688f4b71c2ea7be8354b11d3fe5353183771fe0ecb9821752",
-      "size_bytes": 10836
+      "sha256": "159654810b213a02953b04fa5317b03c65caf551064041375fa0d9bd90fcad23",
+      "size_bytes": 14436
     },
     "README_ES.md": {
-      "sha256": "65b6dd3e25a39b1e5b4eae9336bd3790da4b9a9ad273802b1e6591ca17987132",
-      "size_bytes": 11374
+      "sha256": "95e0368b25ed3db1c0fcbc0003e176de3e82b05c25c720b46acb831c44d94f40",
+      "size_bytes": 14801
+    },
+    "docs/assets/readme_heatmap.svg": {
+      "sha256": "dd1978366d4b515510b25dcda3d7ed38646224f6721dd12ca21547b9bd945c2c",
+      "size_bytes": 20486
+    },
+    "docs/assets/readme_model_comparison.png": {
+      "sha256": "2eacc066e72a49a97bc262974e819db404dc65921ac73d2636c698145d027d09",
+      "size_bytes": 84696
+    },
+    "docs/assets/readme_landing.png": {
+      "sha256": "0eb82dc0dba362ad828e8faf86abbd315d3433992f9ea000407f54aa3a428129",
+      "size_bytes": 583795
+    },
+    "docs/assets/readme_analyze.png": {
+      "sha256": "94cab36c7ce3dfe4427172481664dc59a291b4651f7cd849dda60a069c0a04e1",
+      "size_bytes": 144469
+    },
+    "docs/assets/readme_heatmap.png": {
+      "sha256": "ad137f7c8c78f8fafc16e2906912854f19ec184ebf792349ca5761dbb100fa23",
+      "size_bytes": 933768
+    },
+    "docs/assets/readme_rank.png": {
+      "sha256": "243c746d48c59ecad17f412d0e744274d9b95c812b6837316f40ac88caed89b1",
+      "size_bytes": 136906
+    },
+    "docs/assets/readme_validation.png": {
+      "sha256": "d707ac70ea2cc68aba3ff7fb8961919a49e9c131ecfc5ffbb48e2a1613305263",
+      "size_bytes": 131787
     },
     "requirements.txt": {
       "sha256": "f4466e2b26768a759446db8630a7c46cdf877d819f8e60c3c3a29b80d6f47964",
