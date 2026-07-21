@@ -126,7 +126,7 @@ def _safe_sample_state(model_available: bool) -> tuple[dict[str, Any], dict[str,
     fallback_prediction = {
         "delay_probability": 0.168,
         "raw_model_score": 0.501,
-        "calibration_method": "isotonic",
+        "calibration_method": "sigmoid",
         "risk_level": "low",
         "decision_threshold": 0.17,
         "top_factors": ["sample schedule profile"],

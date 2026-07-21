@@ -4,7 +4,7 @@
 
 Flight Delay Risk estimates the calibrated probability that a scheduled U.S. domestic flight will arrive at least 15 minutes late (`ArrDel15 = 1`) using only information available before departure.
 
-The committed artifact is an Extra Trees pipeline selected by PR-AUC on a dedicated chronological selection block. The release compares seven deliberately selected model candidates, uses 112 features in six auditable families, selects calibration on a later holdout and evaluates once on an untouched final period.
+The committed artifact is an Extra Trees pipeline selected by PR-AUC in a dedicated chronological development experiment, then frozen and refitted at larger scale. The release compares seven deliberately selected model candidates, uses 112 features in six auditable families, selects calibration on a later holdout and evaluates the scaled artifact once on an untouched final period.
 
 ## Intended use
 
@@ -20,15 +20,26 @@ It is not intended for dispatch, compensation, passenger guarantees or automated
 - Source: U.S. DOT/BTS Reporting Carrier On-Time Performance, 2024.
 - Canonical cleaned rows: **6,965,267**.
 - Calendar coverage: January 1–December 31, 2024.
-- Release experiment: deterministic proportional sample of 30,000 rows across all months.
+- Development experiment: deterministic proportional sample of 30,000 rows used for model-family selection, ablation and temporal comparison.
+- Deployment refit: separate deterministic proportional sample of 250,000 rows, used only after Extra Trees had been frozen.
 - Target-free schedule context: fitted on all **6,965,267** published schedules.
+
+### Frozen model-selection experiment
 
 | Partition | Period | Rows | Role |
 |---|---|---:|---|
 | Model training | 2024-01-01 → 2024-07-16 | 16,045 | Fit all candidates |
 | Model selection | 2024-07-17 → 2024-09-04 | 4,191 | Select family by PR-AUC |
 | Calibration | 2024-09-05 → 2024-10-18 | 3,701 | Select/refit calibrator and threshold |
-| Held-out test | 2024-10-19 → 2024-12-31 | 6,063 | Evaluate once |
+| Development test | 2024-10-19 → 2024-12-31 | 6,063 | Diagnose temporal transfer before scale refit |
+
+### Deployed scaled artifact
+
+| Partition | Period | Rows | Role |
+|---|---|---:|---|
+| Frozen-finalist refit | 2024-01-01 → 2024-09-04 | 168,519 | Refit Extra Trees without model-family reselection |
+| Calibration | 2024-09-05 → 2024-10-18 | 31,028 | Select and refit probability calibrator |
+| Untouched final test | 2024-10-19 → 2024-12-31 | 50,453 | Reporting-only evaluation of the deployed artifact |
 
 ## Feature system
 
@@ -84,9 +95,9 @@ Drop-one-family ablation uses the same Extra Trees configuration and chronologic
 
 The full system wins the declared selection metric, but not every family improves every ranking statistic.
 
-## Calibration
+## Development calibration experiment
 
-Candidate calibrators are fitted on September 5–26 and selected on September 27–October 18. Isotonic achieved the best later-holdout Brier score (`0.1236`) and was refitted on all 3,701 calibration rows.
+Candidate calibrators are fitted on September 5–26 and selected on September 27–October 18. Isotonic achieved the best later-holdout Brier score (`0.1236`) in the 30,000-row development experiment and was refitted on its 3,701 calibration rows. This documents the protocol; it is not the calibrator of the final scaled artifact.
 
 | Metric | Raw | Calibrated |
 |---|---:|---:|
@@ -94,19 +105,23 @@ Candidate calibrators are fitted on September 5–26 and selected on September 2
 | Log loss | 0.6448 | 0.4576 |
 | ECE | 0.2922 | 0.0304 |
 
-## Held-out performance
+## Scaled-artifact calibration
+
+The same chronological method-selection protocol was rerun after the frozen Extra Trees finalist was refitted at scale. Sigmoid narrowly beat isotonic on the later calibration holdout (`0.120531` versus `0.120560` Brier) and was refitted on all 31,028 calibration rows.
+
+## Untouched scaled-artifact performance
 
 | Metric | Value |
 |---|---:|
-| ROC-AUC | 0.5849 |
-| PR-AUC | 0.2073 |
-| F1 | 0.2992 |
-| Precision@Top10% | 0.2327 |
-| Lift@Top10% | 1.363× |
-| Brier score | 0.1409 |
-| ECE | 0.0304 |
+| ROC-AUC | 0.6179 |
+| PR-AUC | 0.2386 |
+| F1 | 0.2460 |
+| Precision@Top10% | 0.2801 |
+| Lift@Top10% | 1.6387× |
+| Brier score | 0.1385 |
+| ECE | 0.0130 |
 
-The 112-feature system improved the selection period but weakened on the last-quarter test. This is retained as evidence of temporal non-stationarity rather than used to tune the feature set against the test.
+The scaled refit improved the reported final-period metrics relative to the smaller development artifact. Because the samples differ, those deltas are not treated as paired row-level estimates. The final test was not reused to change the frozen model family, feature set or policy.
 
 ## Temporal backtest
 

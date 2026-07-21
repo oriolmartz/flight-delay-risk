@@ -1,7 +1,7 @@
 {
   "release": "1.5.0",
   "model": "extra_trees",
-  "method": "isotonic",
+  "method": "sigmoid",
   "protocol": "chronological_holdout_method_selection_then_full_calibration_refit",
   "method_selection": {
     "fit_period": [
@@ -12,29 +12,29 @@
       "2024-09-27",
       "2024-10-18"
     ],
-    "fit_rows": 1847,
-    "selection_rows": 1854,
+    "fit_rows": 15355,
+    "selection_rows": 15673,
     "candidate_metrics_on_later_holdout": {
       "identity": {
-        "brier_score": 0.22068029148059498,
-        "log_loss": 0.632627527249694,
-        "expected_calibration_error": 0.3099492006559161,
-        "mean_predicted_probability": 0.4598952632233379,
-        "observed_positive_rate": 0.1499460625674218
+        "brier_score": 0.18292942621561878,
+        "log_loss": 0.5515475412953218,
+        "expected_calibration_error": 0.24585083644020594,
+        "mean_predicted_probability": 0.39062209912124973,
+        "observed_positive_rate": 0.14477126268104384
       },
       "sigmoid": {
-        "brier_score": 0.12386776714891042,
-        "log_loss": 0.4085731807253039,
-        "expected_calibration_error": 0.019124530126974824,
-        "mean_predicted_probability": 0.15530588674390822,
-        "observed_positive_rate": 0.1499460625674218
+        "brier_score": 0.12053073572440888,
+        "log_loss": 0.3998698994529432,
+        "expected_calibration_error": 0.010259192391413716,
+        "mean_predicted_probability": 0.1549984917486579,
+        "observed_positive_rate": 0.14477126268104384
       },
       "isotonic": {
-        "brier_score": 0.12356708093396744,
-        "log_loss": 0.4073726814763963,
-        "expected_calibration_error": 0.011000772615008795,
-        "mean_predicted_probability": 0.15594855777514316,
-        "observed_positive_rate": 0.1499460625674218
+        "brier_score": 0.12055975054795973,
+        "log_loss": 0.4007450203454665,
+        "expected_calibration_error": 0.011306078586581572,
+        "mean_predicted_probability": 0.15515713076067456,
+        "observed_positive_rate": 0.14477126268104384
       }
     }
   },
@@ -43,32 +43,32 @@
       "2024-09-05",
       "2024-10-18"
     ],
-    "rows": 3701
+    "rows": 31028
   },
   "operational_policy": {
     "policy_name": "top_10pct_capacity",
     "capacity_fraction": 0.1,
-    "probability_cutoff": 0.2549800796812749,
+    "probability_cutoff": 0.2302271426499157,
     "cutoff_role": "single-flight reference; batch decisions use exact top-k capacity"
   },
   "threshold_tuning": {
     "role": "single-flight reference only; batches use exact top-k capacity",
-    "threshold": 0.2549800796812749
+    "threshold": 0.2302271426499157
   },
   "held_out_test": {
     "start": "2024-10-19",
     "end": "2024-12-31",
-    "rows": 6063
+    "rows": 50453
   },
   "raw": {},
   "calibrated": {
-    "brier_score": 0.14089005496308898,
-    "log_loss": 0.45755757355228976,
-    "expected_calibration_error": 0.030432641716271146,
-    "mean_predicted_probability": 0.154618465734344,
-    "observed_positive_rate": 0.1707075705096487
+    "brier_score": 0.13845021442812538,
+    "log_loss": 0.4461387844998992,
+    "expected_calibration_error": 0.012977091706419383,
+    "mean_predicted_probability": 0.1586329225926881,
+    "observed_positive_rate": 0.1709115414346025
   },
-  "note": "Calibration was selected on a later chronological holdout and refitted on the full calibration block. The 10% review policy was fixed before the untouched final test.",
+  "note": "Calibration was selected on a later chronological holdout and refitted on the full 31,028-row calibration block. The model family and 10% review policy were frozen before the untouched final test.",
   "public_release": {
     "version": "1.5.0",
     "name": "Flight Delay Risk",

@@ -5,7 +5,8 @@ Flight Delay Risk is a portfolio-grade pre-departure risk-ranking system, not an
 ## Data and scope
 
 - The canonical dataset covers U.S. domestic BTS records for one calendar year, 2024.
-- The committed release benchmark uses a deterministic 30,000-row proportional sample; it is not a full-data hyperparameter search.
+- Model-family selection and feature ablation use a deterministic 30,000-row proportional sample; they are controlled development experiments, not a full-data hyperparameter search.
+- After freezing Extra Trees, the deployed release was refitted from a separate deterministic 250,000-row sample: 168,519 refit rows, 31,028 calibration rows and 50,453 untouched test rows.
 - Cancelled, diverted and target-missing flights are excluded from the supervised target population.
 - Transfer to European operations is not validated or calibrated.
 

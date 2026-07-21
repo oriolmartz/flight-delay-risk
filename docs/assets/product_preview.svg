@@ -41,7 +41,7 @@
   <rect x="1212" y="162" width="80" height="26" rx="5" fill="#bb7a24"/>
   <text x="1252" y="180" text-anchor="middle" class="sans white tiny bold">WATCH</text>
   <text x="946" y="278" class="sans white" font-size="50" font-weight="900">33.8%</text>
-  <text x="946" y="303" class="sans" font-size="12" fill="#c9d2dc">calibrated delay probability · isotonic</text>
+  <text x="946" y="303" class="sans" font-size="12" fill="#c9d2dc">calibrated delay probability · sigmoid</text>
   <line x1="946" y1="327" x2="1292" y2="327" stroke="#ffffff" opacity="0.18"/>
   <text x="946" y="352" class="sans white small bold">86.9%</text><text x="946" y="374" class="sans" font-size="11" fill="#c9d2dc">raw model score</text>
   <text x="1051" y="352" class="sans white small bold">29.7%</text><text x="1051" y="374" class="sans" font-size="11" fill="#c9d2dc">route cohort</text>
