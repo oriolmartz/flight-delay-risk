@@ -13,6 +13,7 @@ import io
 import json
 import math
 import sys
+import xml.etree.ElementTree as ET
 from dataclasses import dataclass
 from datetime import date, time
 from pathlib import Path
@@ -39,9 +40,14 @@ st.set_page_config(
 
 ROOT = Path(__file__).resolve().parent.parent.parent
 REPORTS_DIR = ROOT / "reports"
+AIRPORT_MAP_PATH = ROOT / "docs" / "assets" / "us_airport_coverage.svg"
+TRAINING_SOURCE_URL = "https://www.transtats.bts.gov/DL_SelectFields.aspx?gnoyr_VQ=FGJ"
 SAMPLE_PATH = ROOT / "data" / "sample" / "sample_schedule.csv"
 TEMPLATE_PATH = ROOT / "data" / "sample" / "schedule_template.csv"
 MAX_UPLOAD_ROWS = 500
+SVG_NAMESPACE = "http://www.w3.org/2000/svg"
+SVG_NAMESPACES = {"svg": SVG_NAMESPACE}
+ET.register_namespace("", SVG_NAMESPACE)
 
 
 @dataclass
@@ -106,6 +112,177 @@ def _safe_catalog() -> dict[str, list[str]]:
         }
     except Exception:
         return fallback
+
+
+def _safe_airport_history() -> list[dict[str, Any]]:
+    try:
+        return prediction_service.airport_historical_summary()
+    except Exception:
+        return []
+
+
+@st.cache_data(show_spinner=False)
+def _airport_map_source() -> str:
+    return AIRPORT_MAP_PATH.read_text(encoding="utf-8")
+
+
+def _airport_code(circle: ET.Element) -> str | None:
+    title = circle.find(f"{{{SVG_NAMESPACE}}}title")
+    if title is None or not title.text:
+        return None
+    return title.text.split(" — ", 1)[0].strip()
+
+
+def _coverage_map_svg(airports: list[str], aria_label: str) -> str:
+    """Render only airport points exposed by the loaded artifact."""
+    try:
+        root = ET.fromstring(_airport_map_source())
+    except (OSError, ET.ParseError):
+        return ""
+    supported = set(airports)
+    airport_group = root.find(".//svg:g[@class='fr-airports']", SVG_NAMESPACES)
+    if airport_group is not None and supported:
+        for circle in list(airport_group):
+            code = _airport_code(circle)
+            if code and code not in supported:
+                airport_group.remove(circle)
+    label_group = root.find(".//svg:g[@class='fr-airport-labels']", SVG_NAMESPACES)
+    if label_group is not None and supported:
+        for label in list(label_group):
+            if (label.text or "").strip() not in supported:
+                label_group.remove(label)
+    root.set("aria-label", aria_label)
+    return ET.tostring(root, encoding="unicode")
+
+
+def _heatmap_color(rate: float) -> str:
+    if rate < 0.18:
+        return "#53c7f0"
+    if rate < 0.21:
+        return "#a1dcf2"
+    if rate < 0.24:
+        return "#f2b84b"
+    return "#ff6b5e"
+
+
+def _airport_heatmap_svg(
+    history: list[dict[str, Any]],
+    mode: str,
+    aria_label: str,
+    tooltip_rate_template: str,
+    tooltip_support_template: str,
+) -> str:
+    """Build an artifact-backed proportional-symbol heatmap on the U.S. SVG."""
+    try:
+        root = ET.fromstring(_airport_map_source())
+    except (OSError, ET.ParseError):
+        return ""
+    root.set("class", "fr-heatmap-svg")
+    root.set("aria-label", aria_label)
+    rows = {str(row.get("airport")): row for row in history if row.get("airport")}
+    rate_key = "origin_rate" if mode == "origin" else "destination_rate"
+    support_key = "origin_support" if mode == "origin" else "destination_support"
+    support_logs = [math.log1p(max(int(row.get(support_key, 0) or 0), 0)) for row in rows.values()]
+    low_log = min(support_logs, default=0.0)
+    high_log = max(support_logs, default=1.0)
+    log_span = max(high_log - low_log, 1e-9)
+    airport_group = root.find(".//svg:g[@class='fr-airports']", SVG_NAMESPACES)
+    tooltip_layer = ET.Element(
+        f"{{{SVG_NAMESPACE}}}g",
+        {"class": "fr-heat-tooltip-layer", "aria-hidden": "true"},
+    )
+    root.append(tooltip_layer)
+    if airport_group is not None:
+        for circle in list(airport_group):
+            code = _airport_code(circle)
+            row = rows.get(code or "")
+            if row is None:
+                airport_group.remove(circle)
+                continue
+            rate = float(row.get(rate_key, 0.0) or 0.0)
+            support = max(int(row.get(support_key, 0) or 0), 0)
+            normalized_support = (math.log1p(support) - low_log) / log_span
+            radius = 1.8 + 4.3 * math.sqrt(max(0.0, min(normalized_support, 1.0)))
+            circle.set("class", "fr-heat-dot")
+            circle.set("r", f"{radius:.2f}")
+            circle.set("fill", _heatmap_color(rate))
+            circle.set("fill-opacity", ".9")
+            circle.set("stroke", "#ffffff")
+            circle.set("stroke-opacity", ".96")
+            circle.set("stroke-width", ".82")
+            rate_line = tooltip_rate_template.format(rate=f"{rate:.1%}")
+            support_line = tooltip_support_template.format(support=f"{support:,}")
+            accessible_label = f"{code} · {rate_line} · {support_line}"
+            circle.set("aria-label", accessible_label)
+            title = circle.find(f"{{{SVG_NAMESPACE}}}title")
+            if title is not None:
+                circle.remove(title)
+
+            cx = float(circle.get("cx", "0"))
+            cy = float(circle.get("cy", "0"))
+            tooltip_width = 220.0
+            tooltip_height = 59.0
+            tooltip_x = cx + 12.0
+            if tooltip_x + tooltip_width > 967.0:
+                tooltip_x = cx - tooltip_width - 12.0
+            tooltip_x = max(8.0, min(tooltip_x, 967.0 - tooltip_width))
+            tooltip_y = cy - tooltip_height - 12.0
+            if tooltip_y < 8.0:
+                tooltip_y = cy + 12.0
+            tooltip_y = max(8.0, min(tooltip_y, 602.0 - tooltip_height))
+
+            hover_group = ET.SubElement(
+                tooltip_layer,
+                f"{{{SVG_NAMESPACE}}}g",
+                {"class": "fr-heat-hover", "aria-label": accessible_label},
+            )
+            ET.SubElement(
+                hover_group,
+                f"{{{SVG_NAMESPACE}}}circle",
+                {
+                    "class": "fr-heat-hit",
+                    "cx": f"{cx:.1f}",
+                    "cy": f"{cy:.1f}",
+                    "r": f"{radius + 3.2:.2f}",
+                    "fill": "none",
+                    "stroke": "none",
+                    "pointer-events": "all",
+                },
+            )
+            tooltip = ET.SubElement(
+                hover_group,
+                f"{{{SVG_NAMESPACE}}}g",
+                {
+                    "class": "fr-heat-tooltip",
+                    "aria-hidden": "true",
+                    "transform": f"translate({tooltip_x:.1f} {tooltip_y:.1f})",
+                },
+            )
+            ET.SubElement(
+                tooltip,
+                f"{{{SVG_NAMESPACE}}}rect",
+                {"width": str(tooltip_width), "height": str(tooltip_height), "rx": "7"},
+            )
+            code_text = ET.SubElement(
+                tooltip,
+                f"{{{SVG_NAMESPACE}}}text",
+                {"class": "fr-heat-tooltip-code", "x": "12", "y": "18"},
+            )
+            code_text.text = str(code)
+            rate_text = ET.SubElement(
+                tooltip,
+                f"{{{SVG_NAMESPACE}}}text",
+                {"class": "fr-heat-tooltip-rate", "x": "12", "y": "36"},
+            )
+            rate_text.text = rate_line
+            support_text = ET.SubElement(
+                tooltip,
+                f"{{{SVG_NAMESPACE}}}text",
+                {"class": "fr-heat-tooltip-support", "x": "12", "y": "51"},
+            )
+            support_text.text = support_line
+    root.set("data-mode", mode)
+    return ET.tostring(root, encoding="unicode")
 
 
 def _sample_input() -> PredictionInput:
@@ -276,6 +453,9 @@ def _topbar(model_available: bool, artifact_version: str | None, t: dict[str, An
     <div>
       <div class="fr-brand-name">FLIGHT DELAY RISK</div>
       <div class="fr-byline">{html.escape(str(t['topbar']['byline']))}</div>
+      <a class="fr-source-link" href="{TRAINING_SOURCE_URL}" target="_blank" rel="noopener noreferrer">
+        {html.escape(str(t['topbar']['source']))}<span aria-hidden="true">↗</span>
+      </a>
     </div>
   </div>
   <div class="fr-status">
@@ -298,7 +478,11 @@ def _workflow(t: dict[str, Any]) -> None:
     st.markdown(f'<div class="fr-workflow">{blocks}</div>', unsafe_allow_html=True)
 
 
-def _hero(t: dict[str, Any], model_available: bool) -> None:
+def _hero(
+    t: dict[str, Any],
+    model_available: bool,
+    catalog: dict[str, list[str]],
+) -> None:
     prediction, context = _safe_sample_state(model_available)
     probability = float(prediction.get("delay_probability", 0.0))
     route_rate = float(context.get("route_rate", 0.0))
@@ -312,41 +496,53 @@ def _hero(t: dict[str, Any], model_available: bool) -> None:
         "moderate": t["hero_card"]["watch"],
         "high": t["hero_card"]["priority"],
     }.get(level, t["hero_card"]["watch"])
-    st.markdown('<div class="fr-hero">', unsafe_allow_html=True)
-    left, right = st.columns([0.62, 0.38], gap="large")
-    with left:
-        st.markdown(
-            f"""
-<div class="fr-kicker">{t['hero_kicker']}</div>
-<div class="fr-title">{t['hero_title']}</div>
-<div class="fr-subtitle">{t['hero_sub']}</div>
-<div class="fr-constraint">{t['constraint']}</div>
-""",
-            unsafe_allow_html=True,
-        )
-    with right:
-        st.markdown(
-            f"""
-<div class="fr-flight-card">
-  <div class="fr-flight-top">
-    <div>
-      <div class="fr-flight-id">{t['hero_card']['example']}</div>
-      <div class="fr-route">{html.escape(str(route))}</div>
+    airport_count = len(catalog.get("airports", []))
+    map_count = str(t["hero_map"]["count"]).format(count=airport_count)
+    map_aria = str(t["hero_map"]["aria"]).format(count=airport_count)
+    coverage_svg = _coverage_map_svg(catalog.get("airports", []), map_aria)
+    st.markdown(
+        f"""
+<section class="fr-hero">
+  <div class="fr-hero-copy">
+    <div class="fr-kicker">{t['hero_kicker']}</div>
+    <div class="fr-title">{t['hero_title']}</div>
+    <div class="fr-subtitle">{t['hero_sub']}</div>
+    <div class="fr-constraint">{t['constraint']}</div>
+  </div>
+  <div class="fr-coverage-visual">
+    <div class="fr-coverage-head">
+      <div>
+        <span>{html.escape(str(t['hero_map']['eyebrow']))}</span>
+        <strong>{html.escape(map_count)}</strong>
+      </div>
+      <p>{html.escape(str(t['hero_map']['caption']))}</p>
     </div>
-    <div class="fr-priority">{html.escape(str(priority))}</div>
+    <div class="fr-map-frame">{coverage_svg}</div>
+    <div class="fr-flight-card">
+      <div class="fr-flight-top">
+        <div>
+          <div class="fr-flight-id">{t['hero_card']['example']}</div>
+          <div class="fr-route">{html.escape(str(route))}</div>
+        </div>
+        <div class="fr-priority">{html.escape(str(priority))}</div>
+      </div>
+      <div class="fr-risk-row">
+        <div>
+          <div class="fr-risk-number">{_fmt_pct(probability)}</div>
+          <div class="fr-risk-label">{t['hero_card']['probability']}</div>
+        </div>
+        <div class="fr-flight-grid">
+          <div class="fr-flight-stat"><b>{_fmt_pct(route_rate)}</b><span>{t['hero_card']['route_rate']}</span></div>
+          <div class="fr-flight-stat"><b>{relative:.2f}×</b><span>{t['hero_card']['relative']}</span></div>
+          <div class="fr-flight-stat"><b>{_fmt_int(support)} · {_support_quality(support, t)}</b><span>{t['hero_card']['support']}</span></div>
+        </div>
+      </div>
+    </div>
   </div>
-  <div class="fr-risk-number">{_fmt_pct(probability)}</div>
-  <div class="fr-risk-label">{t['hero_card']['probability']}</div>
-  <div class="fr-flight-grid">
-    <div class="fr-flight-stat"><b>{_fmt_pct(route_rate)}</b><span>{t['hero_card']['route_rate']}</span></div>
-    <div class="fr-flight-stat"><b>{relative:.2f}×</b><span>{t['hero_card']['relative']}</span></div>
-    <div class="fr-flight-stat"><b>{_fmt_int(support)} · {_support_quality(support, t)}</b><span>{t['hero_card']['support']}</span></div>
-  </div>
-</div>
+</section>
 """,
-            unsafe_allow_html=True,
-        )
-    st.markdown("</div>", unsafe_allow_html=True)
+        unsafe_allow_html=True,
+    )
     _workflow(t)
 
 
@@ -1020,6 +1216,68 @@ def _model_metrics(report: dict[str, Any], key: str) -> dict[str, Any]:
     return block.get("metrics", block) if isinstance(block, dict) else {}
 
 
+def _render_airport_heatmap(lang: str, t: dict[str, Any]) -> None:
+    history = _safe_airport_history()
+    if not history:
+        return
+    copy = t["heatmap"]
+    mode = st.segmented_control(
+        str(copy["mode"]),
+        options=("origin", "destination"),
+        format_func=lambda value: str(
+            copy["origin" if value == "origin" else "destination"]
+        ),
+        default="origin",
+        selection_mode="single",
+        label_visibility="collapsed",
+        key=f"airport_heatmap_mode_{lang}",
+    )
+    mode = str(mode or "origin")
+    aria_key = "aria_origin" if mode == "origin" else "aria_destination"
+    heatmap_svg = _airport_heatmap_svg(
+        history,
+        mode,
+        str(copy[aria_key]),
+        str(copy["tooltip_rate"]),
+        str(copy["tooltip_support"]),
+    )
+    legend = "".join(
+        f'<span><i style="background:{color}"></i>{html.escape(label)}</span>'
+        for color, label in (
+            ("#53c7f0", "<18%"),
+            ("#a1dcf2", "18–21%"),
+            ("#f2b84b", "21–24%"),
+            ("#ff6b5e", "≥24%"),
+        )
+    )
+    airport_count = str(copy["count"]).format(count=len(history))
+    st.markdown(
+        f"""
+<div class="fr-heatmap-shell">
+  <div class="fr-heatmap-intro">
+    <div>
+      <span class="fr-heatmap-eyebrow">{html.escape(str(copy['eyebrow']))}</span>
+      <strong>{html.escape(str(copy['title']))}</strong>
+      <p>{html.escape(str(copy['caption']))}</p>
+    </div>
+    <div class="fr-heatmap-meta">
+      <span>{html.escape(airport_count)}</span>
+      <span>{html.escape(str(copy['target']))}</span>
+      <em>{html.escape(str(copy['disclaimer']))}</em>
+    </div>
+  </div>
+  <div class="fr-heatmap-map">{heatmap_svg}</div>
+  <div class="fr-heatmap-legend">
+    <b>{html.escape(str(copy['legend_rate']))}</b>
+    {legend}
+    <em>{html.escape(str(copy['legend_support']))}</em>
+  </div>
+</div>
+""",
+        unsafe_allow_html=True,
+    )
+
+
 def _render_validation(lang: str, t: dict[str, Any]) -> None:
     report = _load_json(REPORTS_DIR / "metrics.json")
     backtest = _load_json(REPORTS_DIR / "temporal_backtest.json")
@@ -1466,6 +1724,7 @@ def main() -> None:
     info = _safe_model_info()
     card = _safe_model_card()
     model_available = prediction_service.is_model_available()
+    catalog = _safe_catalog()
 
     top_left, top_right = st.columns([0.84, 0.16], gap="small")
     with top_right:
@@ -1473,17 +1732,18 @@ def main() -> None:
     with top_left:
         _topbar(model_available, info.get("version"), t)
 
-    _hero(t, model_available)
+    _hero(t, model_available, catalog)
 
     tabs = st.tabs(t["tabs"])
     with tabs[0]:
         _section_header(t["analyze_title"], t["analyze_sub"])
-        form_result = _flight_form(lang, t, _safe_catalog(), disabled=not model_available)
+        form_result = _flight_form(lang, t, catalog, disabled=not model_available)
         if form_result is not None:
             payload, metadata = form_result
             _render_prediction(payload, metadata, lang, t)
         else:
             st.markdown(f'<div class="fr-note">{t["single"]["idle"]}</div>', unsafe_allow_html=True)
+        _render_airport_heatmap(lang, t)
 
     with tabs[1]:
         _section_header(t["rank_title"], t["rank_sub"])
