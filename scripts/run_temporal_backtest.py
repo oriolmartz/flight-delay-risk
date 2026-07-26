@@ -288,6 +288,12 @@ def main() -> None:
         include_gradient_boosting=args.include_gradient_boosting,
         schedule_context=schedule_context,
     )
+    output["data_preparation"] = {
+        "source": str(args.data),
+        "cleaning_contract": "normalize_columns_then_clean_flights_with_report",
+        "cleaning_report": df.attrs.get("cleaning_report", {}),
+        "model_population": "completed_non_diverted_flights_with_binary_ArrDel15",
+    }
     args.output.parent.mkdir(parents=True, exist_ok=True)
     args.output.write_text(json.dumps(output, indent=2), encoding="utf-8")
     args.output.with_suffix(".md").write_text(_markdown_report(output), encoding="utf-8")
