@@ -36,7 +36,6 @@ from src.reference.european_layer import (
     european_airports_catalog,
 )
 from src.version import APP_VERSION
-
 from src.weather.model_features import WEATHER_MODEL_FEATURES
 from src.weather.ui_analytics import (
     load_weather_ui_summary,

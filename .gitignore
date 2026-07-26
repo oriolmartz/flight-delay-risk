@@ -184,4 +184,5 @@ temp/
 *.tmp
 *.bak
 *.swp
-*.swo
+*.swodata/raw/weather/
+artifacts/
