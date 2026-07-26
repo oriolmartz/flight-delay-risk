@@ -139,13 +139,29 @@ Across three expanding folds with the seven public candidates:
 
 No model family is stable across all periods.
 
+
+## Point-in-time weather extension
+
+The public schedule-only artifact remains the primary product model. A separate paired experiment freezes Extra Trees and compares identical complete-weather rows, chronological folds, hyperparameters and seed:
+
+| Metric | Base | Base + weather | Mean delta | Weather wins |
+|---|---:|---:|---:|---:|
+| ROC-AUC | 0.6430 | 0.6486 | +0.0056 | 3/3 |
+| PR-AUC | 0.3104 | 0.3156 | +0.0052 | 3/3 |
+| Lift@10% | 1.704× | 1.753× | +0.049× | 2/3 |
+| Brier | 0.21730 | 0.21683 | −0.00047 | 2/3 |
+
+For UI counterfactual scoring, `scripts.train_weather_release` writes two artifacts on the same complete-weather cohort: a schedule-only companion and the weather-enhanced model. The displayed probability delta is therefore paired model behaviour. It is not a causal estimate of weather impact.
+
+Weather observations are joined only if their timestamp is at or before the six-hour prediction cutoff and no more than six hours old. Missing observations cause the weather layer to degrade explicitly rather than silently substituting future information.
+
 ## Explanation
 
 For Extra Trees, decision paths are decomposed into parent-to-child positive-class probability changes, averaged across trees, grouped to raw features and rescaled to the pre-calibration log-odds change. This explains model behaviour, not causes.
 
 ## Limitations
 
-- No live weather, ATC, aircraft rotation, crew, gate or maintenance state.
+- Historical point-in-time NOAA observations cover the supported 2024 cohort, but there is no live forecast, ATC, aircraft rotation, crew, gate or maintenance state.
 - One calendar year and a release-size training sample.
 - Scheduled congestion is a timetable proxy, not observed congestion.
 - Cohort signals are associative rather than causal.
