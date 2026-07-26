@@ -26,9 +26,38 @@ def _map_from_grouped(table: pa.Table, key_columns: list[str], occurrences: dict
     return output
 
 
+def _resolve_parquet_column(schema_names: set[str], canonical: str, *aliases: str) -> str:
+    """Return the first available parquet column for a canonical field."""
+    for candidate in (canonical, *aliases):
+        if candidate in schema_names:
+            return candidate
+    expected = ", ".join((canonical, *aliases))
+    raise ValueError(
+        f"Missing required parquet column for {canonical!r}. "
+        f"Expected one of: {expected}. Available columns: {sorted(schema_names)}"
+    )
+
+
 def fit_schedule_context_from_parquet(path: Path) -> ScheduleContextReference:
-    columns = ["FlightDate", "DayOfWeek", "Airline", "Origin", "Dest", "CRSDepTime", "CRSArrTime"]
-    table = pq.read_table(path, columns=columns)
+    schema_names = set(pq.ParquetFile(path).schema.names)
+    source_columns = {
+        "FlightDate": _resolve_parquet_column(schema_names, "FlightDate", "FL_DATE"),
+        "DAY_OF_WEEK": _resolve_parquet_column(schema_names, "DAY_OF_WEEK", "DayOfWeek"),
+        "Airline": _resolve_parquet_column(
+            schema_names, "Airline", "OP_UNIQUE_CARRIER", "Reporting_Airline"
+        ),
+        "Origin": _resolve_parquet_column(schema_names, "Origin", "ORIGIN"),
+        "Dest": _resolve_parquet_column(schema_names, "Dest", "DEST"),
+        "CRSDepTime": _resolve_parquet_column(
+            schema_names, "CRSDepTime", "CRS_DEP_TIME"
+        ),
+        "CRSArrTime": _resolve_parquet_column(
+            schema_names, "CRSArrTime", "CRS_ARR_TIME"
+        ),
+    }
+
+    table = pq.read_table(path, columns=list(source_columns.values()))
+    table = table.rename_columns(list(source_columns.keys()))
     dates = pd.DatetimeIndex(table.column("FlightDate").to_numpy())
     date_start, date_end = dates.min(), dates.max()
     calendar = pd.date_range(date_start.normalize(), date_end.normalize(), freq="D")
@@ -48,12 +77,12 @@ def fit_schedule_context_from_parquet(path: Path) -> ScheduleContextReference:
         return enriched.group_by(columns_).aggregate([([], "count_all")])
 
     reference = ScheduleContextReference(
-        origin_slot_counts=_map_from_grouped(grouped(["DayOfWeek", "Origin", "DepSlot"]), ["DayOfWeek", "Origin", "DepSlot"], occurrences),
-        dest_slot_counts=_map_from_grouped(grouped(["DayOfWeek", "Dest", "ArrSlot"]), ["DayOfWeek", "Dest", "ArrSlot"], occurrences),
-        origin_daily=_map_from_grouped(grouped(["DayOfWeek", "Origin"]), ["DayOfWeek", "Origin"], occurrences),
-        dest_daily=_map_from_grouped(grouped(["DayOfWeek", "Dest"]), ["DayOfWeek", "Dest"], occurrences),
-        carrier_origin_daily=_map_from_grouped(grouped(["DayOfWeek", "Airline", "Origin"]), ["DayOfWeek", "Airline", "Origin"], occurrences),
-        route_daily=_map_from_grouped(grouped(["DayOfWeek", "Route"]), ["DayOfWeek", "Route"], occurrences),
+        origin_slot_counts=_map_from_grouped(grouped(["DAY_OF_WEEK", "Origin", "DepSlot"]), ["DAY_OF_WEEK", "Origin", "DepSlot"], occurrences),
+        dest_slot_counts=_map_from_grouped(grouped(["DAY_OF_WEEK", "Dest", "ArrSlot"]), ["DAY_OF_WEEK", "Dest", "ArrSlot"], occurrences),
+        origin_daily=_map_from_grouped(grouped(["DAY_OF_WEEK", "Origin"]), ["DAY_OF_WEEK", "Origin"], occurrences),
+        dest_daily=_map_from_grouped(grouped(["DAY_OF_WEEK", "Dest"]), ["DAY_OF_WEEK", "Dest"], occurrences),
+        carrier_origin_daily=_map_from_grouped(grouped(["DAY_OF_WEEK", "Airline", "Origin"]), ["DAY_OF_WEEK", "Airline", "Origin"], occurrences),
+        route_daily=_map_from_grouped(grouped(["DAY_OF_WEEK", "Route"]), ["DAY_OF_WEEK", "Route"], occurrences),
         fitted_rows=table.num_rows,
         date_start=str(date_start.date()),
         date_end=str(date_end.date()),
@@ -98,3 +127,4 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
+

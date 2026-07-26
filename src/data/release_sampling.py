@@ -9,6 +9,11 @@ import pyarrow as pa
 import pyarrow.parquet as pq
 
 from src.config import RANDOM_SEED
+from src.data.clean import clean_flights_with_report
+from src.data.load_data import normalize_columns
+from src.utils.logging import get_logger
+
+logger = get_logger(__name__)
 
 
 def read_release_frame(path: Path, max_rows: int | None = None) -> pd.DataFrame:
@@ -34,5 +39,21 @@ def read_release_frame(path: Path, max_rows: int | None = None) -> pd.DataFrame:
             selected.append(rng.choice(positions, size=min(int(allocation), len(positions)), replace=False))
         indices = np.sort(np.concatenate(selected))
         frame = table.take(pa.array(indices)).to_pandas()
-    frame["FlightDate"] = pd.to_datetime(frame["FlightDate"], errors="raise", format="mixed")
-    return frame.sort_values(["FlightDate", "CRSDepTime"], kind="stable").reset_index(drop=True)
+    frame = normalize_columns(frame)
+    frame, report = clean_flights_with_report(frame)
+    frame.attrs["cleaning_report"] = report.to_dict()
+    frame.attrs["source_path"] = str(Path(path))
+    logger.info(
+        "Prepared release frame from %s: input=%d, output=%d, missing_target=%d, "
+        "cancelled_or_diverted=%d, invalid_date=%d, invalid_numeric=%d, "
+        "invalid_schedule=%d",
+        Path(path).name,
+        report.input_rows,
+        report.output_rows,
+        report.missing_target_rows,
+        report.cancelled_or_diverted_rows,
+        report.invalid_date_rows,
+        report.invalid_numeric_rows,
+        report.invalid_schedule_rows,
+    )
+    return frame

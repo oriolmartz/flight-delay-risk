@@ -185,6 +185,35 @@ CancellationCode
 
 `Cancelled` and `Diverted` are filtering fields only.
 
+
+## Point-in-time weather layer
+
+The weather upgrade uses NOAA Global Hourly observations mapped to airports through `data/weather/airport_station_map.csv`. Scheduled origin departure is converted to UTC with `data/weather/airport_timezone_map.csv`; the declared prediction horizon is then subtracted before any observation is selected.
+
+```text
+scheduled origin departure in local time
+→ convert to UTC
+→ subtract six-hour prediction horizon
+→ latest observation at or before the cutoff
+→ reject observations older than six hours
+→ derive severe-condition flags
+```
+
+The same cutoff is used for origin and destination because the product question is what was knowable before the flight departed. Future observations are asserted impossible by the point-in-time join.
+
+Key files:
+
+| File | Role |
+|---|---|
+| `data/processed/weather_hourly.parquet` | Canonical hourly station observations. |
+| `data/processed/flights_2024_weather_ready.parquet` | BTS schedule normalized for point-in-time joining. |
+| `data/processed/flights_with_weather_2024.parquet` | Joined schedule, target and weather features. |
+| `reports/weather_ui_summary.json` | Compact airport and airport-hour UI analytics. |
+| `models/flightrisk_model_weather_base.joblib` | Paired schedule-only Extra Trees companion. |
+| `models/flightrisk_model_weather.joblib` | Same family and cohort plus weather features. |
+
+`weather_uplift` in the UI summary is the observed adverse-weather delay rate minus the clear-weather delay rate. It is an association and must not be described as a causal effect.
+
 ## Processed files
 
 Preferred output:

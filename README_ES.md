@@ -94,6 +94,38 @@ Las dos últimas vistas exponen folds cronológicos, calibración, comparación 
 
 ![Métricas del test final intacto y guía de interpretación](docs/assets/readme_validation.png)
 
+
+## Mejora meteorológica
+
+La meteorología se integra con un contrato point-in-time: se calcula el cutoff seis horas antes de la salida programada y solo se adjunta la última observación NOAA conocida en ese momento. Las observaciones futuras están prohibidas y las que superan seis horas de antigüedad se marcan como no disponibles.
+
+La UI incorpora:
+
+1. tarjetas de condiciones en origen y destino;
+2. delta contrafactual entre el modelo sin weather y el Extra Trees weather congelado;
+3. capas de mapa para retraso, severidad y uplift asociado al weather;
+4. heatmap aeropuerto × hora.
+
+El uplift es una asociación descriptiva, no causalidad. En el backtest temporal emparejado de tres folds, weather mejoró ROC-AUC y PR-AUC en **3/3 folds**, Lift@10% en **2/3** y Brier en **2/3**. Los deltas medios fueron **+0.0056 ROC-AUC**, **+0.0052 PR-AUC**, **+0.049 Lift@10%** y **−0.00047 Brier**.
+
+```powershell
+python -m scripts.build_weather_ui_summary `
+  --data data/processed/flights_with_weather_2024.parquet `
+  --output reports/weather_ui_summary.json
+
+python -m scripts.train_weather_release `
+  --data data/processed/flights_with_weather_2024.parquet
+```
+
+El segundo comando genera dos artefactos emparejados sobre las mismas filas y particiones temporales:
+
+```text
+models/flightrisk_model_weather_base.joblib
+models/flightrisk_model_weather.joblib
+```
+
+[Arquitectura detallada de la UI weather](docs/WEATHER_UI.md)
+
 ## Flujo de producto
 
 El score del modelo y la decisión de negocio se mantienen separados:
@@ -177,6 +209,12 @@ La captura corresponde al **bloque cronológico de selección** utilizado para e
 Son métricas del **bloque de selección**, no afirmaciones sobre el test final. El resultado posterior se muestra al principio del README.
 
 </details>
+
+## Contrato de preprocesamiento limpio
+
+Cada entrenamiento y backtest temporal pasa por el mismo contrato canónico antes de construir features. El lector normaliza los alias BTS al esquema interno y después elimina vuelos cancelados o desviados, descarta filas sin una etiqueta binaria válida `ArrDel15`, valida fechas y campos programados, comprueba la coherencia del calendario, elimina columnas con fuga de información y conserva las variables meteorológicas disponibles antes de la salida. También registra de forma auditable cuántas filas se eliminan por cada motivo.
+
+Por tanto, el holdout, la ablación meteorológica y la validación cruzada temporal trabajan sobre la misma población limpia: vuelos completados, no desviados y con etiqueta de retraso de llegada conocida.
 
 ## Diseño de validación
 
@@ -303,7 +341,7 @@ docs/              model card, guía de datos, despliegue y limitaciones
 
 ## Limitaciones
 
-- Los inputs schedule-only no observan meteorología, rotación, tripulación, ATC ni disrupciones activas.
+- La capa weather usa únicamente observaciones NOAA históricas conocidas en el cutoff; no existe forecast en vivo, ni rotación, tripulación, ATC o feed de disrupciones activas.
 - El ranking cambia con el tiempo; ninguna familia dominó todos los folds.
 - La evidencia histórica puede ser débil para combinaciones raras o desconocidas.
 - El drift actual es alto; un uso operativo exigiría retraining y revisión de umbral.

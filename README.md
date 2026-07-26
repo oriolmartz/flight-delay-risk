@@ -20,10 +20,10 @@ Find the scheduled flights that deserve attention first, understand why they wer
 
 ## Start here
 
-An airline operations team cannot investigate every departure with the same level of attention. Flight Delay Risk turns a published schedule into a review queue before take-off:
+An airline operations team cannot investigate every departure with the same level of attention. Flight Delay Risk turns a published schedule into a **capacity-aware review queue before take-off**:
 
 ```text
-scheduled flight → calibrated delay risk → historical evidence → review queue
+scheduled flight → clean pre-departure features → calibrated delay risk → historical evidence → review queue
 ```
 
 The product answers one practical question:
@@ -36,10 +36,25 @@ The product answers one practical question:
 | **Target** | Probability of arriving at least 15 minutes late (`ArrDel15`). |
 | **Inputs** | Carrier, route, date, scheduled times, duration and distance. |
 | **Action** | Prioritize the highest-risk 10% of an uploaded schedule. |
-| **Evidence** | Route baseline, historical support, local model contributions and temporal validation. |
-| **Boundary** | No live weather, aircraft rotation, crew, ATC or post-departure information. |
+| **Evidence** | Route baseline, historical support, local model contributions, point-in-time weather and temporal validation. |
+| **Boundary** | Historical weather is joined only from observations known at the prediction cutoff; there is no live weather, aircraft rotation, crew, ATC or post-departure feed. |
 
-This is a **triage workbench**, not a promise that a flight will be delayed and not a safety or dispatch system.
+### What the system does
+
+- scores **published scheduled flights** using only data that should exist **before departure**;
+- exposes the **historical support** behind the baseline so weak-evidence routes are visible;
+- supports both **single-flight analysis** and **schedule ranking**;
+- shows **point-in-time weather evidence** when available and keeps the weather model as a separate, optional artifact;
+- publishes the release evidence: preprocessing assumptions, temporal validation, calibration and monitoring.
+
+### What the system does *not* do
+
+- it does **not** ingest live ATC, turnaround, maintenance, tail assignment, crew or passenger-flow data;
+- it does **not** know post-departure facts such as actual departure delay, taxi-out or wheels-off times;
+- it does **not** provide causal statements about weather; the uplift view is descriptive association only;
+- it is **not** an operational dispatch, safety, passenger-guarantee or revenue-management system.
+
+This is a **triage workbench**, not a promise that a flight will be delayed.
 
 ## Operational result
 
@@ -80,7 +95,13 @@ Scroll below the single-flight form to explore the training evidence by origin o
 
 ![Historical airport delay heatmap](docs/assets/readme_heatmap.png)
 
-This map describes the **historical BTS training evidence**. It is not live weather, current congestion or a forecast by itself.
+The map now exposes three explicit layers:
+
+- **Delay risk:** smoothed historical `ArrDel15` rate.
+- **Weather severity:** average count of severe point-in-time weather flags.
+- **Weather-associated uplift:** observed adverse-weather delay rate minus clear-weather delay rate.
+
+A second airport × hour heatmap shows how the selected layer changes through the scheduled day. The uplift layer is descriptive association, **not causal attribution**, and none of these views is a live weather forecast.
 
 ### 4. Rank an entire schedule
 
@@ -93,6 +114,62 @@ Upload the included CSV template or a valid schedule. Valid rows are preserved e
 The final two views expose chronological folds, calibration, baseline comparisons, model lineage, API endpoints, release health and deployment evidence. The technical story remains available without blocking the main decision flow.
 
 ![Untouched final-test metrics and plain-language metric guide](docs/assets/readme_validation.png)
+
+
+## Weather upgrade
+
+Weather is treated as a leakage-sensitive data product rather than a decorative feed. For every flight, the pipeline converts the scheduled origin departure into UTC, subtracts the declared six-hour prediction horizon and joins the latest eligible NOAA observation at both origin and destination. Observations newer than the cutoff are forbidden and observations older than six hours are marked unavailable.
+
+The UI uses weather in three ways:
+
+1. **Single-flight evidence:** origin and destination temperature, wind, visibility, ceiling, precipitation, observation age and severe-condition flags.
+2. **Counterfactual model delta:** the frozen weather Extra Trees artifact is scored against the same schedule-only flight. The displayed delta is model behaviour, not causal impact.
+3. **Network exploration:** airport map layers and an airport × hour heatmap for delay rate, weather severity and weather-associated uplift.
+
+The weather model is kept as a separate artifact so the public schedule-only model remains available when NOAA data or the weather artifact is absent. The UI degrades transparently: raw weather observations remain visible, while the probability delta is labelled unavailable.
+
+### Paired temporal evidence
+
+The weather upgrade was evaluated with identical rows, chronological folds, Extra Trees hyperparameters and random seed. No model-family selection occurred inside the folds.
+
+| Three-fold paired result | Base | Base + weather | Mean delta | Weather wins |
+|---|---:|---:|---:|---:|
+| ROC-AUC | 0.6430 | 0.6486 | **+0.0056** | **3 / 3** |
+| PR-AUC | 0.3104 | 0.3156 | **+0.0052** | **3 / 3** |
+| Lift@10% | 1.704× | 1.753× | **+0.049×** | **2 / 3** |
+| Brier score | 0.21730 | 0.21683 | **−0.00047** | **2 / 3** |
+
+The conclusion is deliberately narrow: point-in-time weather adds a modest but temporally consistent ranking signal. It does not transform the task into a deterministic flight-delay forecast.
+
+### Why the weather evaluation is fair
+
+The weather comparison is **paired by design**. The base model and the base-plus-weather model are trained on the **same rows**, with the **same chronological splits**, the **same Extra Trees hyperparameters** and the **same random seed**. That means the delta reflects the added information content of the point-in-time weather features, not a second round of model-family fishing.
+
+Build the compact UI analytics artifact:
+
+```powershell
+python -m scripts.build_weather_ui_summary `
+  --data data/processed/flights_with_weather_2024.parquet `
+  --output reports/weather_ui_summary.json
+```
+
+Train the separate frozen Extra Trees weather artifact:
+
+```powershell
+python -m scripts.train_weather_release `
+  --data data/processed/flights_with_weather_2024.parquet
+```
+
+That command writes two paired artifacts trained on identical rows and time blocks:
+
+```text
+models/flightrisk_model_weather_base.joblib
+models/flightrisk_model_weather.joblib
+```
+
+[Detailed weather UI architecture](docs/WEATHER_UI.md)
+
+For a fast integration smoke test, add `--max-rows 300000` to either command. Smoke artifacts must not be reported as final release evidence.
 
 ## Product workflow
 
@@ -178,9 +255,24 @@ These are **selection-block** metrics, not final-test claims. The later final te
 
 </details>
 
+## Clean preprocessing contract
+
+Every training run, weather ablation and temporal backtest now passes through the **same canonical preprocessing contract** before feature engineering. This is intentional: the model should not change just because one script cleaned the data differently from another.
+
+The clean preprocessing pipeline is:
+
+1. **Normalize BTS aliases** such as `OP_UNIQUE_CARRIER`, `CRS_ARR_TIME`, `ARR_DEL15`, `CANCELLED` and `DIVERTED` into one internal schema.
+2. **Filter the supervised population** to completed, non-diverted flights with a known binary `ArrDel15` target.
+3. **Reject malformed records**: invalid dates, impossible schedule fields, missing or non-binary targets, and rows that fail calendar consistency checks against `FlightDate`.
+4. **Protect the inference boundary** by dropping post-departure or post-outcome columns while preserving allowed pre-departure weather features.
+5. **Sort the modelling frame chronologically** so every later split, historical aggregate and backtest respects time.
+6. **Log every removal reason** so the cleaned frame is auditable rather than implicit.
+
+The result is a single modelling population: **6,965,267** cleaned 2024 flights. When you run the final holdout, the weather ablation or the expanding-window backtest, you are testing different modelling choices on the **same cleaned population**, not on quietly different data paths.
+
 ## Validation design
 
-The release enforces forward-only evaluation:
+The release enforces **forward-only evaluation** and separates each decision in time:
 
 ```text
 model training            2024-01-01 → 2024-07-16
@@ -189,11 +281,20 @@ calibration               2024-09-05 → 2024-10-18
 untouched final test      2024-10-19 → 2024-12-31
 ```
 
-- Model choice is made before the final test.
-- Calibration candidates are compared on a later holdout; **sigmoid** wins and is refitted on the permitted calibration block.
-- The operational policy is frozen before final reporting.
-- Confidence intervals use 100 weekly block-bootstrap samples.
-- The release includes three temporal backtest folds, robustness checks, ablations and feature-stability evidence.
+### Why this matters
+
+1. **Candidate search happens once.** The model zoo is compared on a declared chronological selection block. Extra Trees wins there and becomes the frozen release family.
+2. **Hyperparameters are frozen before later evidence.** The scaled refit uses the declared winner rather than re-optimizing on the final test.
+3. **Calibration is evaluated later again.** Calibration candidates are compared on a later holdout; **sigmoid** wins and is refitted only on the permitted calibration block.
+4. **The final test stays untouched.** October 19 to December 31 is reported once, after the modelling choices are already fixed.
+5. **Cross-validation is temporal, not random.** The expanding-window backtests move forward through time so each fold simulates future deployment rather than mixing months randomly.
+
+### Release evidence included
+
+- three temporal backtest folds for the main release protocol;
+- paired weather backtests on identical rows and frozen Extra Trees settings;
+- confidence intervals from 100 weekly block-bootstrap samples;
+- robustness checks, ablations and feature-stability evidence.
 
 ## Leakage contract
 
@@ -303,7 +404,7 @@ docs/              model card, data guide, deployment and limitations
 
 ## Limitations
 
-- Schedule-only inputs cannot observe live weather, aircraft rotation, crew, ATC or active airport disruption state.
+- Historical NOAA observations are available only for the covered 2024 period; the product has no live forecast, aircraft rotation, crew, ATC or active airport disruption feed.
 - Ranking quality varies through time; no model family dominated every temporal fold.
 - Historical route evidence may be weak for rare or unseen combinations.
 - The current drift audit is high, so retraining and threshold review would be required before operational reuse.

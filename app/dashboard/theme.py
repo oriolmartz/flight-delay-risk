@@ -108,6 +108,37 @@ h1, h2, h3, h4, p, div, span, label { color: var(--fr-ink); }
   color: var(--fr-ink);
 }
 
+[data-baseweb="tag"],
+[data-baseweb="tag"] * {
+  color: #ffffff !important;
+  fill: #ffffff !important;
+}
+[data-baseweb="tag"] {
+  background: var(--fr-navy) !important;
+  border-color: var(--fr-navy) !important;
+}
+
+[data-testid="stSegmentedControl"] button,
+div[data-baseweb="button-group"] button {
+  color: var(--fr-navy) !important;
+  background: #f7fbff !important;
+  border-color: var(--fr-line) !important;
+  font-weight: 800 !important;
+}
+[data-testid="stSegmentedControl"] button *,
+div[data-baseweb="button-group"] button * {
+  color: inherit !important;
+  fill: currentColor !important;
+}
+[data-testid="stSegmentedControl"] button[aria-checked="true"],
+[data-testid="stSegmentedControl"] button[aria-selected="true"],
+div[data-baseweb="button-group"] button[aria-checked="true"],
+div[data-baseweb="button-group"] button[aria-selected="true"] {
+  background: var(--fr-navy) !important;
+  border-color: var(--fr-navy) !important;
+  color: #ffffff !important;
+}
+
 [data-testid="stFileUploaderDropzone"] {
   background: var(--fr-surface) !important;
   border: 1px dashed #9f9789 !important;
@@ -164,12 +195,19 @@ button[data-baseweb="tab"][aria-selected="true"] { color: var(--fr-navy) !import
 }
 .fr-source-link:hover { color: var(--fr-navy) !important; text-decoration: underline; }
 .fr-source-link span { font-size: .72rem; transform: translateY(-.02rem); }
+.fr-dataset-meta {
+  margin-top: .22rem;
+  color: var(--fr-muted);
+  font-size: .70rem;
+  line-height: 1.3;
+  font-weight: 760;
+}
 .fr-status { display: flex; gap: .42rem; flex-wrap: wrap; justify-content: flex-end; }
 .fr-chip {
   display: inline-flex; align-items: center; gap: .35rem;
   padding: .28rem .5rem; border-radius: 999px;
   background: var(--fr-surface-2); border: 1px solid var(--fr-line);
-  color: var(--fr-muted); font-size: .72rem; font-weight: 800;
+  color: #41586f; font-size: .72rem; font-weight: 820;
 }
 .fr-chip.ok { color: var(--fr-teal); }
 .fr-chip.warn { color: var(--fr-red); }
@@ -621,6 +659,31 @@ button[data-baseweb="tab"][aria-selected="true"] { color: var(--fr-navy) !import
   box-shadow: none !important;
 }
 
+
+.fr-weather-card {
+  padding: .82rem .88rem;
+  background: linear-gradient(145deg, rgba(231,243,255,.92), rgba(255,255,255,.98));
+  border: 1px solid var(--fr-line);
+  border-radius: 9px;
+  min-height: 190px;
+  box-shadow: 0 7px 18px rgba(28, 82, 124, .04);
+}
+.fr-weather-card > span { display: block; color: var(--fr-muted); margin-top: .55rem; font-size: .8rem; }
+.fr-weather-card-head { display: flex; justify-content: space-between; align-items: center; gap: 1rem; }
+.fr-weather-card-head b { font-size: .96rem; }
+.fr-weather-card-head strong {
+  display: inline-flex; align-items: center; justify-content: center;
+  min-width: 48px; padding: .24rem .42rem; border-radius: 999px;
+  background: var(--fr-navy); color: #fff; font-size: .76rem;
+}
+.fr-weather-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: .55rem; margin-top: .7rem; }
+.fr-weather-grid span { padding-top: .42rem; border-top: 1px solid var(--fr-line); color: var(--fr-muted); font-size: .67rem; }
+.fr-weather-grid b { display: block; color: var(--fr-ink); font-size: .82rem; font-variant-numeric: tabular-nums; }
+.fr-weather-flags {
+  margin-top: .68rem; padding: .46rem .55rem; border-radius: 6px;
+  background: rgba(22,74,115,.07); color: var(--fr-navy); font-size: .72rem; font-weight: 780;
+}
+
 @media (max-width: 900px) {
   .fr-title { font-size: 2.45rem; }
   .fr-status { display: none; }
@@ -630,6 +693,7 @@ button[data-baseweb="tab"][aria-selected="true"] { color: var(--fr-navy) !import
   .fr-flight-grid { grid-template-columns: repeat(3, 1fr); }
   .fr-workflow { grid-template-columns: repeat(2, 1fr); }
   .fr-metric-grid.cols-2, .fr-metric-grid.cols-3, .fr-metric-grid.cols-4 { grid-template-columns: 1fr; }
+  .fr-weather-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .fr-step:nth-child(2) { border-right: 0; }
   .fr-step:nth-child(-n+2) { border-bottom: 1px solid var(--fr-line); }
 }

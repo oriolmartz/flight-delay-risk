@@ -29,6 +29,12 @@ DEFAULT_PROCESSED_PATH: Path = PROCESSED_DATA_DIR / "flights_processed.parquet"
 DATA_MANIFEST_PATH: Path = PROCESSED_DATA_DIR / "data_manifest.json"
 SCHEDULE_CONTEXT_PATH: Path = Path(os.getenv("FLIGHTRISK_SCHEDULE_CONTEXT_PATH", PROCESSED_DATA_DIR / "schedule_context.joblib"))
 DEFAULT_MODEL_PATH: Path = Path(os.getenv("FLIGHTRISK_MODEL_PATH", MODELS_DIR / "flightrisk_model.joblib"))
+WEATHER_BASE_MODEL_PATH: Path = Path(os.getenv("FLIGHTRISK_WEATHER_BASE_MODEL_PATH", MODELS_DIR / "flightrisk_model_weather_base.joblib"))
+WEATHER_MODEL_PATH: Path = Path(os.getenv("FLIGHTRISK_WEATHER_MODEL_PATH", MODELS_DIR / "flightrisk_model_weather.joblib"))
+WEATHER_UI_SUMMARY_PATH: Path = Path(os.getenv("FLIGHTRISK_WEATHER_UI_SUMMARY_PATH", REPORTS_DIR / "weather_ui_summary.json"))
+WEATHER_HOURLY_PATH: Path = Path(os.getenv("FLIGHTRISK_WEATHER_HOURLY_PATH", PROCESSED_DATA_DIR / "weather_hourly.parquet"))
+AIRPORT_STATION_MAP_PATH: Path = DATA_DIR / "weather" / "airport_station_map.csv"
+AIRPORT_TIMEZONE_MAP_PATH: Path = DATA_DIR / "weather" / "airport_timezone_map.csv"
 SAMPLE_CSV_PATH: Path = SAMPLE_DATA_DIR / "sample_flights.csv"
 
 # Target column
