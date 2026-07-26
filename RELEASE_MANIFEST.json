@@ -3,7 +3,7 @@
   "version": "1.5.0",
   "release_name": "Self-Explaining Product UI Release",
   "status": "stable_public_portfolio_release",
-  "generated_at_utc": "2026-07-26T17:08:18.369394+00:00",
+  "generated_at_utc": "2026-07-26T20:33:39.170913+00:00",
   "artifact_schema_version": "7",
   "interfaces": [
     "streamlit_en_es",
@@ -115,12 +115,12 @@
       "size_bytes": 1923
     },
     "reports/production_smoke.json": {
-      "sha256": "2fdbc1a1676e63ba7a4b88233dfdfeb44d59ac114a1eb3a244bb6a11f10f0fe6",
-      "size_bytes": 1186
+      "sha256": "d824f2517e1aa77267a25769d83466d28cfe1054552c92303637683b9795512d",
+      "size_bytes": 1190
     },
     "docs/openapi.json": {
-      "sha256": "54567e6332de10c4ddc4c0fd4726b2a0c07fe4e38d848160a3dc51fb24614167",
-      "size_bytes": 57754
+      "sha256": "c91f053f8187ab9496d8370118e7ca432167b61cc39403d6aec74cbb965a90ab",
+      "size_bytes": 57918
     },
     "reports/test_results.json": {
       "sha256": "ae7004cfc75328611c58235aa452d000c10562f6f6586f76b574314382bc23c0",
@@ -131,12 +131,12 @@
       "size_bytes": 1072
     },
     "README.md": {
-      "sha256": "8470143261cf99c8f9b5a5c60027a9480c04bb19a915e4a2c05f7f49e7a77a6d",
-      "size_bytes": 25529
+      "sha256": "88d8a941630cd762a64112563ebbb6f8f6ae85db99322a17ca59a1a6677e55e4",
+      "size_bytes": 26748
     },
     "README_ES.md": {
-      "sha256": "cba3702f46b3bfdf315a9317cd75c13aac16688a294b510ef3cbc0f71ffe757e",
-      "size_bytes": 23194
+      "sha256": "166aed19d79e01c3722b50ed582d62c3f50b3d7c915a1d00f30a8f8bc7aa139f",
+      "size_bytes": 24548
     },
     "requirements.txt": {
       "sha256": "571ab147caf18743f12eee7a7b25359bd23e205e1bdf80241150b848d53a6846",

@@ -143,6 +143,18 @@ class TestPredictEndpoint:
         assert "weather" in body
         assert "available" in body["weather"]
 
+    def test_future_weather_request_returns_schedule_only_contract(self, client: TestClient):
+        payload = {**self.SAMPLE_PAYLOAD, "flight_date": "2030-07-15"}
+        response = client.post("/predict/weather", json=payload)
+        assert response.status_code == 200
+        weather = response.json()["weather"]
+        assert weather["mode"] == "future_schedule_only"
+        assert weather["weather_available"] is False
+        assert weather["weather_delta"] is None
+        assert weather["reason"] == "live_forecast_feed_required"
+        assert weather["operational_for_future_flights"] is False
+        assert weather["requires_live_forecast_feed"] is True
+
     def test_weather_summary_endpoint_is_explicit_when_artifact_missing(self, client: TestClient):
         response = client.get("/weather/summary")
         assert response.status_code == 200

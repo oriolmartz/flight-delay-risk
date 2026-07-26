@@ -36,10 +36,20 @@ El producto responde una pregunta práctica:
 | **Target** | Probabilidad de llegar con al menos 15 minutos de retraso (`ArrDel15`). |
 | **Inputs** | Aerolínea, ruta, fecha, horarios programados, duración y distancia. |
 | **Acción** | Priorizar el 10% de mayor riesgo dentro del horario cargado. |
-| **Evidencia** | Baseline de ruta, soporte histórico, contribuciones locales y validación temporal. |
-| **Límite** | Sin meteorología en vivo, rotación de aeronaves, tripulación, ATC ni datos posteriores a la salida. |
+| **Evidencia** | Baseline de ruta, soporte histórico, contribuciones locales, validación temporal y un replay weather histórico opcional de 2024. |
+| **Límite** | Los vuelos futuros se puntúan con información de horario. Weather es solo un replay histórico versionado de 2024; actualizar weather futuro exige un feed de forecast en vivo. |
 
 Es un **workbench de triaje**, no una promesa de que un vuelo se retrasará ni un sistema de seguridad o despacho.
+
+### Dos modos de producto
+
+| Solicitud | Qué devuelve la release |
+|---|---|
+| **Vuelo programado histórico o futuro** | El score oficial de riesgo basado en horario. |
+| **Vuelo histórico compatible de 2024** | El mismo score oficial más un replay NOAA point-in-time opcional y un diagnóstico weather emparejado. |
+| **Actualización weather de un vuelo futuro** | No está disponible en esta release. Requiere un forecast en vivo, versionado y emitido antes del cutoff. |
+
+El módulo weather histórico valida si la meteorología cercana a salida aporta señal. Todavía no es un pipeline operacional de forecast para vuelos futuros.
 
 ## Resultado honesto
 
@@ -70,15 +80,15 @@ Introduce campos naturales del horario; las features de calendario y del modelo 
 - riesgo frente al baseline histórico de la ruta;
 - número de vuelos previos que sustentan esa referencia;
 - factores que elevaron y redujeron la estimación;
-- observaciones meteorológicas de origen y destino disponibles en el cutoff declarado;
-- una única predicción oficial desplegada y un diagnóstico separado de señal weather cuando están disponibles los dos artefactos compañeros congelados;
+- para vuelos compatibles de 2024, observaciones de origen y destino reconstruidas en el cutoff declarado;
+- una única predicción oficial basada en horario y un diagnóstico weather separado de replay histórico cuando están disponibles los dos artefactos compañeros congelados;
 - informe PDF bilingüe.
 
 ![Resumen de decisión para un vuelo con evidencia histórica](docs/assets/readme_analyze.png)
 
-El score desplegado sigue siendo la única predicción del producto. La meteorología aparece aparte como diagnóstico incremental medido dentro de un par de modelos compañeros; el delta no debe sumarse, restarse ni utilizarse como sustituto del score oficial.
+El score desplegado sigue siendo la única predicción del producto y puede puntuar vuelos futuros programados. El panel weather solo está disponible como replay histórico para fechas compatibles de 2024. Su delta emparejado no debe sumarse, restarse ni utilizarse como sustituto del score oficial.
 
-![Contexto meteorológico point-in-time y diagnóstico incremental emparejado](docs/assets/readme_weather_context.png)
+![Replay meteorológico histórico cercano a salida y diagnóstico incremental emparejado](docs/assets/readme_weather_context.png)
 
 ### 3. Explorar el histórico aeroportuario sin salir del flujo
 
@@ -103,23 +113,23 @@ Las dos últimas vistas exponen folds cronológicos, calibración, comparación 
 
 ## Mejora meteorológica
 
-La meteorología se trata como un producto de datos sensible al leakage, no como un feed decorativo. Las observaciones históricas proceden de [NOAA/NCEI Global Hourly Integrated Surface Database](https://www.ncei.noaa.gov/products/land-based-station/integrated-surface-database), y el proyecto descarga los archivos de estaciones de 2024 necesarios desde el [archivo HTTPS anual de NOAA](https://www.ncei.noaa.gov/pub/data/noaa/2024/).
+La meteorología se trata como un **replay histórico** sensible al leakage, no como un feed operativo para vuelos futuros. Las observaciones históricas proceden de [NOAA/NCEI Global Hourly Integrated Surface Database](https://www.ncei.noaa.gov/products/land-based-station/integrated-surface-database), y el proyecto descarga los archivos de estaciones de 2024 necesarios desde el [archivo HTTPS anual de NOAA](https://www.ncei.noaa.gov/pub/data/noaa/2024/).
 
-Para cada vuelo elegible, el pipeline convierte la salida programada del origen a UTC, resta el horizonte declarado de seis horas y une la última observación conocida en ese cutoff tanto en origen como en destino. Las observaciones futuras están prohibidas y las que superan seis horas de antigüedad se marcan como no disponibles. El mapping actual cubre **20 aeropuertos**, mientras que el modelo schedule-only mantiene soporte para **348 aeropuertos**.
+Para cada **vuelo de replay de 2024** elegible, el pipeline convierte la salida programada del origen a UTC, resta el horizonte declarado de seis horas y une la última observación conocida en ese cutoff tanto en origen como en destino. Las observaciones futuras están prohibidas y las que superan seis horas de antigüedad se marcan como no disponibles. El mapping actual cubre **20 aeropuertos**, mientras que el modelo schedule-only mantiene soporte para **348 aeropuertos** y puede puntuar fechas fuera de la ventana de replay.
 
 La UI utiliza weather de tres formas:
 
-1. **Evidencia para un vuelo:** temperatura, viento, visibilidad, techo, precipitación, antigüedad de la observación y flags severos en origen y destino.
+1. **Replay histórico para un vuelo:** temperatura, viento, visibilidad, techo, precipitación, antigüedad de la observación y flags severos en origen y destino para una fecha compatible de 2024.
 2. **Diagnóstico emparejado de señal weather:** dos artefactos compañeros congelados evalúan el mismo vuelo, pero la UI expone únicamente su diferencia de probabilidad en puntos porcentuales. Las probabilidades internas existen para aislar la información incremental del weather; no son predicciones alternativas y el delta no debe sumarse al score desplegado.
 3. **Exploración de red:** capas del mapa y matriz aeropuerto × hora para retraso, severidad meteorológica observada y uplift asociado al weather.
 
-El panel meteorológico de vuelo mostrado anteriormente utiliza las últimas observaciones elegibles conocidas en el cutoff declarado. Mantiene visualmente separada la predicción oficial del diagnóstico experimental weather.
+El panel meteorológico mostrado anteriormente reconstruye las últimas observaciones elegibles conocidas en el cutoff para un vuelo histórico de 2024. Para una fecha futura, el producto devuelve el score schedule-based e indica explícitamente que se necesita un feed de forecast en vivo y versionado; no reutiliza observaciones históricas NOAA como sustituto.
 
 ![Severidad meteorológica point-in-time por aeropuerto y hora programada](docs/assets/readme_weather_network.png)
 
 La captura anterior representa **evidencia histórica point-in-time**, no una previsión en vivo. Cada fila corresponde a un aeropuerto para la perspectiva de origen o destino seleccionada; las columnas son horas locales programadas y las celdas claras vacías indican soporte histórico insuficiente. El uplift es una asociación entre condiciones adversas y despejadas, no atribución causal.
 
-El modelo weather se mantiene como artefacto separado. Así, la release pública schedule-only continúa funcionando cuando faltan observaciones NOAA o algún artefacto compañero. La UI degrada de forma transparente: muestra observaciones cuando existen y marca la señal emparejada como no disponible si falta alguno de los dos modelos. El riesgo oficial desplegado nunca se sustituye por el par experimental.
+El modelo weather se mantiene como artefacto separado. Así, la release pública schedule-only continúa funcionando para fechas futuras y cuando faltan observaciones del replay NOAA o algún artefacto compañero. La UI degrada de forma transparente: las solicitudes futuras siguen siendo schedule-only con `weather_delta: null`; las solicitudes históricas compatibles muestran observaciones cuando existen y marcan el diagnóstico emparejado como no disponible si falta alguno de los modelos. El riesgo oficial desplegado nunca se sustituye por el par experimental.
 
 ### Evidencia temporal emparejada
 
@@ -398,7 +408,7 @@ docs/              model card, guía de datos, despliegue y limitaciones
 
 ## Limitaciones
 
-- La capa weather usa únicamente observaciones NOAA históricas conocidas en el cutoff; no existe forecast en vivo, ni rotación, tripulación, ATC o feed de disrupciones activas.
+- Los vuelos futuros se puntúan solo con horario. La capa weather usa únicamente observaciones NOAA históricas de la ventana de replay versionada de 2024; no existe forecast en vivo, ni rotación, tripulación, ATC o feed de disrupciones activas.
 - El ranking cambia con el tiempo; ninguna familia dominó todos los folds.
 - La evidencia histórica puede ser débil para combinaciones raras o desconocidas.
 - El drift actual es alto; un uso operativo exigiría retraining y revisión de umbral.

@@ -876,19 +876,59 @@ def _render_weather_context(
 ) -> None:
     del lang
     copy = t["weather"]
-    snapshot = prediction_service.weather_snapshot(payload)
     enhanced = prediction_service.weather_enhanced_prediction(
         payload,
         base_result=base_result,
-        snapshot=snapshot,
     )
+    snapshot = enhanced.get("snapshot") or {}
+    mode = str(enhanced.get("mode", "schedule_only"))
+    deployed_label = _fmt_pct(base_result.get("delay_probability"))
+
+    if mode != "historical_replay":
+        if mode == "future_schedule_only":
+            title = str(copy["future_title"])
+            message = str(copy["future_message"]).format(deployed_score=deployed_label)
+            requirement = str(copy["future_requirement"])
+        elif mode == "schedule_only_outside_weather_coverage":
+            title = str(copy["outside_title"])
+            message = str(copy["outside_message"]).format(deployed_score=deployed_label)
+            requirement = str(copy["outside_requirement"])
+        else:
+            title = str(copy["missing_date_title"])
+            message = str(copy["missing_date_message"])
+            requirement = str(copy["missing_date_requirement"])
+
+        st.markdown(f"### {title}")
+        st.markdown(
+            f"""
+<div class="fr-weather-comparison">
+  <div class="fr-weather-comparison-head">
+    <div>
+      <span>{html.escape(str(copy['release_anchor_label']))}</span>
+      <b>{html.escape(deployed_label)}</b>
+    </div>
+    <strong>{html.escape(str(copy['schedule_only_badge']))}</strong>
+  </div>
+  <p>{html.escape(message)}</p>
+  <small class="fr-weather-guardrail">{html.escape(requirement)}</small>
+</div>
+""",
+            unsafe_allow_html=True,
+        )
+        return
+
     st.markdown(f"### {copy['title']}")
-    st.markdown(f'<div class="fr-note">{html.escape(str(copy["subtitle"]))}</div>', unsafe_allow_html=True)
+    st.markdown(
+        f'<div class="fr-note">{html.escape(str(copy["subtitle"]))}</div>',
+        unsafe_allow_html=True,
+    )
     left, right = st.columns(2, gap="large")
     with left:
         _render_weather_endpoint(str(copy["origin"]), snapshot.get("origin", {}), copy)
     with right:
-        _render_weather_endpoint(str(copy["destination"]), snapshot.get("destination", {}), copy)
+        _render_weather_endpoint(
+            str(copy["destination"]), snapshot.get("destination", {}), copy
+        )
 
     cutoff = snapshot.get("prediction_cutoff_utc")
     if cutoff:
@@ -903,7 +943,6 @@ def _render_weather_context(
 
     delta = float(enhanced.get("weather_delta", 0.0))
     delta_label = f"{delta * 100:+.1f} pp"
-    deployed_label = _fmt_pct(base_result.get("delay_probability"))
     comparison_note = str(copy["comparison_note"]).format(deployed_score=deployed_label)
     delta_help = str(copy["comparison_delta_help"]).format(delta=delta_label)
     st.markdown(

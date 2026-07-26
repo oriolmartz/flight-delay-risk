@@ -72,12 +72,14 @@ def test_dashboard_exposes_weather_evidence_and_network_layers():
     assert "weather_enhanced_prediction" in dashboard
     assert "Airport × hour matrix" in copy
     assert "Weather-associated uplift" in copy
-    assert "counterfactual comparison" in copy
+    assert "historical replay evidence" in copy
+    assert "Future flight · schedule-only prediction" in copy
+    assert "live, versioned forecast" in copy
     assert "cleaned flight observations" in copy
     assert "PROMINENT_AIRPORT_LABELS" in dashboard
     assert "one row per airport" in copy.lower()
     assert "SEPARATE FROM THE RELEASE SCORE" in copy
-    assert "One official prediction, one incremental diagnostic" in copy
+    assert "One official prediction, one replay diagnostic" in copy
     assert "Do not add this delta to the official prediction" in copy
     weather_block = dashboard.split("def _render_weather_context", 1)[1].split("def _render_prediction", 1)[0]
     assert "fr-weather-signal-card" in weather_block
@@ -86,3 +88,5 @@ def test_dashboard_exposes_weather_evidence_and_network_layers():
     assert "comparison_formula" not in weather_block
     assert "_metric_cards" not in weather_block
     assert "delta * 100" in weather_block
+    assert 'mode != "historical_replay"' in weather_block
+    assert "future_schedule_only" in weather_block

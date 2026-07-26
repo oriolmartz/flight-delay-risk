@@ -227,7 +227,7 @@
           "weather"
         ],
         "summary": "Predict With Weather",
-        "description": "Return base prediction, point-in-time observations and paired weather delta.",
+        "description": "Return the schedule score and an optional historical weather replay.\n\nFuture flights remain schedule-only until a live, versioned forecast feed\nis integrated. The endpoint never substitutes historical observations for a\nfuture forecast.",
         "operationId": "predict_with_weather_predict_weather_post",
         "requestBody": {
           "content": {
