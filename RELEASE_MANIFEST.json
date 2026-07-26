@@ -3,7 +3,7 @@
   "version": "1.5.0",
   "release_name": "Self-Explaining Product UI Release",
   "status": "stable_public_portfolio_release",
-  "generated_at_utc": "2026-07-21T22:22:07.667558+00:00",
+  "generated_at_utc": "2026-07-26T13:59:06.442425+00:00",
   "artifact_schema_version": "7",
   "interfaces": [
     "streamlit_en_es",
@@ -55,8 +55,8 @@
       "size_bytes": 13688
     },
     "data/processed/schedule_context.joblib": {
-      "sha256": "5eb53af1813c92adf56c2ed83cff4508220ff201a0e38be464768e3ee432c87a",
-      "size_bytes": 997838
+      "sha256": "c679493fa8dcb7c4d039b22f31b4e9e172f378192d52acde9e0e95c1c5ff1db6",
+      "size_bytes": 965424
     },
     "reports/metrics.json": {
       "sha256": "343329ec4a8b1f33646c50d5201edfb51a105dbda3bbfeecbca90b24138d7347",
@@ -115,12 +115,12 @@
       "size_bytes": 1923
     },
     "reports/production_smoke.json": {
-      "sha256": "59c318531e2e4899114989631d28d83800d571f40b1407be3281aabd044b9189",
-      "size_bytes": 1144
+      "sha256": "15ac2c0ac4bbc56e10a47983c6d564c774291f03c5b7cd512dd71ad050239883",
+      "size_bytes": 1185
     },
     "docs/openapi.json": {
-      "sha256": "32a738e4049847ea74412af376ce99db9684ba38e65e6d3e8ed745fc9c6a7671",
-      "size_bytes": 53644
+      "sha256": "54567e6332de10c4ddc4c0fd4726b2a0c07fe4e38d848160a3dc51fb24614167",
+      "size_bytes": 57754
     },
     "reports/test_results.json": {
       "sha256": "ae7004cfc75328611c58235aa452d000c10562f6f6586f76b574314382bc23c0",
@@ -131,48 +131,16 @@
       "size_bytes": 1072
     },
     "README.md": {
-      "sha256": "159654810b213a02953b04fa5317b03c65caf551064041375fa0d9bd90fcad23",
-      "size_bytes": 14436
+      "sha256": "6fff2b5a6675af775a6def064d9d5c36029c60beeae350f6807f905cedf72386",
+      "size_bytes": 21282
     },
     "README_ES.md": {
-      "sha256": "95e0368b25ed3db1c0fcbc0003e176de3e82b05c25c720b46acb831c44d94f40",
-      "size_bytes": 14801
-    },
-    "docs/assets/readme_heatmap.svg": {
-      "sha256": "dd1978366d4b515510b25dcda3d7ed38646224f6721dd12ca21547b9bd945c2c",
-      "size_bytes": 20486
-    },
-    "docs/assets/readme_model_comparison.png": {
-      "sha256": "2eacc066e72a49a97bc262974e819db404dc65921ac73d2636c698145d027d09",
-      "size_bytes": 84696
-    },
-    "docs/assets/readme_landing.png": {
-      "sha256": "0eb82dc0dba362ad828e8faf86abbd315d3433992f9ea000407f54aa3a428129",
-      "size_bytes": 583795
-    },
-    "docs/assets/readme_analyze.png": {
-      "sha256": "94cab36c7ce3dfe4427172481664dc59a291b4651f7cd849dda60a069c0a04e1",
-      "size_bytes": 144469
-    },
-    "docs/assets/readme_heatmap.png": {
-      "sha256": "ad137f7c8c78f8fafc16e2906912854f19ec184ebf792349ca5761dbb100fa23",
-      "size_bytes": 933768
-    },
-    "docs/assets/readme_rank.png": {
-      "sha256": "243c746d48c59ecad17f412d0e744274d9b95c812b6837316f40ac88caed89b1",
-      "size_bytes": 136906
-    },
-    "docs/assets/readme_validation.png": {
-      "sha256": "d707ac70ea2cc68aba3ff7fb8961919a49e9c131ecfc5ffbb48e2a1613305263",
-      "size_bytes": 131787
-    },
-    "docs/assets/architecture.svg": {
-      "sha256": "896185289510605ab7a816314ee642a43fd655804bb808d1c3fdba8bd2184d61",
-      "size_bytes": 7804
+      "sha256": "403984a3dafff828e6f0059d01c77f884ee000a6a5a9488b3871697bdb9da7ce",
+      "size_bytes": 17099
     },
     "requirements.txt": {
-      "sha256": "f4466e2b26768a759446db8630a7c46cdf877d819f8e60c3c3a29b80d6f47964",
-      "size_bytes": 744
+      "sha256": "571ab147caf18743f12eee7a7b25359bd23e205e1bdf80241150b848d53a6846",
+      "size_bytes": 761
     },
     "requirements-advanced.txt": {
       "sha256": "de1fd115eb7e5100bcc68213d5be1ac6a74d55313a49b6811cf7be611b29a098",

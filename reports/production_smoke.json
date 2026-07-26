@@ -30,12 +30,12 @@
     "openapi_contract": true
   },
   "timings_ms": {
-    "live": 21.444,
-    "ready": 1943.731,
-    "model_info": 6.134,
-    "predict": 871.591,
-    "rank": 842.062,
-    "openapi": 124.875
+    "live": 9.619,
+    "ready": 1466.206,
+    "model_info": 5.193,
+    "predict": 642.92,
+    "rank": 630.511,
+    "openapi": 70.172
   },
   "model": {
     "name": "extra_trees",

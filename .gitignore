@@ -184,5 +184,7 @@ temp/
 *.tmp
 *.bak
 *.swp
-*.swodata/raw/weather/
+*.swo
 artifacts/
+data/raw/weather/
+reports/weather_ablation_four_scopes_1m.*
