@@ -398,15 +398,16 @@ TEXT: dict[str, dict[str, object]] = {'en': {'language': 'English',
                                          'have not been built yet. Run `python -m '
                                          'scripts.train_weather_release` to enable the paired '
                                          'base-vs-weather probability delta.',
-                    'schedule_score': 'Paired schedule-only risk',
-                    'schedule_score_help': 'Probability from the paired Extra Trees schedule-only companion trained '
-                                           'on the same rows and chronological partitions.',
-                    'weather_score': 'Risk with weather',
-                    'weather_score_help': 'Probability from the frozen ExtraTrees weather artifact using the '
-                                          'same scheduled flight.',
-                    'contribution': 'Weather model delta',
-                    'contribution_help': 'Weather-model probability minus its paired schedule-only companion. This '
-                                         'is model behaviour, not causal attribution.',
+                    'comparison_eyebrow': 'WEATHER SIGNAL DIAGNOSTIC · SEPARATE FROM THE RELEASE SCORE',
+                    'comparison_title': 'One official prediction, one incremental diagnostic',
+                    'comparison_note': 'The official product prediction remains {deployed_score}. The weather figure is measured in a separate matched experiment and is shown only as evidence that point-in-time weather contains incremental signal.',
+                    'comparison_badge': 'Experimental diagnostic',
+                    'comparison_accessible_label': 'Official release prediction and separate incremental weather diagnostic',
+                    'comparison_direct_note': 'Do not add this delta to the official prediction. It is not another prediction for this flight and it is not causal attribution.',
+                    'release_anchor_label': 'Official deployed release prediction',
+                    'release_anchor_help': 'This is the single product prediction used for the flight decision above.',
+                    'contribution': 'Paired weather signal',
+                    'comparison_delta_help': '{delta} change when weather is added inside the matched diagnostic pair.',
                     'drivers': 'Weather features influencing the enhanced estimate',
                     'push_up': 'Pushes weather estimate up',
                     'push_down': 'Pushes weather estimate down',
@@ -830,15 +831,16 @@ TEXT: dict[str, dict[str, object]] = {'en': {'language': 'English',
                                          'artefactos weather emparejados. Ejecuta `python -m '
                                          'scripts.train_weather_release` para activar el delta '
                                          'base-vs-weather.',
-                    'schedule_score': 'Riesgo emparejado sin weather',
-                    'schedule_score_help': 'Probabilidad del Extra Trees sin weather entrenado sobre las '
-                                           'mismas filas y particiones cronológicas.',
-                    'weather_score': 'Riesgo con weather',
-                    'weather_score_help': 'Probabilidad del ExtraTrees weather congelado para el mismo vuelo '
-                                          'programado.',
-                    'contribution': 'Delta del modelo weather',
-                    'contribution_help': 'Probabilidad weather menos probabilidad sin weather. Describe el '
-                                         'comportamiento del modelo, no causalidad.',
+                    'comparison_eyebrow': 'DIAGNÓSTICO DE SEÑAL WEATHER · SEPARADO DEL SCORE DE RELEASE',
+                    'comparison_title': 'Una predicción oficial y un diagnóstico incremental',
+                    'comparison_note': 'La predicción oficial del producto sigue siendo {deployed_score}. La cifra weather procede de un experimento emparejado separado y se muestra únicamente como evidencia de que la meteorología point-in-time aporta señal incremental.',
+                    'comparison_badge': 'Diagnóstico experimental',
+                    'comparison_accessible_label': 'Predicción oficial de la release y diagnóstico incremental weather separado',
+                    'comparison_direct_note': 'No sumes este delta a la predicción oficial. No es otra predicción para este vuelo ni una atribución causal.',
+                    'release_anchor_label': 'Predicción oficial de la release desplegada',
+                    'release_anchor_help': 'Esta es la única predicción de producto usada en la decisión del vuelo mostrada arriba.',
+                    'contribution': 'Señal weather emparejada',
+                    'comparison_delta_help': 'Cambio de {delta} al añadir weather dentro del par diagnóstico emparejado.',
                     'drivers': 'Variables meteorológicas que influyen en la estimación',
                     'push_up': 'Eleva la estimación weather',
                     'push_down': 'Reduce la estimación weather',

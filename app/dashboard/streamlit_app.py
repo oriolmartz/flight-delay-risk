@@ -902,26 +902,37 @@ def _render_weather_context(
         return
 
     delta = float(enhanced.get("weather_delta", 0.0))
-    delta_label = f"{delta:+.1%}"
-    _metric_cards(
-        [
-            {
-                "label": str(copy["schedule_score"]),
-                "value": _fmt_pct(enhanced.get("paired_base_probability")),
-                "help": str(copy["schedule_score_help"]),
-            },
-            {
-                "label": str(copy["weather_score"]),
-                "value": _fmt_pct(enhanced.get("weather_probability")),
-                "help": str(copy["weather_score_help"]),
-            },
-            {
-                "label": str(copy["contribution"]),
-                "value": delta_label,
-                "help": str(copy["contribution_help"]),
-            },
-        ],
-        columns=3,
+    delta_label = f"{delta * 100:+.1f} pp"
+    deployed_label = _fmt_pct(base_result.get("delay_probability"))
+    comparison_note = str(copy["comparison_note"]).format(deployed_score=deployed_label)
+    delta_help = str(copy["comparison_delta_help"]).format(delta=delta_label)
+    st.markdown(
+        f"""
+<div class="fr-weather-comparison">
+  <div class="fr-weather-comparison-head">
+    <div>
+      <span>{html.escape(str(copy['comparison_eyebrow']))}</span>
+      <b>{html.escape(str(copy['comparison_title']))}</b>
+    </div>
+    <strong>{html.escape(str(copy['comparison_badge']))}</strong>
+  </div>
+  <div class="fr-weather-signal-grid">
+    <div class="fr-weather-release-anchor">
+      <span>{html.escape(str(copy['release_anchor_label']))}</span>
+      <b>{html.escape(deployed_label)}</b>
+      <small>{html.escape(str(copy['release_anchor_help']))}</small>
+    </div>
+    <div class="fr-weather-signal-card" role="group" aria-label="{html.escape(str(copy['comparison_accessible_label']))}">
+      <span>{html.escape(str(copy['contribution']))}</span>
+      <b>{html.escape(delta_label)}</b>
+      <small>{html.escape(delta_help)}</small>
+    </div>
+  </div>
+  <p>{html.escape(comparison_note)}</p>
+  <small class="fr-weather-guardrail">{html.escape(str(copy['comparison_direct_note']))}</small>
+</div>
+""",
+        unsafe_allow_html=True,
     )
     contributions = enhanced.get("weather_contributions") or []
     if contributions:
