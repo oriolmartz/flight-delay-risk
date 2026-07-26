@@ -36,25 +36,36 @@ The product answers one practical question:
 | **Target** | Probability of arriving at least 15 minutes late (`ArrDel15`). |
 | **Inputs** | Carrier, route, date, scheduled times, duration and distance. |
 | **Action** | Prioritize the highest-risk 10% of an uploaded schedule. |
-| **Evidence** | Route baseline, historical support, local model contributions, point-in-time weather and temporal validation. |
-| **Boundary** | Historical weather is joined only from observations known at the prediction cutoff; there is no live weather, aircraft rotation, crew, ATC or post-departure feed. |
+| **Evidence** | Route baseline, historical support, local model contributions, temporal validation and an optional 2024 historical weather replay. |
+| **Boundary** | Future flights are scored with schedule-time information. Weather is a versioned 2024 historical replay only; future weather updates require a live forecast feed. |
 
 ### What the system does
 
 - scores **published scheduled flights** using only data that should exist **before departure**;
 - exposes the **historical support** behind the baseline so weak-evidence routes are visible;
 - supports both **single-flight analysis** and **schedule ranking**;
-- shows **point-in-time weather evidence** when available and exposes a separate paired diagnostic for the incremental weather signal;
+- scores historical or future scheduled flights with the deployed schedule-only artifact;
+- for supported 2024 dates, reconstructs **historical point-in-time weather evidence** and exposes a separate paired diagnostic for incremental signal;
 - publishes the release evidence: preprocessing assumptions, temporal validation, calibration and monitoring.
 
 ### What the system does *not* do
 
-- it does **not** ingest live ATC, turnaround, maintenance, tail assignment, crew or passenger-flow data;
+- it does **not** ingest a live weather forecast, ATC, turnaround, maintenance, tail assignment, crew or passenger-flow data;
 - it does **not** know post-departure facts such as actual departure delay, taxi-out or wheels-off times;
 - it does **not** provide causal statements about weather; the uplift view is descriptive association only;
 - it is **not** an operational dispatch, safety, passenger-guarantee or revenue-management system.
 
 This is a **triage workbench**, not a promise that a flight will be delayed.
+
+### Two product modes
+
+| Request | What the release returns |
+|---|---|
+| **Historical or future scheduled flight** | The official schedule-based delay-risk score. |
+| **Supported 2024 historical flight** | The same official score plus an optional NOAA point-in-time replay and paired weather diagnostic. |
+| **Future flight weather update** | Not available in this release. A live, versioned forecast issued before the cutoff is required. |
+
+The historical weather module validates whether near-departure meteorology adds signal. It is not yet an operational forecast pipeline for future flights.
 
 ## Operational result
 
@@ -85,15 +96,15 @@ Enter natural schedule fields. Calendar and model features are derived automatic
 - risk relative to the historical route baseline;
 - the number of prior flights supporting that reference;
 - factors that raised and reduced the estimate;
-- origin and destination weather observations available at the declared cutoff;
-- one official deployed prediction plus a separate paired weather-signal diagnostic when both frozen companion artifacts are available;
+- for supported 2024 flights, origin and destination observations reconstructed at the declared cutoff;
+- one official deployed schedule prediction plus a separate historical-replay weather diagnostic when both frozen companion artifacts are available;
 - a bilingual PDF brief.
 
 ![Single-flight decision summary with historical evidence](docs/assets/readme_analyze.png)
 
-The official deployed score remains the only product prediction. Weather is shown separately as an incremental diagnostic measured inside a matched companion pair; the diagnostic must not be added to, subtracted from or treated as a replacement for the official score.
+The official deployed score remains the only product prediction and can score future scheduled flights. The weather panel is available only as a historical replay for supported 2024 dates. Its paired delta must not be added to, subtracted from or treated as a replacement for the official score.
 
-![Point-in-time weather context and incremental paired diagnostic](docs/assets/readme_weather_context.png)
+![Historical near-departure weather replay and incremental paired diagnostic](docs/assets/readme_weather_context.png)
 
 ### 3. Explore airport history without leaving the flow
 
@@ -124,23 +135,23 @@ The final two views expose chronological folds, calibration, baseline comparison
 
 ## Weather upgrade
 
-Weather is treated as a leakage-sensitive data product rather than a decorative feed. Historical observations come from the official [NOAA/NCEI Global Hourly Integrated Surface Database](https://www.ncei.noaa.gov/products/land-based-station/integrated-surface-database); the project downloads the required 2024 station files from NOAA's [yearly HTTPS archive](https://www.ncei.noaa.gov/pub/data/noaa/2024/).
+Weather is treated as a leakage-sensitive **historical replay**, not as a live future-flight feed. Historical observations come from the official [NOAA/NCEI Global Hourly Integrated Surface Database](https://www.ncei.noaa.gov/products/land-based-station/integrated-surface-database); the project downloads the required 2024 station files from NOAA's [yearly HTTPS archive](https://www.ncei.noaa.gov/pub/data/noaa/2024/).
 
-For every eligible flight, the pipeline converts the scheduled origin departure to UTC, subtracts the declared six-hour prediction horizon and joins the latest observation known at that cutoff for both origin and destination. Future observations are forbidden; observations older than six hours are marked unavailable. The current mapping covers **20 airports**, while the schedule-only model continues to support **348 airports**.
+For every eligible **2024 replay flight**, the pipeline converts the scheduled origin departure to UTC, subtracts the declared six-hour prediction horizon and joins the latest observation known at that cutoff for both origin and destination. Future observations are forbidden; observations older than six hours are marked unavailable. The current mapping covers **20 airports**, while the schedule-only model continues to support **348 airports** and can score dates outside the replay window.
 
 The UI uses weather in three ways:
 
-1. **Single-flight evidence:** origin and destination temperature, wind, visibility, ceiling, precipitation, observation age and severe-condition flags.
+1. **Historical single-flight replay:** origin and destination temperature, wind, visibility, ceiling, precipitation, observation age and severe-condition flags for a supported 2024 date.
 2. **Paired weather-signal diagnostic:** two frozen companion artifacts are evaluated on the same flight, but the UI exposes only their probability difference in percentage points. The hidden companion probabilities exist to isolate the incremental weather signal; they are not alternative product predictions and the delta must not be added to the deployed release score.
 3. **Network exploration:** airport map layers and an airport × hour matrix for delay rate, observed weather severity and weather-associated uplift.
 
-The single-flight weather panel shown earlier uses the latest eligible observations known at the declared cutoff. It keeps the official deployed prediction visually separate from the experimental weather diagnostic.
+The single-flight weather panel shown earlier reconstructs the latest eligible observations known at the declared cutoff for a historical 2024 flight. For a future date, the product returns the schedule-based score and explicitly reports that a live, versioned forecast feed is required; it does not reuse historical NOAA observations as a substitute.
 
 ![Point-in-time weather severity by airport and scheduled hour](docs/assets/readme_weather_network.png)
 
 The screenshot above must be read as **historical point-in-time evidence**, not as a live forecast. Each row represents one airport for the selected origin or destination perspective; columns represent scheduled local hours; pale empty cells indicate insufficient historical support. The uplift layer is adverse-minus-clear association and is not causal attribution.
 
-The weather model remains a separate artifact so the public schedule-only release still works when NOAA observations or a weather companion artifact are absent. The UI degrades transparently: observations remain visible when available, while the paired weather signal is labelled unavailable if either companion model is missing. The official deployed risk is never replaced by the companion pair.
+The weather model remains a separate artifact so the public schedule-only release still works for future dates and whenever NOAA replay observations or a companion artifact are absent. The UI degrades transparently: future requests remain schedule-only with `weather_delta: null`; supported historical requests show observations when available and label the paired diagnostic unavailable if either companion model is missing. The official deployed risk is never replaced by the companion pair.
 
 ### Paired temporal evidence
 
@@ -445,7 +456,7 @@ docs/              model card, data guide, deployment and limitations
 
 ## Limitations
 
-- Historical NOAA observations are available only for the covered 2024 period; the product has no live forecast, aircraft rotation, crew, ATC or active airport disruption feed.
+- Future flights are scored schedule-only. The weather layer uses historical NOAA observations only inside the versioned 2024 replay window; there is no live forecast, aircraft rotation, crew, ATC or active airport disruption feed.
 - Ranking quality varies through time; no model family dominated every temporal fold.
 - Historical route evidence may be weak for rare or unseen combinations.
 - The current drift audit is high, so retraining and threshold review would be required before operational reuse.

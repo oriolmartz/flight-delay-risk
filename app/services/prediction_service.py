@@ -1,6 +1,7 @@
 """Thin service layer between the API/dashboard and the trained model artifact."""
 from __future__ import annotations
 
+from datetime import date
 from functools import lru_cache
 from pathlib import Path
 
@@ -16,6 +17,8 @@ from src.config import (
     WEATHER_BASE_MODEL_PATH,
     WEATHER_HOURLY_PATH,
     WEATHER_MODEL_PATH,
+    WEATHER_REPLAY_END_DATE,
+    WEATHER_REPLAY_START_DATE,
     WEATHER_UI_SUMMARY_PATH,
 )
 from src.features.build_features import add_schedule_features
@@ -201,20 +204,86 @@ def weather_ui_summary() -> dict:
     return load_weather_ui_summary(WEATHER_UI_SUMMARY_PATH)
 
 
+def weather_request_contract(payload: PredictionInput) -> dict:
+    """Classify whether a request can use the historical weather replay.
+
+    The deployed product can score scheduled flights outside the weather dataset,
+    but the optional NOAA layer is intentionally restricted to the versioned
+    historical replay window. Future-flight weather updates require a separate
+    live, versioned forecast feed.
+    """
+    requested = pd.to_datetime(payload.flight_date, errors="coerce") if payload.flight_date else pd.NaT
+    replay_start = pd.Timestamp(WEATHER_REPLAY_START_DATE).date()
+    replay_end = pd.Timestamp(WEATHER_REPLAY_END_DATE).date()
+    base = {
+        "operational_for_future_flights": False,
+        "requires_live_forecast_feed": True,
+        "weather_replay_start_date": replay_start.isoformat(),
+        "weather_replay_end_date": replay_end.isoformat(),
+    }
+    if pd.isna(requested):
+        return {
+            **base,
+            "mode": "schedule_only",
+            "weather_replay_eligible": False,
+            "reason": "exact_flight_date_required_for_historical_replay",
+        }
+
+    requested_date = requested.date()
+    if replay_start <= requested_date <= replay_end:
+        return {
+            **base,
+            "mode": "historical_replay",
+            "weather_replay_eligible": True,
+            "reason": None,
+        }
+    if requested_date > date.today():
+        return {
+            **base,
+            "mode": "future_schedule_only",
+            "weather_replay_eligible": False,
+            "reason": "live_forecast_feed_required",
+        }
+    return {
+        **base,
+        "mode": "schedule_only_outside_weather_coverage",
+        "weather_replay_eligible": False,
+        "reason": "outside_historical_weather_replay_coverage",
+    }
+
+
 def weather_snapshot(payload: PredictionInput) -> dict:
-    """Return leakage-safe origin/destination observations available at the cutoff."""
+    """Return leakage-safe historical observations available at the cutoff."""
+    contract = weather_request_contract(payload)
+    if not contract["weather_replay_eligible"]:
+        return {
+            **contract,
+            "available": False,
+            "weather_available": False,
+            "origin": {"available": False},
+            "destination": {"available": False},
+            "feature_values": {},
+        }
     try:
         weather, station_mapping, timezone_mapping = _weather_source_frames()
-        return point_in_time_weather_snapshot(
+        snapshot = point_in_time_weather_snapshot(
             payload.to_raw_frame(),
             weather,
             station_mapping,
             timezone_mapping,
         )
+        return {
+            **contract,
+            **snapshot,
+            "weather_available": bool(snapshot.get("available")),
+        }
     except Exception as exc:
         return {
+            **contract,
             "available": False,
-            "reason": str(exc),
+            "weather_available": False,
+            "reason": "historical_weather_snapshot_unavailable",
+            "detail": str(exc),
             "origin": {"available": False},
             "destination": {"available": False},
             "feature_values": {},
@@ -251,27 +320,53 @@ def weather_enhanced_prediction(
     base_result: dict | None = None,
     snapshot: dict | None = None,
 ) -> dict:
-    """Compare paired ExtraTrees artifacts on the same complete-weather cohort.
+    """Return the schedule score plus an optional historical weather diagnostic.
 
-    The displayed weather delta is weather-model probability minus its paired
-    schedule-only companion. The main deployed score is returned separately and
-    remains the primary product prediction.
+    The public score is operational for scheduled flights. The weather delta is
+    available only for the versioned 2024 historical replay and is never a live
+    forecast or a second product prediction.
     """
+    contract = weather_request_contract(payload)
+    base_result = base_result or predict_flight(payload)
+    deployed_probability = float(base_result["delay_probability"])
+
+    if not contract["weather_replay_eligible"]:
+        return {
+            **contract,
+            "available": False,
+            "weather_available": False,
+            "weather_delta": None,
+            "deployed_probability": deployed_probability,
+            "snapshot": snapshot or weather_snapshot(payload),
+            "interpretation": "schedule_only_no_live_forecast",
+        }
+
     snapshot = snapshot or weather_snapshot(payload)
     if not snapshot.get("available"):
         return {
+            **contract,
             "available": False,
-            "reason": "No point-in-time weather observation is available for both endpoints.",
+            "weather_available": False,
+            "weather_delta": None,
+            "deployed_probability": deployed_probability,
+            "reason": snapshot.get("reason") or "historical_weather_snapshot_unavailable",
             "snapshot": snapshot,
+            "interpretation": "historical_replay_unavailable",
         }
     try:
         paired_base = get_weather_base_artifact()
         weather_artifact = get_weather_artifact()
     except Exception as exc:
         return {
+            **contract,
             "available": False,
-            "reason": f"Paired weather artifacts unavailable: {exc}",
+            "weather_available": True,
+            "weather_delta": None,
+            "deployed_probability": deployed_probability,
+            "reason": "paired_weather_artifacts_unavailable",
+            "detail": str(exc),
             "snapshot": snapshot,
+            "interpretation": "historical_replay_observations_only",
         }
 
     paired_base_probability, raw_paired_base, _ = _score_optional_artifact(
@@ -283,14 +378,15 @@ def weather_enhanced_prediction(
         payload,
         feature_values=snapshot.get("feature_values", {}),
     )
-    base_result = base_result or predict_flight(payload)
     contributions = local_model_contributions(weather_artifact, weather_X, top_n=16)[0]
     weather_contributions = [
         item for item in contributions if str(item.get("feature")) in WEATHER_MODEL_FEATURES
     ][:6]
     return {
+        **contract,
         "available": True,
-        "deployed_probability": float(base_result["delay_probability"]),
+        "weather_available": True,
+        "deployed_probability": deployed_probability,
         "paired_base_probability": round(paired_base_probability, 4),
         "weather_probability": round(weather_probability, 4),
         "weather_delta": round(weather_probability - paired_base_probability, 4),
@@ -298,7 +394,7 @@ def weather_enhanced_prediction(
         "raw_weather_model_score": round(raw_weather, 4),
         "weather_contributions": weather_contributions,
         "snapshot": snapshot,
-        "interpretation": "paired_model_counterfactual_not_causal",
+        "interpretation": "historical_paired_model_diagnostic_not_causal",
     }
 
 def prediction_context(payload: PredictionInput) -> dict:

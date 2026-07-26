@@ -141,15 +141,17 @@ def get_weather_summary() -> dict:
 
 @app.post('/predict/weather', tags=['weather'])
 def predict_with_weather(flight: FlightInput) -> dict:
-    """Return base prediction, point-in-time observations and paired weather delta."""
+    """Return the schedule score and an optional historical weather replay.
+
+    Future flights remain schedule-only until a live, versioned forecast feed
+    is integrated. The endpoint never substitutes historical observations for a
+    future forecast.
+    """
     if not prediction_service.is_model_available():
         raise HTTPException(status_code=503, detail='No trained model artifact found. Train one first.')
     payload = _to_prediction_input(flight)
     base = prediction_service.predict_flight(payload)
-    snapshot = prediction_service.weather_snapshot(payload)
-    enhanced = prediction_service.weather_enhanced_prediction(
-        payload, base_result=base, snapshot=snapshot
-    )
+    enhanced = prediction_service.weather_enhanced_prediction(payload, base_result=base)
     return {'base_prediction': base, 'weather': enhanced}
 
 

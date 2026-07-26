@@ -12,7 +12,9 @@ Flight Delay Risk is a portfolio-grade pre-departure risk-ranking system, not an
 
 ## Missing live operational state
 
-The model does not receive live weather, ATC restrictions, aircraft tail rotation, inbound delay propagation, crew legality, gate availability, maintenance state or real-time airport operations. Scheduled-congestion features are a timetable-density proxy, not observed congestion.
+The deployed schedule-only model can score historical or future scheduled flights, but the weather module is limited to a versioned 2024 historical replay. It does not provide a live forecast for future departures. A real near-departure update would require archived forecast vintages for training and a live, versioned forecast feed at inference time.
+
+The model also does not receive live ATC restrictions, aircraft tail rotation, inbound delay propagation, crew legality, gate availability, maintenance state or real-time airport operations. Scheduled-congestion features are a timetable-density proxy, not observed congestion.
 
 ## Non-stationarity
 

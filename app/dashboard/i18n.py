@@ -15,9 +15,9 @@ TEXT: dict[str, dict[str, object]] = {'en': {'language': 'English',
         'hero_sub': 'Flight Delay Risk ranks scheduled flights by estimated arrival-delay exposure using '
                     'only information available before take-off. It combines calibrated probabilities, '
                     'historical cohort evidence, model-native explanations and temporal validation.',
-        'constraint': 'Schedule-time estimate · historical point-in-time weather is used only when available '
-                      '· no live ATC, aircraft rotation or disruption feed · not for operational dispatch, '
-                      'safety decisions or passenger guarantees.',
+        'constraint': 'Schedule-based estimates are available for historical and future flights · weather '
+                      'is a 2024 historical replay only, not a live forecast · no live ATC, aircraft rotation '
+                      'or disruption feed · not for operational dispatch, safety decisions or passenger guarantees.',
         'hero_map': {'eyebrow': 'U.S. MODEL COVERAGE',
                      'count': '{count} supported airports',
                      'aria': 'U.S. model coverage: {count} supported airports',
@@ -379,13 +379,29 @@ TEXT: dict[str, dict[str, object]] = {'en': {'language': 'English',
                         'predictions': 'Predictions recorded by this local or deployed demo instance.',
                         'drift': 'How much recent input patterns differ from the training reference. Lower '
                                  'is safer.'},
-        'weather': {'title': 'Point-in-time weather context',
-                    'subtitle': 'The latest origin and destination observations known six hours before '
-                                'scheduled departure. Raw conditions are evidence; the model delta is a '
-                                'counterfactual comparison, not a causal claim.',
-                    'origin': 'Origin conditions',
-                    'destination': 'Destination conditions',
-                    'unavailable_endpoint': 'No eligible observation at the prediction cutoff.',
+        'weather': {'title': 'Historical near-departure weather replay',
+                    'subtitle': 'Reconstructs the origin and destination observations that were available six hours before a '
+                                'supported 2024 flight. This is historical replay evidence, not a live forecast for a future '
+                                'flight.',
+                    'future_title': 'Future flight · schedule-only prediction',
+                    'future_message': 'The official {deployed_score} schedule-based prediction remains available. The current '
+                                      'release does not run the 2024 NOAA replay for future dates and does not produce a '
+                                      'weather delta.',
+                    'schedule_only_badge': 'Schedule only',
+                    'future_requirement': 'A live, versioned forecast issued before the cutoff is required to update '
+                                          'future-flight risk near departure.',
+                    'outside_requirement': 'Only the versioned 2024 replay is packaged in this release; other dates remain '
+                                           'schedule-only.',
+                    'missing_date_requirement': 'Provide an exact 2024 flight date to run the historical replay.',
+                    'outside_title': 'Weather replay unavailable for this date',
+                    'outside_message': 'The official {deployed_score} schedule-based prediction remains available. Historical '
+                                       'weather replay is limited to the versioned 2024 coverage window.',
+                    'missing_date_title': 'Exact date required for weather replay',
+                    'missing_date_message': 'The schedule-based prediction remains available, but historical weather replay '
+                                            'requires an exact flight date inside the 2024 coverage window.',
+                    'origin': 'Origin conditions in the replay',
+                    'destination': 'Destination conditions in the replay',
+                    'unavailable_endpoint': 'No eligible historical observation at the prediction cutoff.',
                     'temperature': 'Temperature',
                     'wind': 'Wind speed',
                     'visibility': 'Visibility',
@@ -393,24 +409,29 @@ TEXT: dict[str, dict[str, object]] = {'en': {'language': 'English',
                     'precipitation': 'Precipitation',
                     'age': 'Observation age',
                     'no_flags': 'No severe threshold flags',
-                    'cutoff': 'Prediction cutoff: {cutoff}',
-                    'model_unavailable': 'Weather observations are shown, but the paired weather artifacts '
-                                         'have not been built yet. Run `python -m '
-                                         'scripts.train_weather_release` to enable the paired '
-                                         'base-vs-weather probability delta.',
-                    'comparison_eyebrow': 'WEATHER SIGNAL DIAGNOSTIC · SEPARATE FROM THE RELEASE SCORE',
-                    'comparison_title': 'One official prediction, one incremental diagnostic',
-                    'comparison_note': 'The official product prediction remains {deployed_score}. The weather figure is measured in a separate matched experiment and is shown only as evidence that point-in-time weather contains incremental signal.',
-                    'comparison_badge': 'Experimental diagnostic',
-                    'comparison_accessible_label': 'Official release prediction and separate incremental weather diagnostic',
-                    'comparison_direct_note': 'Do not add this delta to the official prediction. It is not another prediction for this flight and it is not causal attribution.',
-                    'release_anchor_label': 'Official deployed release prediction',
-                    'release_anchor_help': 'This is the single product prediction used for the flight decision above.',
-                    'contribution': 'Paired weather signal',
-                    'comparison_delta_help': '{delta} change when weather is added inside the matched diagnostic pair.',
-                    'drivers': 'Weather features influencing the enhanced estimate',
-                    'push_up': 'Pushes weather estimate up',
-                    'push_down': 'Pushes weather estimate down',
+                    'cutoff': 'Historical replay cutoff: {cutoff}',
+                    'model_unavailable': 'Historical observations are available, but the paired weather artifacts have not '
+                                         'been built. Run `python -m scripts.train_weather_release` to enable the matched '
+                                         'base-vs-weather diagnostic.',
+                    'comparison_eyebrow': 'HISTORICAL WEATHER REPLAY · SEPARATE FROM THE RELEASE SCORE',
+                    'comparison_title': 'One official prediction, one replay diagnostic',
+                    'comparison_note': 'The official product prediction remains {deployed_score}. The weather figure is '
+                                       'measured only inside a matched historical 2024 replay and is not a live update for a '
+                                       'future flight.',
+                    'comparison_badge': 'Historical diagnostic',
+                    'comparison_accessible_label': 'Official release prediction and separate historical weather replay '
+                                                   'diagnostic',
+                    'comparison_direct_note': 'Do not add this delta to the official prediction. It is not another prediction '
+                                              'for this flight, not a live forecast and not causal attribution.',
+                    'release_anchor_label': 'Official deployed schedule prediction',
+                    'release_anchor_help': 'This is the single product prediction used for the flight decision above and '
+                                           'remains available for future scheduled flights.',
+                    'contribution': 'Incremental signal in this historical replay',
+                    'comparison_delta_help': '{delta} change when historical weather is added inside the matched diagnostic '
+                                             'pair.',
+                    'drivers': 'Historical weather features influencing the replay estimate',
+                    'push_up': 'Pushes replay estimate up',
+                    'push_down': 'Pushes replay estimate down',
                     'flags': {'low_visibility': 'Low visibility',
                               'strong_wind': 'Strong wind',
                               'low_ceiling': 'Low ceiling',
@@ -419,9 +440,8 @@ TEXT: dict[str, dict[str, object]] = {'en': {'language': 'English',
                               'thunderstorm': 'Thunderstorm',
                               'snow': 'Snow',
                               'fog': 'Fog'},
-                    'snapshot_unavailable': 'No complete origin-and-destination weather snapshot exists at '
-                                            'this cutoff. Choose supported 2024 airports and date, or '
-                                            'interpret the score as schedule-only.'}},
+                    'snapshot_unavailable': 'No complete origin-and-destination historical snapshot exists at this cutoff. '
+                                            'The official score remains schedule-only.'}},
  'es': {'language': 'Español',
         'tabs': ['Analizar vuelo', 'Priorizar horario', 'Validación', 'Modelo y operaciones'],
         'topbar': {'byline': 'Creado por Oriol Martínez · Ingeniería de producto ML',
@@ -437,9 +457,9 @@ TEXT: dict[str, dict[str, object]] = {'en': {'language': 'English',
                     'solo información disponible antes de la salida. Combina probabilidades calibradas, '
                     'evidencia de cohortes históricas, explicaciones nativas del modelo y validación '
                     'temporal.',
-        'constraint': 'Estimación previa a salida · se usa meteorología histórica point-in-time solo cuando '
-                      'está disponible · sin datos ATC en vivo, rotación de aeronaves ni feed de incidencias '
-                      '· no usar para despacho, seguridad o garantías al pasajero.',
+        'constraint': 'La predicción basada en horario está disponible para vuelos históricos y futuros · '
+                      'weather es solo un replay histórico de 2024, no un forecast en vivo · sin ATC en vivo, '
+                      'rotación de aeronaves ni feed de incidencias · no usar para despacho o seguridad.',
         'hero_map': {'eyebrow': 'COBERTURA DEL MODELO EN EE. UU.',
                      'count': '{count} aeropuertos compatibles',
                      'aria': 'Cobertura del modelo en EE. UU.: {count} aeropuertos compatibles',
@@ -812,13 +832,29 @@ TEXT: dict[str, dict[str, object]] = {'en': {'language': 'English',
                                        'demo.',
                         'drift': 'Cuánto difieren los patrones recientes respecto al entrenamiento. Menor es '
                                  'más seguro.'},
-        'weather': {'title': 'Contexto meteorológico point-in-time',
-                    'subtitle': 'Últimas observaciones de origen y destino conocidas seis horas antes de la '
-                                'salida programada. Las condiciones son evidencia; el delta del modelo es '
-                                'una comparación contrafactual, no una afirmación causal.',
-                    'origin': 'Condiciones en origen',
-                    'destination': 'Condiciones en destino',
-                    'unavailable_endpoint': 'No hay una observación válida en el cutoff de predicción.',
+        'weather': {'title': 'Replay meteorológico histórico cercano a salida',
+                    'subtitle': 'Reconstruye las observaciones de origen y destino que estaban disponibles seis horas antes '
+                                'de un vuelo compatible de 2024. Es evidencia de replay histórico, no un forecast en vivo '
+                                'para un vuelo futuro.',
+                    'future_title': 'Vuelo futuro · predicción solo con horario',
+                    'future_message': 'La predicción oficial schedule-based de {deployed_score} sigue disponible. La release '
+                                      'actual no ejecuta el replay NOAA de 2024 para fechas futuras ni produce un delta '
+                                      'weather.',
+                    'schedule_only_badge': 'Solo horario',
+                    'future_requirement': 'Para actualizar el riesgo de un vuelo futuro cerca de la salida se necesita un '
+                                          'forecast en vivo, versionado y emitido antes del cutoff.',
+                    'outside_requirement': 'Esta release solo incluye el replay versionado de 2024; las demás fechas siguen '
+                                           'siendo schedule-only.',
+                    'missing_date_requirement': 'Indica una fecha exacta de 2024 para ejecutar el replay histórico.',
+                    'outside_title': 'Replay weather no disponible para esta fecha',
+                    'outside_message': 'La predicción oficial schedule-based de {deployed_score} sigue disponible. El replay '
+                                       'meteorológico histórico está limitado a la ventana versionada de 2024.',
+                    'missing_date_title': 'Se necesita una fecha exacta para el replay weather',
+                    'missing_date_message': 'La predicción schedule-based sigue disponible, pero el replay meteorológico '
+                                            'histórico exige una fecha exacta dentro de la cobertura de 2024.',
+                    'origin': 'Condiciones de origen en el replay',
+                    'destination': 'Condiciones de destino en el replay',
+                    'unavailable_endpoint': 'No hay una observación histórica válida en el cutoff de predicción.',
                     'temperature': 'Temperatura',
                     'wind': 'Velocidad del viento',
                     'visibility': 'Visibilidad',
@@ -826,24 +862,29 @@ TEXT: dict[str, dict[str, object]] = {'en': {'language': 'English',
                     'precipitation': 'Precipitación',
                     'age': 'Antigüedad de observación',
                     'no_flags': 'Sin umbrales meteorológicos severos',
-                    'cutoff': 'Cutoff de predicción: {cutoff}',
-                    'model_unavailable': 'Se muestran las observaciones, pero aún no se han generado los '
-                                         'artefactos weather emparejados. Ejecuta `python -m '
-                                         'scripts.train_weather_release` para activar el delta '
-                                         'base-vs-weather.',
-                    'comparison_eyebrow': 'DIAGNÓSTICO DE SEÑAL WEATHER · SEPARADO DEL SCORE DE RELEASE',
-                    'comparison_title': 'Una predicción oficial y un diagnóstico incremental',
-                    'comparison_note': 'La predicción oficial del producto sigue siendo {deployed_score}. La cifra weather procede de un experimento emparejado separado y se muestra únicamente como evidencia de que la meteorología point-in-time aporta señal incremental.',
-                    'comparison_badge': 'Diagnóstico experimental',
-                    'comparison_accessible_label': 'Predicción oficial de la release y diagnóstico incremental weather separado',
-                    'comparison_direct_note': 'No sumes este delta a la predicción oficial. No es otra predicción para este vuelo ni una atribución causal.',
-                    'release_anchor_label': 'Predicción oficial de la release desplegada',
-                    'release_anchor_help': 'Esta es la única predicción de producto usada en la decisión del vuelo mostrada arriba.',
-                    'contribution': 'Señal weather emparejada',
-                    'comparison_delta_help': 'Cambio de {delta} al añadir weather dentro del par diagnóstico emparejado.',
-                    'drivers': 'Variables meteorológicas que influyen en la estimación',
-                    'push_up': 'Eleva la estimación weather',
-                    'push_down': 'Reduce la estimación weather',
+                    'cutoff': 'Cutoff del replay histórico: {cutoff}',
+                    'model_unavailable': 'Las observaciones históricas están disponibles, pero aún no se han generado los '
+                                         'artefactos weather emparejados. Ejecuta `python -m scripts.train_weather_release` '
+                                         'para activar el diagnóstico base-vs-weather.',
+                    'comparison_eyebrow': 'REPLAY WEATHER HISTÓRICO · SEPARADO DEL SCORE DE RELEASE',
+                    'comparison_title': 'Una predicción oficial y un diagnóstico de replay',
+                    'comparison_note': 'La predicción oficial del producto sigue siendo {deployed_score}. La cifra weather se '
+                                       'mide únicamente dentro de un replay histórico emparejado de 2024 y no es una '
+                                       'actualización en vivo para un vuelo futuro.',
+                    'comparison_badge': 'Diagnóstico histórico',
+                    'comparison_accessible_label': 'Predicción oficial de la release y diagnóstico separado de replay '
+                                                   'meteorológico histórico',
+                    'comparison_direct_note': 'No sumes este delta a la predicción oficial. No es otra predicción para este '
+                                              'vuelo, ni un forecast en vivo, ni una atribución causal.',
+                    'release_anchor_label': 'Predicción oficial desplegada basada en horario',
+                    'release_anchor_help': 'Esta es la única predicción de producto usada en la decisión y sigue disponible '
+                                           'para vuelos programados futuros.',
+                    'contribution': 'Señal incremental en este replay histórico',
+                    'comparison_delta_help': 'Cambio de {delta} al añadir weather histórico dentro del par diagnóstico '
+                                             'emparejado.',
+                    'drivers': 'Variables meteorológicas históricas que influyen en la estimación del replay',
+                    'push_up': 'Eleva la estimación del replay',
+                    'push_down': 'Reduce la estimación del replay',
                     'flags': {'low_visibility': 'Baja visibilidad',
                               'strong_wind': 'Viento fuerte',
                               'low_ceiling': 'Techo bajo',
@@ -852,6 +893,5 @@ TEXT: dict[str, dict[str, object]] = {'en': {'language': 'English',
                               'thunderstorm': 'Tormenta',
                               'snow': 'Nieve',
                               'fog': 'Niebla'},
-                    'snapshot_unavailable': 'No existe un snapshot completo de origen y destino en este '
-                                            'cutoff. Elige aeropuertos y fecha compatibles de 2024 o '
-                                            'interpreta el score como schedule-only.'}}}
+                    'snapshot_unavailable': 'No existe un snapshot histórico completo de origen y destino en este cutoff. El '
+                                            'score oficial sigue siendo schedule-only.'}}}

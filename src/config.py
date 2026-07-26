@@ -35,6 +35,8 @@ WEATHER_UI_SUMMARY_PATH: Path = Path(os.getenv("FLIGHTRISK_WEATHER_UI_SUMMARY_PA
 WEATHER_HOURLY_PATH: Path = Path(os.getenv("FLIGHTRISK_WEATHER_HOURLY_PATH", PROCESSED_DATA_DIR / "weather_hourly.parquet"))
 AIRPORT_STATION_MAP_PATH: Path = DATA_DIR / "weather" / "airport_station_map.csv"
 AIRPORT_TIMEZONE_MAP_PATH: Path = DATA_DIR / "weather" / "airport_timezone_map.csv"
+WEATHER_REPLAY_START_DATE: str = os.getenv("FLIGHTRISK_WEATHER_REPLAY_START_DATE", "2024-01-01")
+WEATHER_REPLAY_END_DATE: str = os.getenv("FLIGHTRISK_WEATHER_REPLAY_END_DATE", "2024-12-31")
 SAMPLE_CSV_PATH: Path = SAMPLE_DATA_DIR / "sample_flights.csv"
 
 # Target column
