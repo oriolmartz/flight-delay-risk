@@ -1,6 +1,6 @@
 <div align="center">
 
-[BTS source data](https://www.transtats.bts.gov/DL_SelectFields.aspx?gnoyr_VQ=FGJ) · **7,079,081 source rows** · **168,519-flight deployed refit** · **50,453-flight untouched test**
+[BTS flight data](https://www.transtats.bts.gov/DL_SelectFields.aspx?gnoyr_VQ=FGJ) · [NOAA/NCEI Global Hourly weather](https://www.ncei.noaa.gov/products/land-based-station/integrated-surface-database) · **7,079,081 source flights** · **6,965,267 cleaned flights** · **348 model-supported airports** · **20 NOAA-mapped airports**
 
 # Flight Delay Risk
 
@@ -44,7 +44,7 @@ The product answers one practical question:
 - scores **published scheduled flights** using only data that should exist **before departure**;
 - exposes the **historical support** behind the baseline so weak-evidence routes are visible;
 - supports both **single-flight analysis** and **schedule ranking**;
-- shows **point-in-time weather evidence** when available and keeps the weather model as a separate, optional artifact;
+- shows **point-in-time weather evidence** when available and exposes a separate paired diagnostic for the incremental weather signal;
 - publishes the release evidence: preprocessing assumptions, temporal validation, calibration and monitoring.
 
 ### What the system does *not* do
@@ -85,9 +85,15 @@ Enter natural schedule fields. Calendar and model features are derived automatic
 - risk relative to the historical route baseline;
 - the number of prior flights supporting that reference;
 - factors that raised and reduced the estimate;
+- origin and destination weather observations available at the declared cutoff;
+- one official deployed prediction plus a separate paired weather-signal diagnostic when both frozen companion artifacts are available;
 - a bilingual PDF brief.
 
 ![Single-flight decision summary with historical evidence](docs/assets/readme_analyze.png)
+
+The official deployed score remains the only product prediction. Weather is shown separately as an incremental diagnostic measured inside a matched companion pair; the diagnostic must not be added to, subtracted from or treated as a replacement for the official score.
+
+![Point-in-time weather context and incremental paired diagnostic](docs/assets/readme_weather_context.png)
 
 ### 3. Explore airport history without leaving the flow
 
@@ -118,32 +124,55 @@ The final two views expose chronological folds, calibration, baseline comparison
 
 ## Weather upgrade
 
-Weather is treated as a leakage-sensitive data product rather than a decorative feed. For every flight, the pipeline converts the scheduled origin departure into UTC, subtracts the declared six-hour prediction horizon and joins the latest eligible NOAA observation at both origin and destination. Observations newer than the cutoff are forbidden and observations older than six hours are marked unavailable.
+Weather is treated as a leakage-sensitive data product rather than a decorative feed. Historical observations come from the official [NOAA/NCEI Global Hourly Integrated Surface Database](https://www.ncei.noaa.gov/products/land-based-station/integrated-surface-database); the project downloads the required 2024 station files from NOAA's [yearly HTTPS archive](https://www.ncei.noaa.gov/pub/data/noaa/2024/).
+
+For every eligible flight, the pipeline converts the scheduled origin departure to UTC, subtracts the declared six-hour prediction horizon and joins the latest observation known at that cutoff for both origin and destination. Future observations are forbidden; observations older than six hours are marked unavailable. The current mapping covers **20 airports**, while the schedule-only model continues to support **348 airports**.
 
 The UI uses weather in three ways:
 
 1. **Single-flight evidence:** origin and destination temperature, wind, visibility, ceiling, precipitation, observation age and severe-condition flags.
-2. **Counterfactual model delta:** the frozen weather Extra Trees artifact is scored against the same schedule-only flight. The displayed delta is model behaviour, not causal impact.
-3. **Network exploration:** airport map layers and an airport × hour heatmap for delay rate, weather severity and weather-associated uplift.
+2. **Paired weather-signal diagnostic:** two frozen companion artifacts are evaluated on the same flight, but the UI exposes only their probability difference in percentage points. The hidden companion probabilities exist to isolate the incremental weather signal; they are not alternative product predictions and the delta must not be added to the deployed release score.
+3. **Network exploration:** airport map layers and an airport × hour matrix for delay rate, observed weather severity and weather-associated uplift.
 
-The weather model is kept as a separate artifact so the public schedule-only model remains available when NOAA data or the weather artifact is absent. The UI degrades transparently: raw weather observations remain visible, while the probability delta is labelled unavailable.
+The single-flight weather panel shown earlier uses the latest eligible observations known at the declared cutoff. It keeps the official deployed prediction visually separate from the experimental weather diagnostic.
+
+![Point-in-time weather severity by airport and scheduled hour](docs/assets/readme_weather_network.png)
+
+The screenshot above must be read as **historical point-in-time evidence**, not as a live forecast. Each row represents one airport for the selected origin or destination perspective; columns represent scheduled local hours; pale empty cells indicate insufficient historical support. The uplift layer is adverse-minus-clear association and is not causal attribution.
+
+The weather model remains a separate artifact so the public schedule-only release still works when NOAA observations or a weather companion artifact are absent. The UI degrades transparently: observations remain visible when available, while the paired weather signal is labelled unavailable if either companion model is missing. The official deployed risk is never replaced by the companion pair.
 
 ### Paired temporal evidence
 
-The weather upgrade was evaluated with identical rows, chronological folds, Extra Trees hyperparameters and random seed. No model-family selection occurred inside the folds.
+The final paired experiment uses a **1,406,680-flight complete-weather cohort** extracted from the canonical cleaned 2024 frame. Base and weather models use identical rows, expanding chronological folds, frozen Extra Trees hyperparameters and the same random seed. No model-family selection occurs inside the folds.
 
 | Three-fold paired result | Base | Base + weather | Mean delta | Weather wins |
 |---|---:|---:|---:|---:|
-| ROC-AUC | 0.6430 | 0.6486 | **+0.0056** | **3 / 3** |
-| PR-AUC | 0.3104 | 0.3156 | **+0.0052** | **3 / 3** |
-| Lift@10% | 1.704× | 1.753× | **+0.049×** | **2 / 3** |
-| Brier score | 0.21730 | 0.21683 | **−0.00047** | **2 / 3** |
+| ROC-AUC | 0.6553 | 0.6597 | **+0.0044** | **3 / 3** |
+| PR-AUC | 0.3238 | 0.3287 | **+0.0049** | **3 / 3** |
+| Lift@10% | 1.773× | 1.820× | **+0.047×** | **3 / 3** |
+| Brier score | 0.22107 | 0.21955 | **−0.00152** | **2 / 3** |
 
-The conclusion is deliberately narrow: point-in-time weather adds a modest but temporally consistent ranking signal. It does not transform the task into a deterministic flight-delay forecast.
+The conclusion is deliberately narrow: leakage-safe point-in-time weather adds a **modest but reproducible incremental ranking signal**. It improves ROC-AUC, PR-AUC and Lift@10% in all three future folds, but it does not turn the task into a deterministic flight-delay forecast.
+
+### Frozen weather-release holdout
+
+The two persistent companion artifacts used by the UI were trained on the same complete-weather protocol and evaluated on a later **286,367-flight** holdout. This is separate from the deployed public-release score and exists only to operationalize the paired diagnostic.
+
+| Holdout metric | Schedule-only companion | Companion + weather | Delta |
+|---|---:|---:|---:|
+| ROC-AUC | 0.6235 | 0.6312 | **+0.0077** |
+| PR-AUC | 0.2509 | 0.2627 | **+0.0118** |
+| Lift@10% | 1.698× | 1.761× | **+0.063×** |
+| Brier score | 0.14253 | 0.14179 | **−0.00073** |
+
+The dashboard therefore shows one official deployed prediction and one **separate incremental weather signal**. It does not expose the companion probabilities as competing answers.
 
 ### Why the weather evaluation is fair
 
-The weather comparison is **paired by design**. The base model and the base-plus-weather model are trained on the **same rows**, with the **same chronological splits**, the **same Extra Trees hyperparameters** and the **same random seed**. That means the delta reflects the added information content of the point-in-time weather features, not a second round of model-family fishing.
+The comparison is **paired by design**. The schedule-only and weather models are trained on the **same complete-weather rows**, with the **same chronological splits**, the **same Extra Trees hyperparameters** and the **same random seed**. This isolates the incremental information content of weather instead of starting a second model-selection tournament.
+
+[Inspect the full paired weather report](reports/paired_weather_backtest_extra_trees.md)
 
 Build the compact UI analytics artifact:
 
@@ -215,11 +244,23 @@ The source and the deployed training sample are related, but they are not the sa
 | **Calibration** | **31,028** | Later holdout used to choose sigmoid calibration, then refit. |
 | **Final test** | **50,453** | Untouched October–December evaluation window. |
 
-The target is `ArrDel15 = 1` when arrival is at least 15 minutes late. Raw CSVs and the processed parquet are intentionally excluded from Git; the committed manifest records source hashes, row totals, schema, calendar coverage and the processed-data fingerprint.
+The target is `ArrDel15 = 1` when arrival is at least 15 minutes late. Raw flight CSVs, raw NOAA station files and large processed parquets are intentionally excluded from Git; the committed manifests and mapping files record lineage, schema and coverage without pretending the raw data are bundled with the repository.
+
+### Weather source and coverage
+
+| Weather layer | Coverage | Role |
+|---|---:|---|
+| **NOAA-mapped airports** | **20** | Airports linked to an official Global Hourly station and timezone. |
+| **Complete-weather paired cohort** | **1,406,680 flights** | Flights with valid point-in-time observations at both endpoints used for the frozen paired backtest. |
+| **Prediction horizon** | **6 hours** | Weather must have been observable at or before this pre-departure cutoff. |
+| **Maximum observation age** | **6 hours** | Older observations are marked unavailable rather than silently forward-filled. |
 
 - [Download BTS flight records](https://www.transtats.bts.gov/DL_SelectFields.aspx?gnoyr_VQ=FGJ)
+- [Open the NOAA/NCEI Global Hourly dataset](https://www.ncei.noaa.gov/products/land-based-station/integrated-surface-database)
+- [Browse the NOAA 2024 HTTPS archive used by the downloader](https://www.ncei.noaa.gov/pub/data/noaa/2024/)
 - [Read the data contract](docs/DATA.md)
 - [Inspect the processed-data manifest](data/processed/data_manifest.json)
+- [Inspect the airport-to-station mapping](data/weather/airport_station_map.csv)
 
 ## Model comparison
 

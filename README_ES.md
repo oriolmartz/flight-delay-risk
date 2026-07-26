@@ -1,6 +1,6 @@
 <div align="center">
 
-[Fuente BTS](https://www.transtats.bts.gov/DL_SelectFields.aspx?gnoyr_VQ=FGJ) · **7.079.081 filas fuente** · **refit desplegado con 168.519 vuelos** · **test intacto de 50.453 vuelos**
+[Datos de vuelos BTS](https://www.transtats.bts.gov/DL_SelectFields.aspx?gnoyr_VQ=FGJ) · [Meteorología NOAA/NCEI Global Hourly](https://www.ncei.noaa.gov/products/land-based-station/integrated-surface-database) · **7.079.081 vuelos originales** · **6.965.267 vuelos limpios** · **348 aeropuertos del modelo** · **20 aeropuertos mapeados a NOAA**
 
 # Flight Delay Risk
 
@@ -70,9 +70,15 @@ Introduce campos naturales del horario; las features de calendario y del modelo 
 - riesgo frente al baseline histórico de la ruta;
 - número de vuelos previos que sustentan esa referencia;
 - factores que elevaron y redujeron la estimación;
+- observaciones meteorológicas de origen y destino disponibles en el cutoff declarado;
+- una única predicción oficial desplegada y un diagnóstico separado de señal weather cuando están disponibles los dos artefactos compañeros congelados;
 - informe PDF bilingüe.
 
 ![Resumen de decisión para un vuelo con evidencia histórica](docs/assets/readme_analyze.png)
+
+El score desplegado sigue siendo la única predicción del producto. La meteorología aparece aparte como diagnóstico incremental medido dentro de un par de modelos compañeros; el delta no debe sumarse, restarse ni utilizarse como sustituto del score oficial.
+
+![Contexto meteorológico point-in-time y diagnóstico incremental emparejado](docs/assets/readme_weather_context.png)
 
 ### 3. Explorar el histórico aeroportuario sin salir del flujo
 
@@ -97,16 +103,55 @@ Las dos últimas vistas exponen folds cronológicos, calibración, comparación 
 
 ## Mejora meteorológica
 
-La meteorología se integra con un contrato point-in-time: se calcula el cutoff seis horas antes de la salida programada y solo se adjunta la última observación NOAA conocida en ese momento. Las observaciones futuras están prohibidas y las que superan seis horas de antigüedad se marcan como no disponibles.
+La meteorología se trata como un producto de datos sensible al leakage, no como un feed decorativo. Las observaciones históricas proceden de [NOAA/NCEI Global Hourly Integrated Surface Database](https://www.ncei.noaa.gov/products/land-based-station/integrated-surface-database), y el proyecto descarga los archivos de estaciones de 2024 necesarios desde el [archivo HTTPS anual de NOAA](https://www.ncei.noaa.gov/pub/data/noaa/2024/).
 
-La UI incorpora:
+Para cada vuelo elegible, el pipeline convierte la salida programada del origen a UTC, resta el horizonte declarado de seis horas y une la última observación conocida en ese cutoff tanto en origen como en destino. Las observaciones futuras están prohibidas y las que superan seis horas de antigüedad se marcan como no disponibles. El mapping actual cubre **20 aeropuertos**, mientras que el modelo schedule-only mantiene soporte para **348 aeropuertos**.
 
-1. tarjetas de condiciones en origen y destino;
-2. delta contrafactual entre el modelo sin weather y el Extra Trees weather congelado;
-3. capas de mapa para retraso, severidad y uplift asociado al weather;
-4. heatmap aeropuerto × hora.
+La UI utiliza weather de tres formas:
 
-El uplift es una asociación descriptiva, no causalidad. En el backtest temporal emparejado de tres folds, weather mejoró ROC-AUC y PR-AUC en **3/3 folds**, Lift@10% en **2/3** y Brier en **2/3**. Los deltas medios fueron **+0.0056 ROC-AUC**, **+0.0052 PR-AUC**, **+0.049 Lift@10%** y **−0.00047 Brier**.
+1. **Evidencia para un vuelo:** temperatura, viento, visibilidad, techo, precipitación, antigüedad de la observación y flags severos en origen y destino.
+2. **Diagnóstico emparejado de señal weather:** dos artefactos compañeros congelados evalúan el mismo vuelo, pero la UI expone únicamente su diferencia de probabilidad en puntos porcentuales. Las probabilidades internas existen para aislar la información incremental del weather; no son predicciones alternativas y el delta no debe sumarse al score desplegado.
+3. **Exploración de red:** capas del mapa y matriz aeropuerto × hora para retraso, severidad meteorológica observada y uplift asociado al weather.
+
+El panel meteorológico de vuelo mostrado anteriormente utiliza las últimas observaciones elegibles conocidas en el cutoff declarado. Mantiene visualmente separada la predicción oficial del diagnóstico experimental weather.
+
+![Severidad meteorológica point-in-time por aeropuerto y hora programada](docs/assets/readme_weather_network.png)
+
+La captura anterior representa **evidencia histórica point-in-time**, no una previsión en vivo. Cada fila corresponde a un aeropuerto para la perspectiva de origen o destino seleccionada; las columnas son horas locales programadas y las celdas claras vacías indican soporte histórico insuficiente. El uplift es una asociación entre condiciones adversas y despejadas, no atribución causal.
+
+El modelo weather se mantiene como artefacto separado. Así, la release pública schedule-only continúa funcionando cuando faltan observaciones NOAA o algún artefacto compañero. La UI degrada de forma transparente: muestra observaciones cuando existen y marca la señal emparejada como no disponible si falta alguno de los dos modelos. El riesgo oficial desplegado nunca se sustituye por el par experimental.
+
+### Evidencia temporal emparejada
+
+El experimento final utiliza una **cohorte complete-weather de 1.406.680 vuelos** extraída del frame canónico limpio de 2024. Ambos modelos usan las mismas filas, folds cronológicos expanding-window, hiperparámetros Extra Trees congelados y la misma semilla. No se selecciona ninguna familia de modelos dentro de los folds.
+
+| Resultado emparejado en tres folds | Base | Base + weather | Delta medio | Gana weather |
+|---|---:|---:|---:|---:|
+| ROC-AUC | 0,6553 | 0,6597 | **+0,0044** | **3 / 3** |
+| PR-AUC | 0,3238 | 0,3287 | **+0,0049** | **3 / 3** |
+| Lift@10% | 1,773× | 1,820× | **+0,047×** | **3 / 3** |
+| Brier score | 0,22107 | 0,21955 | **−0,00152** | **2 / 3** |
+
+La conclusión es deliberadamente limitada: la meteorología point-in-time sin leakage añade una **señal incremental modesta pero reproducible**. Mejora ROC-AUC, PR-AUC y Lift@10% en los tres folds futuros, pero no convierte el problema en una predicción determinista de retrasos.
+
+### Holdout de los artefactos weather congelados
+
+Los dos artefactos compañeros persistentes que utiliza la UI se entrenaron bajo el mismo protocolo complete-weather y se evaluaron sobre un holdout posterior de **286.367 vuelos**. Esta evaluación está separada del score de la release pública y existe únicamente para operacionalizar el diagnóstico emparejado.
+
+| Métrica del holdout | Compañero schedule-only | Compañero + weather | Delta |
+|---|---:|---:|---:|
+| ROC-AUC | 0,6235 | 0,6312 | **+0,0077** |
+| PR-AUC | 0,2509 | 0,2627 | **+0,0118** |
+| Lift@10% | 1,698× | 1,761× | **+0,063×** |
+| Brier score | 0,14253 | 0,14179 | **−0,00073** |
+
+Por tanto, el dashboard muestra una única predicción oficial desplegada y una **señal weather incremental separada**. No presenta las probabilidades compañeras como respuestas competidoras.
+
+### Por qué la comparación es justa
+
+La evaluación está **emparejada por diseño**. Los modelos schedule-only y weather se entrenan con las **mismas filas complete-weather**, los **mismos splits cronológicos**, los **mismos hiperparámetros Extra Trees** y la **misma semilla**. Así se aísla la información incremental de la meteorología sin abrir una segunda competición de selección de modelos.
+
+[Consultar el informe completo del backtest weather emparejado](reports/paired_weather_backtest_extra_trees.md)
 
 ```powershell
 python -m scripts.build_weather_ui_summary `
@@ -117,7 +162,7 @@ python -m scripts.train_weather_release `
   --data data/processed/flights_with_weather_2024.parquet
 ```
 
-El segundo comando genera dos artefactos emparejados sobre las mismas filas y particiones temporales:
+Los modelos emparejados se guardan en:
 
 ```text
 models/flightrisk_model_weather_base.joblib
@@ -170,11 +215,23 @@ La fuente y la muestra utilizada por el artefacto público están relacionadas, 
 | **Calibración** | **31.028** | Holdout posterior para elegir sigmoid y reajustarlo. |
 | **Test final** | **50.453** | Ventana intacta entre octubre y diciembre. |
 
-El target es `ArrDel15 = 1` cuando la llegada tiene al menos 15 minutos de retraso. Los CSV crudos y el parquet se excluyen deliberadamente de Git; el manifiesto registra hashes, filas, esquema, cobertura y fingerprint del dataset procesado.
+El target es `ArrDel15 = 1` cuando la llegada tiene al menos 15 minutos de retraso. Los CSV crudos de vuelos, los archivos crudos de estaciones NOAA y los parquets grandes se excluyen deliberadamente de Git; los manifests y mappings versionados documentan lineage, esquema y cobertura sin fingir que los datos crudos forman parte del repositorio.
 
-- [Descargar registros BTS](https://www.transtats.bts.gov/DL_SelectFields.aspx?gnoyr_VQ=FGJ)
+### Fuente meteorológica y cobertura
+
+| Capa weather | Cobertura | Función |
+|---|---:|---|
+| **Aeropuertos mapeados a NOAA** | **20** | Aeropuertos enlazados a una estación oficial Global Hourly y su zona horaria. |
+| **Cohorte emparejada complete-weather** | **1.406.680 vuelos** | Vuelos con observaciones point-in-time válidas en ambos extremos utilizados en el backtest congelado. |
+| **Horizonte de predicción** | **6 horas** | La observación debe estar disponible antes o en este cutoff previo a la salida. |
+| **Antigüedad máxima** | **6 horas** | Las observaciones más antiguas se marcan como no disponibles y no se rellenan silenciosamente. |
+
+- [Descargar registros de vuelos BTS](https://www.transtats.bts.gov/DL_SelectFields.aspx?gnoyr_VQ=FGJ)
+- [Abrir NOAA/NCEI Global Hourly](https://www.ncei.noaa.gov/products/land-based-station/integrated-surface-database)
+- [Explorar el archivo HTTPS de NOAA 2024 usado por el downloader](https://www.ncei.noaa.gov/pub/data/noaa/2024/)
 - [Leer el contrato de datos](docs/DATA.md)
 - [Inspeccionar el manifiesto procesado](data/processed/data_manifest.json)
+- [Inspeccionar el mapping aeropuerto-estación](data/weather/airport_station_map.csv)
 
 ## Comparación de modelos
 
