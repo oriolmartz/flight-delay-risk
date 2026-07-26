@@ -135,6 +135,19 @@ class TestPredictEndpoint:
         assert isinstance(body["top_factors"], list)
         assert len(body["top_factors"]) > 0
 
+    def test_predict_weather_degrades_cleanly_without_optional_artifacts(self, client: TestClient):
+        response = client.post("/predict/weather", json=self.SAMPLE_PAYLOAD)
+        assert response.status_code == 200
+        body = response.json()
+        assert "base_prediction" in body
+        assert "weather" in body
+        assert "available" in body["weather"]
+
+    def test_weather_summary_endpoint_is_explicit_when_artifact_missing(self, client: TestClient):
+        response = client.get("/weather/summary")
+        assert response.status_code == 200
+        assert isinstance(response.json(), dict)
+
     def test_predict_rejects_invalid_month(self, client: TestClient):
         bad_payload = {**self.SAMPLE_PAYLOAD, "month": 13}
         response = client.post("/predict", json=bad_payload)

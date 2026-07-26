@@ -39,7 +39,7 @@ app = FastAPI(
     title='Flight Delay Risk API',
     description=(
         'Ranks scheduled flights by arrival-delay risk and returns a post-hoc calibrated estimate of 15+ minute delay, '
-        'using only pre-flight schedule-time information. Includes a European context layer.'
+        'using only pre-flight information. Includes optional point-in-time weather and a European context layer.'
     ),
     version=APP_VERSION,
 )
@@ -127,6 +127,30 @@ def predict(flight: FlightInput) -> PredictionOutput:
         logger.exception('Prediction failed')
         raise HTTPException(status_code=400, detail=f'Prediction failed: {exc}') from exc
     return PredictionOutput(**result)
+
+
+@app.get('/weather/summary', tags=['weather'])
+def get_weather_summary() -> dict:
+    """Compact airport and airport-hour weather analytics for the dashboard."""
+    payload = prediction_service.weather_ui_summary()
+    return payload or {
+        'available': False,
+        'detail': 'Build reports/weather_ui_summary.json with python -m scripts.build_weather_ui_summary.',
+    }
+
+
+@app.post('/predict/weather', tags=['weather'])
+def predict_with_weather(flight: FlightInput) -> dict:
+    """Return base prediction, point-in-time observations and paired weather delta."""
+    if not prediction_service.is_model_available():
+        raise HTTPException(status_code=503, detail='No trained model artifact found. Train one first.')
+    payload = _to_prediction_input(flight)
+    base = prediction_service.predict_flight(payload)
+    snapshot = prediction_service.weather_snapshot(payload)
+    enhanced = prediction_service.weather_enhanced_prediction(
+        payload, base_result=base, snapshot=snapshot
+    )
+    return {'base_prediction': base, 'weather': enhanced}
 
 
 @app.post('/predict/european', response_model=EuropeanPredictionOutput, tags=['prediction'])
@@ -255,5 +279,6 @@ def root() -> dict:
         'message': 'Flight Delay Risk API is running. See /docs for interactive API documentation.',
         'live': '/live', 'ready': '/ready', 'health': '/health', 'model_info': '/model/info', 'model_card': '/model/card',
         'europe_catalog': '/regions/europe', 'predict_european': '/predict/european',
+        'weather_summary': '/weather/summary', 'predict_weather': '/predict/weather',
         'monitoring_summary': '/monitoring/summary', 'drift': '/monitoring/drift', 'rank': '/rank',
     }

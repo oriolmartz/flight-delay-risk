@@ -1,4 +1,4 @@
-.PHONY: setup setup-advanced prepare schedule-context ablation train backtest stability policy-backtest layer4 test neural-smoke quality benchmark dashboard api docker
+.PHONY: setup setup-advanced prepare schedule-context ablation train backtest stability policy-backtest layer4 weather-ui weather-model weather-release test neural-smoke quality benchmark dashboard api docker
 
 setup:
 	python -m pip install -r requirements.txt
@@ -29,6 +29,14 @@ policy-backtest:
 
 layer4:
 	python -m scripts.build_layer4_release
+
+weather-ui:
+	python -m scripts.build_weather_ui_summary --data data/processed/flights_with_weather_2024.parquet
+
+weather-model:
+	python -m scripts.train_weather_release --data data/processed/flights_with_weather_2024.parquet
+
+weather-release: weather-ui weather-model
 
 test:
 	python -m pytest -q

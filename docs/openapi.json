@@ -2,7 +2,7 @@
   "openapi": "3.1.0",
   "info": {
     "title": "Flight Delay Risk API",
-    "description": "Ranks scheduled flights by arrival-delay risk and returns a post-hoc calibrated estimate of 15+ minute delay, using only pre-flight schedule-time information. Includes a European context layer.",
+    "description": "Ranks scheduled flights by arrival-delay risk and returns a post-hoc calibrated estimate of 15+ minute delay, using only pre-flight information. Includes optional point-in-time weather and a European context layer.",
     "version": "1.5.0"
   },
   "paths": {
@@ -180,6 +180,74 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/PredictionOutput"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/weather/summary": {
+      "get": {
+        "tags": [
+          "weather"
+        ],
+        "summary": "Get Weather Summary",
+        "description": "Compact airport and airport-hour weather analytics for the dashboard.",
+        "operationId": "get_weather_summary_weather_summary_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "type": "object",
+                  "title": "Response Get Weather Summary Weather Summary Get"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/predict/weather": {
+      "post": {
+        "tags": [
+          "weather"
+        ],
+        "summary": "Predict With Weather",
+        "description": "Return base prediction, point-in-time observations and paired weather delta.",
+        "operationId": "predict_with_weather_predict_weather_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/FlightInput"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "type": "object",
+                  "title": "Response Predict With Weather Predict Weather Post"
                 }
               }
             }

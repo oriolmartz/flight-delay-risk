@@ -49,6 +49,25 @@ SVG_NAMESPACE = "http://www.w3.org/2000/svg"
 SVG_NAMESPACES = {"svg": SVG_NAMESPACE}
 ET.register_namespace("", SVG_NAMESPACE)
 
+PROMINENT_AIRPORT_LABELS: dict[str, tuple[float, float]] = {
+    "SEA": (-20.0, -10.0),
+    "SFO": (-22.0, -8.0),
+    "LAX": (-22.0, 12.0),
+    "LAS": (10.0, -10.0),
+    "PHX": (10.0, 14.0),
+    "DEN": (10.0, -10.0),
+    "DFW": (12.0, 10.0),
+    "ORD": (12.0, -8.0),
+    "ATL": (12.0, -8.0),
+    "CLT": (10.0, -8.0),
+    "MCO": (10.0, 12.0),
+    "MIA": (12.0, 10.0),
+    "JFK": (12.0, -8.0),
+    "LGA": (12.0, 12.0),
+    "BOS": (12.0, -8.0),
+    "MSP": (10.0, -8.0),
+}
+
 
 @dataclass
 class ScheduleValidationResult:
@@ -121,6 +140,22 @@ def _safe_airport_history() -> list[dict[str, Any]]:
         return []
 
 
+def _safe_weather_ui_summary() -> dict[str, Any]:
+    try:
+        return prediction_service.weather_ui_summary()
+    except Exception:
+        return {}
+
+
+def _ui_dataset_snapshot(catalog: dict[str, list[str]]) -> dict[str, Any]:
+    summary = _safe_weather_ui_summary()
+    airport_layers = summary.get("airport_layers") or []
+    return {
+        "airport_count": len(airport_layers) or len(catalog.get("airports", [])),
+        "rows": int(summary.get("rows", 0) or 0),
+    }
+
+
 @st.cache_data(show_spinner=False)
 def _airport_map_source() -> str:
     return AIRPORT_MAP_PATH.read_text(encoding="utf-8")
@@ -131,6 +166,48 @@ def _airport_code(circle: ET.Element) -> str | None:
     if title is None or not title.text:
         return None
     return title.text.split(" — ", 1)[0].strip()
+
+
+def _promote_map_labels(root: ET.Element, supported: set[str]) -> None:
+    airport_group = root.find(".//svg:g[@class='fr-airports']", SVG_NAMESPACES)
+    if airport_group is None:
+        return
+    circles: dict[str, ET.Element] = {}
+    for circle in list(airport_group):
+        code = _airport_code(circle)
+        if not code:
+            continue
+        circles[code] = circle
+        if code in PROMINENT_AIRPORT_LABELS:
+            current = circle.get("class", "airport-dot")
+            if "airport-dot-major" not in current:
+                circle.set("class", f"{current} airport-dot-major".strip())
+                circle.set("r", "3.4")
+                circle.set("fill", "#b7791f")
+                circle.set("fill-opacity", ".95")
+                circle.set("stroke-width", ".75")
+    label_group = root.find(".//svg:g[@class='fr-airport-labels']", SVG_NAMESPACES)
+    if label_group is None:
+        label_group = ET.SubElement(root, f"{{{SVG_NAMESPACE}}}g", {"class": "fr-airport-labels"})
+    existing = {((node.text or "").strip()): node for node in list(label_group)}
+    for code, (dx, dy) in PROMINENT_AIRPORT_LABELS.items():
+        if code not in supported or code not in circles:
+            if code in existing:
+                label_group.remove(existing[code])
+            continue
+        circle = circles[code]
+        cx = float(circle.get("cx", "0"))
+        cy = float(circle.get("cy", "0"))
+        if code in existing:
+            node = existing[code]
+        else:
+            node = ET.SubElement(label_group, f"{{{SVG_NAMESPACE}}}text")
+            node.text = code
+        node.set("x", f"{cx + dx:.1f}")
+        node.set("y", f"{cy + dy:.1f}")
+        node.set("font-size", "16")
+        node.set("font-weight", "880")
+        node.set("letter-spacing", ".4")
 
 
 def _coverage_map_svg(airports: list[str], aria_label: str) -> str:
@@ -151,38 +228,73 @@ def _coverage_map_svg(airports: list[str], aria_label: str) -> str:
         for label in list(label_group):
             if (label.text or "").strip() not in supported:
                 label_group.remove(label)
+    if supported:
+        _promote_map_labels(root, supported)
     root.set("aria-label", aria_label)
     return ET.tostring(root, encoding="unicode")
 
 
-def _heatmap_color(rate: float) -> str:
-    if rate < 0.18:
+def _heatmap_color(value: float, layer: str) -> str:
+    if layer == "severity":
+        if value < 0.15:
+            return "#53c7f0"
+        if value < 0.35:
+            return "#a1dcf2"
+        if value < 0.75:
+            return "#f2b84b"
+        return "#ff6b5e"
+    if layer == "uplift":
+        if value <= 0:
+            return "#53c7f0"
+        if value < 0.03:
+            return "#a1dcf2"
+        if value < 0.07:
+            return "#f2b84b"
+        return "#ff6b5e"
+    if value < 0.18:
         return "#53c7f0"
-    if rate < 0.21:
+    if value < 0.21:
         return "#a1dcf2"
-    if rate < 0.24:
+    if value < 0.24:
         return "#f2b84b"
     return "#ff6b5e"
 
 
+def _layer_value_label(value: float, layer: str) -> str:
+    if layer == "severity":
+        return f"{value:.2f} / 6"
+    return f"{value:.1%}"
+
+
 def _airport_heatmap_svg(
-    history: list[dict[str, Any]],
+    rows_source: list[dict[str, Any]],
     mode: str,
+    layer: str,
     aria_label: str,
-    tooltip_rate_template: str,
+    tooltip_value_template: str,
     tooltip_support_template: str,
 ) -> str:
-    """Build an artifact-backed proportional-symbol heatmap on the U.S. SVG."""
+    """Build a proportional-symbol map for delay, weather severity or uplift."""
     try:
         root = ET.fromstring(_airport_map_source())
     except (OSError, ET.ParseError):
         return ""
     root.set("class", "fr-heatmap-svg")
     root.set("aria-label", aria_label)
-    rows = {str(row.get("airport")): row for row in history if row.get("airport")}
-    rate_key = "origin_rate" if mode == "origin" else "destination_rate"
-    support_key = "origin_support" if mode == "origin" else "destination_support"
-    support_logs = [math.log1p(max(int(row.get(support_key, 0) or 0), 0)) for row in rows.values()]
+    rows = {str(row.get("airport")): row for row in rows_source if row.get("airport")}
+    prefix = "origin" if mode == "origin" else "destination"
+    value_key = {
+        "delay": f"{prefix}_delay_rate",
+        "severity": f"{prefix}_weather_severity",
+        "uplift": f"{prefix}_weather_uplift",
+    }[layer]
+    support_key = (
+        f"{prefix}_support" if layer == "delay" else f"{prefix}_weather_support"
+    )
+    valid_rows = [row for row in rows.values() if row.get(value_key) is not None]
+    support_logs = [
+        math.log1p(max(int(row.get(support_key, 0) or 0), 0)) for row in valid_rows
+    ]
     low_log = min(support_logs, default=0.0)
     high_log = max(support_logs, default=1.0)
     log_span = max(high_log - low_log, 1e-9)
@@ -196,23 +308,23 @@ def _airport_heatmap_svg(
         for circle in list(airport_group):
             code = _airport_code(circle)
             row = rows.get(code or "")
-            if row is None:
+            if row is None or row.get(value_key) is None:
                 airport_group.remove(circle)
                 continue
-            rate = float(row.get(rate_key, 0.0) or 0.0)
+            value = float(row[value_key])
             support = max(int(row.get(support_key, 0) or 0), 0)
             normalized_support = (math.log1p(support) - low_log) / log_span
             radius = 1.8 + 4.3 * math.sqrt(max(0.0, min(normalized_support, 1.0)))
             circle.set("class", "fr-heat-dot")
             circle.set("r", f"{radius:.2f}")
-            circle.set("fill", _heatmap_color(rate))
+            circle.set("fill", _heatmap_color(value, layer))
             circle.set("fill-opacity", ".9")
             circle.set("stroke", "#ffffff")
             circle.set("stroke-opacity", ".96")
             circle.set("stroke-width", ".82")
-            rate_line = tooltip_rate_template.format(rate=f"{rate:.1%}")
+            value_line = tooltip_value_template.format(value=_layer_value_label(value, layer))
             support_line = tooltip_support_template.format(support=f"{support:,}")
-            accessible_label = f"{code} · {rate_line} · {support_line}"
+            accessible_label = f"{code} · {value_line} · {support_line}"
             circle.set("aria-label", accessible_label)
             title = circle.find(f"{{{SVG_NAMESPACE}}}title")
             if title is not None:
@@ -220,7 +332,7 @@ def _airport_heatmap_svg(
 
             cx = float(circle.get("cx", "0"))
             cy = float(circle.get("cy", "0"))
-            tooltip_width = 220.0
+            tooltip_width = 230.0
             tooltip_height = 59.0
             tooltip_x = cx + 12.0
             if tooltip_x + tooltip_width > 967.0:
@@ -269,12 +381,12 @@ def _airport_heatmap_svg(
                 {"class": "fr-heat-tooltip-code", "x": "12", "y": "18"},
             )
             code_text.text = str(code)
-            rate_text = ET.SubElement(
+            value_text = ET.SubElement(
                 tooltip,
                 f"{{{SVG_NAMESPACE}}}text",
                 {"class": "fr-heat-tooltip-rate", "x": "12", "y": "36"},
             )
-            rate_text.text = rate_line
+            value_text.text = value_line
             support_text = ET.SubElement(
                 tooltip,
                 f"{{{SVG_NAMESPACE}}}text",
@@ -282,8 +394,8 @@ def _airport_heatmap_svg(
             )
             support_text.text = support_line
     root.set("data-mode", mode)
+    root.set("data-layer", layer)
     return ET.tostring(root, encoding="unicode")
-
 
 def _sample_input() -> PredictionInput:
     return PredictionInput(
@@ -441,10 +553,25 @@ def _decision_copy(level: str, t: dict[str, Any]) -> tuple[str, str]:
 # ---------------------------------------------------------------------------
 
 
-def _topbar(model_available: bool, artifact_version: str | None, t: dict[str, Any]) -> None:
+def _topbar(
+    model_available: bool,
+    artifact_version: str | None,
+    t: dict[str, Any],
+    catalog: dict[str, list[str]],
+) -> None:
     status_class = "ok" if model_available else "warn"
     status_text = t["topbar"]["model_loaded"] if model_available else t["topbar"]["model_unavailable"]
     artifact = artifact_version or "unknown"
+    snapshot = _ui_dataset_snapshot(catalog)
+    rows = snapshot.get("rows", 0)
+    airports = snapshot.get("airport_count", len(catalog.get("airports", [])))
+    if rows:
+        dataset_meta = str(t["topbar"]["stats"]).format(
+            airports=_fmt_int(airports),
+            rows=_fmt_int(rows),
+        )
+    else:
+        dataset_meta = str(t["topbar"]["stats_fallback"]).format(airports=_fmt_int(airports))
     st.markdown(
         f"""
 <div class="fr-topbar">
@@ -456,6 +583,7 @@ def _topbar(model_available: bool, artifact_version: str | None, t: dict[str, An
       <a class="fr-source-link" href="{TRAINING_SOURCE_URL}" target="_blank" rel="noopener noreferrer">
         {html.escape(str(t['topbar']['source']))}<span aria-hidden="true">↗</span>
       </a>
+      <div class="fr-dataset-meta">{html.escape(dataset_meta)}</div>
     </div>
   </div>
   <div class="fr-status">
@@ -572,7 +700,7 @@ def _flight_form(
         destination = c4.selectbox(labels["destination"], airports, index=default_dest)
 
         c5, c6, c7 = st.columns(3)
-        flight_date = c5.date_input(labels["date"], value=date.today())
+        flight_date = c5.date_input(labels["date"], value=date(2024, 7, 15))
         departure = c6.time_input(labels["departure"], value=time(18, 30), step=300)
         arrival = c7.time_input(labels["arrival"], value=time(21, 45), step=300)
 
@@ -683,6 +811,136 @@ def _render_contributions(result: dict[str, Any], t: dict[str, Any]) -> None:
         st.dataframe(pd.DataFrame(technical_rows), width="stretch", hide_index=True)
 
 
+
+def _fmt_weather_number(value: Any, unit: str, digits: int = 1) -> str:
+    if value is None:
+        return "n/a"
+    try:
+        return f"{float(value):.{digits}f}{unit}"
+    except (TypeError, ValueError):
+        return "n/a"
+
+
+def _weather_flag_labels(endpoint: dict[str, Any], copy: dict[str, Any]) -> list[str]:
+    flags = endpoint.get("flags") or {}
+    labels = []
+    for key in (
+        "low_visibility",
+        "strong_wind",
+        "low_ceiling",
+        "active_precipitation",
+        "freezing_conditions",
+        "thunderstorm",
+        "snow",
+        "fog",
+    ):
+        if flags.get(key):
+            labels.append(str(copy["flags"].get(key, key)))
+    return labels
+
+
+def _render_weather_endpoint(name: str, endpoint: dict[str, Any], copy: dict[str, Any]) -> None:
+    if not endpoint.get("available"):
+        st.markdown(
+            f'<div class="fr-weather-card"><b>{html.escape(name)}</b><span>{html.escape(str(copy["unavailable_endpoint"]))}</span></div>',
+            unsafe_allow_html=True,
+        )
+        return
+    flags = _weather_flag_labels(endpoint, copy)
+    flag_copy = " · ".join(flags) if flags else str(copy["no_flags"])
+    severity = int(endpoint.get("weather_severity") or 0)
+    st.markdown(
+        f"""
+<div class="fr-weather-card">
+  <div class="fr-weather-card-head"><b>{html.escape(name)}</b><strong>{severity}/6</strong></div>
+  <div class="fr-weather-grid">
+    <span><b>{_fmt_weather_number(endpoint.get('temperature_c'), '°C')}</b>{html.escape(str(copy['temperature']))}</span>
+    <span><b>{_fmt_weather_number(endpoint.get('wind_speed_mps'), ' m/s')}</b>{html.escape(str(copy['wind']))}</span>
+    <span><b>{_fmt_weather_number(endpoint.get('visibility_m'), ' m', 0)}</b>{html.escape(str(copy['visibility']))}</span>
+    <span><b>{_fmt_weather_number(endpoint.get('ceiling_m'), ' m', 0)}</b>{html.escape(str(copy['ceiling']))}</span>
+    <span><b>{_fmt_weather_number(endpoint.get('precipitation_mm'), ' mm')}</b>{html.escape(str(copy['precipitation']))}</span>
+    <span><b>{_fmt_weather_number(endpoint.get('observation_age_minutes'), ' min', 0)}</b>{html.escape(str(copy['age']))}</span>
+  </div>
+  <div class="fr-weather-flags">{html.escape(flag_copy)}</div>
+</div>
+""",
+        unsafe_allow_html=True,
+    )
+
+
+def _render_weather_context(
+    payload: PredictionInput,
+    base_result: dict[str, Any],
+    lang: str,
+    t: dict[str, Any],
+) -> None:
+    del lang
+    copy = t["weather"]
+    snapshot = prediction_service.weather_snapshot(payload)
+    enhanced = prediction_service.weather_enhanced_prediction(
+        payload,
+        base_result=base_result,
+        snapshot=snapshot,
+    )
+    st.markdown(f"### {copy['title']}")
+    st.markdown(f'<div class="fr-note">{html.escape(str(copy["subtitle"]))}</div>', unsafe_allow_html=True)
+    left, right = st.columns(2, gap="large")
+    with left:
+        _render_weather_endpoint(str(copy["origin"]), snapshot.get("origin", {}), copy)
+    with right:
+        _render_weather_endpoint(str(copy["destination"]), snapshot.get("destination", {}), copy)
+
+    cutoff = snapshot.get("prediction_cutoff_utc")
+    if cutoff:
+        st.caption(str(copy["cutoff"]).format(cutoff=cutoff))
+
+    if not snapshot.get("available"):
+        st.info(str(copy["snapshot_unavailable"]))
+        return
+    if not enhanced.get("available"):
+        st.info(str(copy["model_unavailable"]))
+        return
+
+    delta = float(enhanced.get("weather_delta", 0.0))
+    delta_label = f"{delta:+.1%}"
+    _metric_cards(
+        [
+            {
+                "label": str(copy["schedule_score"]),
+                "value": _fmt_pct(enhanced.get("paired_base_probability")),
+                "help": str(copy["schedule_score_help"]),
+            },
+            {
+                "label": str(copy["weather_score"]),
+                "value": _fmt_pct(enhanced.get("weather_probability")),
+                "help": str(copy["weather_score_help"]),
+            },
+            {
+                "label": str(copy["contribution"]),
+                "value": delta_label,
+                "help": str(copy["contribution_help"]),
+            },
+        ],
+        columns=3,
+    )
+    contributions = enhanced.get("weather_contributions") or []
+    if contributions:
+        st.markdown(f"#### {copy['drivers']}")
+        for item in contributions[:4]:
+            label, raw_label = _contribution_label(item, t)
+            contribution = float(item.get("contribution", 0.0))
+            direction_class = "up" if contribution >= 0 else "down"
+            direction_label = copy["push_up"] if contribution >= 0 else copy["push_down"]
+            st.markdown(
+                f"""
+<div class="fr-contribution">
+  <div><b>{html.escape(label)}</b><span>{html.escape(raw_label)}</span></div>
+  <div class="fr-contribution-value {direction_class}">{html.escape(str(direction_label))}</div>
+</div>
+""",
+                unsafe_allow_html=True,
+            )
+
 def _render_prediction(payload: PredictionInput, metadata: dict[str, Any], lang: str, t: dict[str, Any]) -> None:
     try:
         result = prediction_service.predict_flight(payload)
@@ -759,6 +1017,7 @@ def _render_prediction(payload: PredictionInput, metadata: dict[str, Any], lang:
             unsafe_allow_html=True,
         )
 
+    _render_weather_context(payload, result, lang, t)
     _render_contributions(result, t)
 
     with st.expander(t["single"]["advanced_details"]):
@@ -1216,41 +1475,154 @@ def _model_metrics(report: dict[str, Any], key: str) -> dict[str, Any]:
     return block.get("metrics", block) if isinstance(block, dict) else {}
 
 
-def _render_airport_heatmap(lang: str, t: dict[str, Any]) -> None:
-    history = _safe_airport_history()
-    if not history:
+def _render_temporal_weather_heatmap(
+    summary: dict[str, Any],
+    perspective: str,
+    layer: str,
+    copy: dict[str, Any],
+    lang: str,
+) -> None:
+    rows = pd.DataFrame(summary.get("hourly_heatmap") or [])
+    if rows.empty:
         return
-    copy = t["heatmap"]
-    mode = st.segmented_control(
-        str(copy["mode"]),
-        options=("origin", "destination"),
-        format_func=lambda value: str(
-            copy["origin" if value == "origin" else "destination"]
-        ),
-        default="origin",
-        selection_mode="single",
-        label_visibility="collapsed",
-        key=f"airport_heatmap_mode_{lang}",
+    rows = rows.loc[rows["perspective"].eq(perspective)].copy()
+    metric = {
+        "delay": "delay_rate",
+        "severity": "weather_severity",
+        "uplift": "weather_uplift",
+    }[layer]
+    rows = rows.dropna(subset=[metric])
+    if rows.empty:
+        return
+    rows = (
+        rows.groupby(["airport", "hour"], as_index=False)
+        .agg({
+            "support": "sum",
+            "weather_support": "sum",
+            "delay_rate": "mean",
+            "weather_severity": "mean",
+            "weather_uplift": "mean",
+        })
     )
-    mode = str(mode or "origin")
-    aria_key = "aria_origin" if mode == "origin" else "aria_destination"
-    heatmap_svg = _airport_heatmap_svg(
-        history,
-        mode,
-        str(copy[aria_key]),
-        str(copy["tooltip_rate"]),
-        str(copy["tooltip_support"]),
+    support_metric = "support" if layer == "delay" else "weather_support"
+    airport_support = rows.groupby("airport")[support_metric].sum().sort_values(ascending=False)
+    airports = list(airport_support.head(20).index)
+    selected = st.multiselect(
+        str(copy["hourly_airports"]),
+        options=airports,
+        default=airports[:12],
+        key=f"weather_hourly_airports_{lang}_{perspective}_{layer}",
     )
-    legend = "".join(
-        f'<span><i style="background:{color}"></i>{html.escape(label)}</span>'
-        for color, label in (
-            ("#53c7f0", "<18%"),
-            ("#a1dcf2", "18–21%"),
-            ("#f2b84b", "21–24%"),
-            ("#ff6b5e", "≥24%"),
+    if not selected:
+        return
+    value_title = str(copy[{"delay": "delay_layer", "severity": "severity_layer", "uplift": "uplift_layer"}[layer]])
+    value_format = ".1%" if layer != "severity" else ".2f"
+    scope_label = str(copy["origin" if perspective == "origin" else "destination"])
+    base_grid = pd.MultiIndex.from_product([selected, list(range(24))], names=["airport", "hour"]).to_frame(index=False)
+    chart_data = base_grid.merge(
+        rows.loc[rows["airport"].isin(selected), ["airport", "hour", support_metric, metric]],
+        on=["airport", "hour"],
+        how="left",
+    )
+    chart_data["hour_label"] = chart_data["hour"].map(lambda value: f"{int(value):02d}:00")
+    chart_data[support_metric] = chart_data[support_metric].fillna(0).astype(int)
+    filled = chart_data.dropna(subset=[metric]).copy()
+    base = (
+        alt.Chart(base_grid)
+        .mark_rect(cornerRadius=2, color="#ecf3fa", opacity=0.95)
+        .encode(
+            x=alt.X("hour:O", title=str(copy["hour"]), sort=list(range(24))),
+            y=alt.Y("airport:N", title=None, sort=selected),
         )
     )
-    airport_count = str(copy["count"]).format(count=len(history))
+    overlay = (
+        alt.Chart(filled)
+        .mark_rect(cornerRadius=2)
+        .encode(
+            x=alt.X("hour:O", title=str(copy["hour"]), sort=list(range(24)), axis=alt.Axis(labelExpr="datum.value + ':00'")),
+            y=alt.Y("airport:N", title=None, sort=selected),
+            color=alt.Color(f"{metric}:Q", title=value_title, scale=alt.Scale(scheme="blues")),
+            tooltip=[
+                alt.Tooltip("airport:N", title=str(copy["airport"])),
+                alt.Tooltip("hour_label:N", title=str(copy["hour"])),
+                alt.Tooltip(f"{metric}:Q", title=value_title, format=value_format),
+                alt.Tooltip(f"{support_metric}:Q", title=str(copy["support"]), format=","),
+            ],
+        )
+    )
+    chart = (base + overlay).properties(height=max(260, 28 * len(selected)))
+    st.markdown(f"### {copy['hourly_title']} — {scope_label} · {value_title}")
+    st.caption(str(copy["hourly_caption"]))
+    st.altair_chart(chart, width="stretch")
+
+
+def _render_airport_heatmap(lang: str, t: dict[str, Any]) -> None:
+    history = _safe_airport_history()
+    summary = _safe_weather_ui_summary()
+    summary_rows = summary.get("airport_layers") or []
+    if not history and not summary_rows:
+        return
+    copy = t["heatmap"]
+
+    if summary_rows:
+        rows = summary_rows
+        layer_options = ("delay", "severity", "uplift")
+    else:
+        rows = [
+            {
+                "airport": row.get("airport"),
+                "origin_delay_rate": row.get("origin_rate"),
+                "origin_support": row.get("origin_support"),
+                "destination_delay_rate": row.get("destination_rate"),
+                "destination_support": row.get("destination_support"),
+            }
+            for row in history
+        ]
+        layer_options = ("delay",)
+
+    control_a, control_b = st.columns([0.48, 0.52])
+    with control_a:
+        mode = st.segmented_control(
+            str(copy["mode"]),
+            options=("origin", "destination"),
+            format_func=lambda value: str(copy["origin" if value == "origin" else "destination"]),
+            default="origin",
+            selection_mode="single",
+            label_visibility="collapsed",
+            key=f"airport_heatmap_mode_{lang}",
+        )
+    with control_b:
+        layer = st.segmented_control(
+            str(copy["layer"]),
+            options=layer_options,
+            format_func=lambda value: str(copy[f"{value}_layer"]),
+            default="delay",
+            selection_mode="single",
+            label_visibility="collapsed",
+            key=f"airport_heatmap_layer_{lang}",
+        )
+    mode = str(mode or "origin")
+    layer = str(layer or "delay")
+    aria_key = f"aria_{mode}_{layer}"
+    heatmap_svg = _airport_heatmap_svg(
+        rows,
+        mode,
+        layer,
+        str(copy.get(aria_key, copy[f"aria_{mode}"])),
+        str(copy[f"tooltip_{layer}"]),
+        str(copy["tooltip_support"]),
+    )
+    legend_items = {
+        "delay": (("#53c7f0", "<18%"), ("#a1dcf2", "18–21%"), ("#f2b84b", "21–24%"), ("#ff6b5e", "≥24%")),
+        "severity": (("#53c7f0", "<0.15"), ("#a1dcf2", "0.15–0.35"), ("#f2b84b", "0.35–0.75"), ("#ff6b5e", "≥0.75")),
+        "uplift": (("#53c7f0", "≤0 pp"), ("#a1dcf2", "0–3 pp"), ("#f2b84b", "3–7 pp"), ("#ff6b5e", "≥7 pp")),
+    }[layer]
+    legend = "".join(
+        f'<span><i style="background:{color}"></i>{html.escape(label)}</span>'
+        for color, label in legend_items
+    )
+    airport_count = str(copy["count"]).format(count=len(rows))
+    caption = str(copy[f"caption_{layer}"])
     st.markdown(
         f"""
 <div class="fr-heatmap-shell">
@@ -1258,7 +1630,7 @@ def _render_airport_heatmap(lang: str, t: dict[str, Any]) -> None:
     <div>
       <span class="fr-heatmap-eyebrow">{html.escape(str(copy['eyebrow']))}</span>
       <strong>{html.escape(str(copy['title']))}</strong>
-      <p>{html.escape(str(copy['caption']))}</p>
+      <p>{html.escape(caption)}</p>
     </div>
     <div class="fr-heatmap-meta">
       <span>{html.escape(airport_count)}</span>
@@ -1268,7 +1640,7 @@ def _render_airport_heatmap(lang: str, t: dict[str, Any]) -> None:
   </div>
   <div class="fr-heatmap-map">{heatmap_svg}</div>
   <div class="fr-heatmap-legend">
-    <b>{html.escape(str(copy['legend_rate']))}</b>
+    <b>{html.escape(str(copy[f'legend_{layer}']))}</b>
     {legend}
     <em>{html.escape(str(copy['legend_support']))}</em>
   </div>
@@ -1276,7 +1648,8 @@ def _render_airport_heatmap(lang: str, t: dict[str, Any]) -> None:
 """,
         unsafe_allow_html=True,
     )
-
+    if summary_rows:
+        _render_temporal_weather_heatmap(summary, mode, layer, copy, lang)
 
 def _render_validation(lang: str, t: dict[str, Any]) -> None:
     report = _load_json(REPORTS_DIR / "metrics.json")
@@ -1730,7 +2103,7 @@ def main() -> None:
     with top_right:
         lang, t = _language_selector()
     with top_left:
-        _topbar(model_available, info.get("version"), t)
+        _topbar(model_available, info.get("version"), t, catalog)
 
     _hero(t, model_available, catalog)
 

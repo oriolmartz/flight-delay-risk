@@ -5,9 +5,21 @@ from functools import lru_cache
 from pathlib import Path
 
 import numpy as np
+import pandas as pd
 
-from src.config import DEFAULT_MODEL_PATH, REPORTS_DIR, SCHEDULE_CONTEXT_PATH
+from src.config import (
+    AIRPORT_STATION_MAP_PATH,
+    AIRPORT_TIMEZONE_MAP_PATH,
+    DEFAULT_MODEL_PATH,
+    REPORTS_DIR,
+    SCHEDULE_CONTEXT_PATH,
+    WEATHER_BASE_MODEL_PATH,
+    WEATHER_HOURLY_PATH,
+    WEATHER_MODEL_PATH,
+    WEATHER_UI_SUMMARY_PATH,
+)
 from src.features.build_features import add_schedule_features
+from src.models.explain import local_model_contributions
 from src.models.predict import PredictionInput, predict_batch, predict_single, rank_batch
 from src.models.registry import FlightRiskArtifact
 from src.monitoring.monitoring import drift_summary as _drift_summary
@@ -25,10 +37,38 @@ from src.reference.european_layer import (
 )
 from src.version import APP_VERSION
 
+from src.weather.model_features import WEATHER_MODEL_FEATURES
+from src.weather.ui_analytics import (
+    load_weather_ui_summary,
+    point_in_time_weather_snapshot,
+)
+
 
 @lru_cache(maxsize=1)
 def get_artifact() -> FlightRiskArtifact:
     return FlightRiskArtifact.load(DEFAULT_MODEL_PATH)
+
+
+@lru_cache(maxsize=1)
+def get_weather_base_artifact() -> FlightRiskArtifact:
+    """Load the schedule-only companion trained on the weather cohort."""
+    return FlightRiskArtifact.load(WEATHER_BASE_MODEL_PATH)
+
+
+@lru_cache(maxsize=1)
+def get_weather_artifact() -> FlightRiskArtifact:
+    """Load the optional weather-enhanced artifact without replacing the base model."""
+    return FlightRiskArtifact.load(WEATHER_MODEL_PATH)
+
+
+@lru_cache(maxsize=1)
+def _weather_source_frames():
+    import pandas as pd
+
+    weather = pd.read_parquet(WEATHER_HOURLY_PATH)
+    station_mapping = pd.read_csv(AIRPORT_STATION_MAP_PATH, dtype={"station_id": "string"})
+    timezone_mapping = pd.read_csv(AIRPORT_TIMEZONE_MAP_PATH)
+    return weather, station_mapping, timezone_mapping
 
 
 def is_model_available() -> bool:
@@ -146,6 +186,121 @@ def airport_historical_summary() -> list[dict]:
         for airport in airports
     ]
 
+
+
+def is_weather_model_available() -> bool:
+    try:
+        get_weather_base_artifact()
+        get_weather_artifact()
+        return True
+    except (FileNotFoundError, RuntimeError, ValueError, ImportError, AttributeError):
+        return False
+
+
+def weather_ui_summary() -> dict:
+    """Return the compact offline weather landscape used by map and heatmap views."""
+    return load_weather_ui_summary(WEATHER_UI_SUMMARY_PATH)
+
+
+def weather_snapshot(payload: PredictionInput) -> dict:
+    """Return leakage-safe origin/destination observations available at the cutoff."""
+    try:
+        weather, station_mapping, timezone_mapping = _weather_source_frames()
+        return point_in_time_weather_snapshot(
+            payload.to_raw_frame(),
+            weather,
+            station_mapping,
+            timezone_mapping,
+        )
+    except Exception as exc:
+        return {
+            "available": False,
+            "reason": str(exc),
+            "origin": {"available": False},
+            "destination": {"available": False},
+            "feature_values": {},
+        }
+
+
+def _score_optional_artifact(
+    artifact: FlightRiskArtifact,
+    payload: PredictionInput,
+    *,
+    feature_values: dict[str, object] | None = None,
+) -> tuple[float, float, pd.DataFrame]:
+    raw = payload.to_raw_frame()
+    for column, value in (feature_values or {}).items():
+        raw[column] = value
+    frame = artifact.historical_aggregates.transform(add_schedule_features(raw))
+    X = frame.reindex(columns=artifact.feature_columns)
+    medians = artifact.metadata.get("weather_imputation_medians", {})
+    for column in artifact.feature_columns:
+        if column in WEATHER_MODEL_FEATURES:
+            fallback = float(medians.get(column, 0.0))
+            X[column] = pd.to_numeric(X[column], errors="coerce").fillna(fallback)
+    raw_probability = float(artifact.pipeline.predict_proba(X)[:, 1][0])
+    if artifact.probability_calibrator is not None:
+        probability = float(artifact.probability_calibrator.transform([raw_probability])[0])
+    else:
+        probability = raw_probability
+    return probability, raw_probability, X
+
+
+def weather_enhanced_prediction(
+    payload: PredictionInput,
+    *,
+    base_result: dict | None = None,
+    snapshot: dict | None = None,
+) -> dict:
+    """Compare paired ExtraTrees artifacts on the same complete-weather cohort.
+
+    The displayed weather delta is weather-model probability minus its paired
+    schedule-only companion. The main deployed score is returned separately and
+    remains the primary product prediction.
+    """
+    snapshot = snapshot or weather_snapshot(payload)
+    if not snapshot.get("available"):
+        return {
+            "available": False,
+            "reason": "No point-in-time weather observation is available for both endpoints.",
+            "snapshot": snapshot,
+        }
+    try:
+        paired_base = get_weather_base_artifact()
+        weather_artifact = get_weather_artifact()
+    except Exception as exc:
+        return {
+            "available": False,
+            "reason": f"Paired weather artifacts unavailable: {exc}",
+            "snapshot": snapshot,
+        }
+
+    paired_base_probability, raw_paired_base, _ = _score_optional_artifact(
+        paired_base,
+        payload,
+    )
+    weather_probability, raw_weather, weather_X = _score_optional_artifact(
+        weather_artifact,
+        payload,
+        feature_values=snapshot.get("feature_values", {}),
+    )
+    base_result = base_result or predict_flight(payload)
+    contributions = local_model_contributions(weather_artifact, weather_X, top_n=16)[0]
+    weather_contributions = [
+        item for item in contributions if str(item.get("feature")) in WEATHER_MODEL_FEATURES
+    ][:6]
+    return {
+        "available": True,
+        "deployed_probability": float(base_result["delay_probability"]),
+        "paired_base_probability": round(paired_base_probability, 4),
+        "weather_probability": round(weather_probability, 4),
+        "weather_delta": round(weather_probability - paired_base_probability, 4),
+        "raw_paired_base_score": round(raw_paired_base, 4),
+        "raw_weather_model_score": round(raw_weather, 4),
+        "weather_contributions": weather_contributions,
+        "snapshot": snapshot,
+        "interpretation": "paired_model_counterfactual_not_causal",
+    }
 
 def prediction_context(payload: PredictionInput) -> dict:
     """Expose historical cohort context without claiming causal attribution."""

@@ -4,26 +4,27 @@ from __future__ import annotations
 TEXT: dict[str, dict[str, object]] = {'en': {'language': 'English',
         'tabs': ['Analyze flight', 'Rank schedule', 'Validation', 'Model & operations'],
         'topbar': {'byline': 'Built by Oriol Martínez · ML product engineering',
-                   'source': 'BTS 2024 source · 168,519 refit rows',
+                   'source': 'BTS 2024 source data',
+                   'stats': '{airports} supported airports · {rows} cleaned flight observations · point-in-time NOAA weather-enriched frame',
+                   'stats_fallback': '{airports} supported airports in the current artifact',
                    'model_loaded': 'Model ready',
                    'model_unavailable': 'Model unavailable',
                    'public_release': 'Public release'},
         'hero_kicker': 'Pre-departure risk · schedule triage',
         'hero_title': 'Know which flights deserve <em>attention before departure.</em>',
-        'hero_sub': 'Flight Delay Risk ranks scheduled flights by estimated arrival-delay exposure using only '
-                    'information available before take-off. It combines calibrated probabilities, historical cohort '
-                    'evidence, model-native explanations and temporal validation.',
-        'constraint': 'Schedule-only estimate · no live weather, aircraft rotation or ATC state · not for operational '
-                      'dispatch, safety decisions or passenger guarantees.',
+        'hero_sub': 'Flight Delay Risk ranks scheduled flights by estimated arrival-delay exposure using '
+                    'only information available before take-off. It combines calibrated probabilities, '
+                    'historical cohort evidence, model-native explanations and temporal validation.',
+        'constraint': 'Schedule-time estimate · historical point-in-time weather is used only when available '
+                      '· no live ATC, aircraft rotation or disruption feed · not for operational dispatch, '
+                      'safety decisions or passenger guarantees.',
         'hero_map': {'eyebrow': 'U.S. MODEL COVERAGE',
                      'count': '{count} supported airports',
                      'aria': 'U.S. model coverage: {count} supported airports',
                      'caption': 'Every point is available in the origin and destination selectors.'},
         'heatmap': {'eyebrow': 'TRAINING EVIDENCE · BTS 2024',
-                    'title': 'Airport delay landscape',
-                    'caption': 'Explore how historical arrival-delay exposure changes across the U.S. network. '
-                               'Color shows the smoothed delay rate and circle size shows flight volume. Hover a '
-                               'point for its exact evidence.',
+                    'title': 'Airport network and weather explorer',
+                    'caption': 'Explore the U.S. network from the same analysis surface. Switch between delay risk, weather severity and descriptive weather uplift; point size always shows historical support.',
                     'disclaimer': 'Historical pattern · not live disruption data',
                     'count': '{count} airports',
                     'target': 'Target · ArrDel15',
@@ -31,11 +32,44 @@ TEXT: dict[str, dict[str, object]] = {'en': {'language': 'English',
                     'origin': 'Departing flights',
                     'destination': 'Arriving flights',
                     'aria_origin': 'Historical arrival-delay exposure for flights departing each airport',
-                    'aria_destination': 'Historical arrival-delay exposure for flights arriving at each airport',
+                    'aria_destination': 'Historical arrival-delay exposure for flights arriving at each '
+                                        'airport',
                     'tooltip_rate': '{rate} delayed 15+ min',
                     'tooltip_support': '{support} historical flights',
                     'legend_rate': 'Historical delay rate',
-                    'legend_support': 'Circle size = historical flight volume'},
+                    'legend_support': 'Circle size = historical flight volume',
+                    'layer': 'Map layer',
+                    'delay_layer': 'Delay risk',
+                    'severity_layer': 'Weather severity',
+                    'uplift_layer': 'Weather-associated uplift',
+                    'caption_delay': 'Historical arrival-delay exposure across the U.S. network. Colour '
+                                     'shows smoothed delay rate and circle size shows flight volume.',
+                    'caption_severity': 'Average point-in-time severe-weather flag count at each airport. '
+                                        'This layer describes observed conditions, not delay causality.',
+                    'caption_uplift': 'Difference in observed delay rate between adverse and clear weather '
+                                      'cohorts. This is descriptive association, not causal attribution.',
+                    'aria_origin_delay': 'Historical delay exposure for flights departing each airport',
+                    'aria_destination_delay': 'Historical delay exposure for flights arriving at each '
+                                              'airport',
+                    'aria_origin_severity': 'Average pre-departure weather severity for departing flights by '
+                                            'airport',
+                    'aria_destination_severity': 'Average pre-departure weather severity for arriving '
+                                                 'flights by airport',
+                    'aria_origin_uplift': 'Weather-associated delay uplift for departing flights by airport',
+                    'aria_destination_uplift': 'Weather-associated delay uplift for arriving flights by '
+                                               'airport',
+                    'tooltip_delay': '{value} delayed 15+ min',
+                    'tooltip_severity': '{value} average severity',
+                    'tooltip_uplift': '{value} weather-associated uplift',
+                    'legend_delay': 'Historical delay rate',
+                    'legend_severity': 'Mean severity flags',
+                    'legend_uplift': 'Adverse minus clear delay rate',
+                    'hourly_title': 'Airport × hour matrix',
+                    'hourly_caption': 'One row per airport for the selected perspective. The grid spans the full 24-hour local schedule, while empty pale cells indicate little or no historical support.',
+                    'hourly_airports': 'Airports shown (one row each)',
+                    'hour': 'Scheduled hour',
+                    'airport': 'Airport',
+                    'support': 'Historical flights / observations'},
         'workflow': ['Enter or upload', 'Rank risk', 'Inspect evidence', 'Export brief'],
         'hero_card': {'example': 'Public demo · DL 418 · 18:30 departure',
                       'probability': 'estimated chance of a 15+ minute arrival delay',
@@ -47,15 +81,17 @@ TEXT: dict[str, dict[str, object]] = {'en': {'language': 'English',
                       'watch': 'WATCH',
                       'priority': 'PRIORITY'},
         'analyze_title': 'Analyze one scheduled flight',
-        'analyze_sub': 'Enter natural schedule fields. Calendar and model features are derived automatically.',
+        'analyze_sub': 'Enter natural schedule fields. Calendar and model features are derived '
+                       'automatically.',
         'rank_title': 'Rank a flight schedule',
-        'rank_sub': 'Upload a natural schedule, validate every row and turn model output into a review queue.',
+        'rank_sub': 'Upload a natural schedule, validate every row and turn model output into a review '
+                    'queue.',
         'validation_title': 'Validation evidence',
-        'validation_sub': 'Plain-language evidence from unseen future periods. Technical diagnostics remain available '
-                          'on demand.',
+        'validation_sub': 'Plain-language evidence from unseen future periods. Technical diagnostics remain '
+                          'available on demand.',
         'operations_title': 'Model and operations',
-        'operations_sub': 'A readable release summary first; lineage, latency, API and engineering details remain '
-                          'expandable.',
+        'operations_sub': 'A readable release summary first; lineage, latency, API and engineering details '
+                          'remain expandable.',
         'form': {'carrier': 'Carrier',
                  'flight_number': 'Flight number (optional)',
                  'origin': 'Origin',
@@ -68,11 +104,13 @@ TEXT: dict[str, dict[str, object]] = {'en': {'language': 'English',
                  'submit': 'Analyze flight',
                  'route_error': 'Origin and destination must be different.'},
         'decision': {'kicker': 'Schedule triage recommendation',
-                     'low': ['ROUTINE REVIEW', "The profile sits below the artifact's higher-exposure range."],
+                     'low': ['ROUTINE REVIEW',
+                             "The profile sits below the artifact's higher-exposure range."],
                      'moderate': ['WATCH',
-                                  'Review the historical support and model contributions before treating the score as '
-                                  'a strong signal.'],
-                     'high': ['PRIORITY REVIEW', 'The model places this flight in an elevated-exposure range.']},
+                                  'Review the historical support and model contributions before treating the '
+                                  'score as a strong signal.'],
+                     'high': ['PRIORITY REVIEW',
+                              'The model places this flight in an elevated-exposure range.']},
         'metrics': {'probability': 'Estimated delay risk',
                     'route_cohort': 'Usual risk on this route',
                     'relative': 'Risk compared with this route',
@@ -93,8 +131,8 @@ TEXT: dict[str, dict[str, object]] = {'en': {'language': 'English',
                    'support_moderate': 'Moderate',
                    'support_high': 'High',
                    'explanation': 'What influenced this estimate',
-                   'explanation_note': 'These factors show what moved the model estimate up or down. They are '
-                                       'associations, not proven causes of delay.',
+                   'explanation_note': 'These factors show what moved the model estimate up or down. They '
+                                       'are associations, not proven causes of delay.',
                    'increase': 'Pushes risk up',
                    'decrease': 'Pushes risk down',
                    'download_pdf': 'Download flight risk brief (PDF)',
@@ -103,8 +141,8 @@ TEXT: dict[str, dict[str, object]] = {'en': {'language': 'English',
                    'prediction_failed': 'Prediction failed',
                    'technical_explanation': 'Technical contribution values',
                    'advanced_details': 'Advanced model details',
-                   'advanced_details_note': 'These fields are useful for model inspection, but are not needed to '
-                                            'interpret the flight recommendation.',
+                   'advanced_details_note': 'These fields are useful for model inspection, but are not '
+                                            'needed to interpret the flight recommendation.',
                    'route_summary': 'The route baseline is {route_rate}; the overall training delay rate is '
                                     '{global_rate}.',
                    'support_summary': '{count} earlier route flights · {quality} evidence.'},
@@ -132,9 +170,48 @@ TEXT: dict[str, dict[str, object]] = {'en': {'language': 'English',
                      'IsWeekend': 'Weekend schedule',
                      'IsEveningPeak': 'Evening peak',
                      'IsMorningPeak': 'Morning peak',
-                     'IsRedEye': 'Red-eye schedule'},
+                     'IsRedEye': 'Red-eye schedule',
+                     'origin_temperature_c': 'Origin temperature',
+                     'origin_dew_point_c': 'Origin dew point',
+                     'origin_visibility_m': 'Origin visibility',
+                     'origin_wind_speed_mps': 'Origin wind speed',
+                     'origin_wind_gust_mps': 'Origin wind gust',
+                     'origin_ceiling_m': 'Origin ceiling',
+                     'origin_precipitation_mm': 'Origin precipitation',
+                     'origin_thunderstorm_flag': 'Origin thunderstorm',
+                     'origin_snow_flag': 'Origin snow',
+                     'origin_fog_flag': 'Origin fog',
+                     'origin_observation_age_minutes': 'Origin observation age',
+                     'origin_low_visibility': 'Origin low visibility',
+                     'origin_strong_wind': 'Origin strong wind',
+                     'origin_low_ceiling': 'Origin low ceiling',
+                     'origin_active_precipitation': 'Origin active precipitation',
+                     'origin_freezing_conditions': 'Origin freezing conditions',
+                     'origin_weather_severity': 'Origin weather severity',
+                     'origin_weather_available': 'Origin weather available',
+                     'origin_weather_stale': 'Origin weather stale',
+                     'destination_temperature_c': 'Destination temperature',
+                     'destination_dew_point_c': 'Destination dew point',
+                     'destination_visibility_m': 'Destination visibility',
+                     'destination_wind_speed_mps': 'Destination wind speed',
+                     'destination_wind_gust_mps': 'Destination wind gust',
+                     'destination_ceiling_m': 'Destination ceiling',
+                     'destination_precipitation_mm': 'Destination precipitation',
+                     'destination_thunderstorm_flag': 'Destination thunderstorm',
+                     'destination_snow_flag': 'Destination snow',
+                     'destination_fog_flag': 'Destination fog',
+                     'destination_observation_age_minutes': 'Destination observation age',
+                     'destination_low_visibility': 'Destination low visibility',
+                     'destination_strong_wind': 'Destination strong wind',
+                     'destination_low_ceiling': 'Destination low ceiling',
+                     'destination_active_precipitation': 'Destination active precipitation',
+                     'destination_freezing_conditions': 'Destination freezing conditions',
+                     'destination_weather_severity': 'Destination weather severity',
+                     'destination_weather_available': 'Destination weather available',
+                     'destination_weather_stale': 'Destination weather stale'},
         'batch': {'intro': 'Recommended template: flight_number, airline, origin, destination, flight_date, '
-                           'scheduled_departure, scheduled_arrival, scheduled_duration_minutes, distance_miles.',
+                           'scheduled_departure, scheduled_arrival, scheduled_duration_minutes, '
+                           'distance_miles.',
                   'upload': 'Upload schedule CSV',
                   'sample': 'Load sample schedule',
                   'template': 'Download CSV template',
@@ -155,16 +232,16 @@ TEXT: dict[str, dict[str, object]] = {'en': {'language': 'English',
                   'distribution': 'Review queue distribution',
                   'download_csv': 'Download ranked schedule (CSV)',
                   'download_pdf': 'Download ranked schedule brief (PDF)',
-                  'caption': 'Priority tiers are relative to this uploaded schedule; calibrated probability remains '
-                             "the model's absolute estimate.",
+                  'caption': 'Priority tiers are relative to this uploaded schedule; calibrated probability '
+                             "remains the model's absolute estimate.",
                   'missing': 'Missing columns',
                   'no_valid': 'No valid flights remain after validation.',
                   'limit': 'The public dashboard accepts up to 500 rows per upload.',
                   'evidence_gaps': 'Flights with limited route evidence',
-                  'summary_intro': 'The queue is relative to this uploaded schedule. “Priority” means review first, '
-                                   'not a guaranteed delay.',
-                  'table_help': 'Probability is the absolute estimate; queue and percentile are relative to the '
-                                'uploaded schedule.',
+                  'summary_intro': 'The queue is relative to this uploaded schedule. “Priority” means review '
+                                   'first, not a guaranteed delay.',
+                  'table_help': 'Probability is the absolute estimate; queue and percentile are relative to '
+                                'the uploaded schedule.',
                   'advanced_summary': 'Advanced batch diagnostics'},
         'validation': {'heldout_pr': 'Ranking quality',
                        'lift': 'Priority-list advantage',
@@ -174,18 +251,18 @@ TEXT: dict[str, dict[str, object]] = {'en': {'language': 'English',
                        'comparison': 'Deployed model versus simple baseline',
                        'reliability': 'Do predicted probabilities match reality?',
                        'reliability_caption': 'A reliable model places the observed line close to the '
-                                              'perfect-calibration line. For example, flights assigned 30% risk should '
-                                              'be delayed about 30% of the time.',
+                                              'perfect-calibration line. For example, flights assigned 30% '
+                                              'risk should be delayed about 30% of the time.',
                        'encoding_title': 'Strictly prior-date encoding',
-                       'encoding_body': 'Every training row receives historical target rates built only from earlier '
-                                        'FlightDate values. Same-day labels cannot leak across rows.',
+                       'encoding_body': 'Every training row receives historical target rates built only from '
+                                        'earlier FlightDate values. Same-day labels cannot leak across rows.',
                        'calibration_title': 'Holdout-selected calibration',
-                       'calibration_body': 'Identity, sigmoid and isotonic are fitted on an earlier calibration '
-                                           'sub-block, selected on a later sub-block and refitted before one untouched '
-                                           'test evaluation.',
+                       'calibration_body': 'Identity, sigmoid and isotonic are fitted on an earlier '
+                                           'calibration sub-block, selected on a later sub-block and '
+                                           'refitted before one untouched test evaluation.',
                        'backtest_title': '3-fold temporal backtest',
-                       'backtest_body': 'Expanding windows repeat model selection, calibration and evaluation across '
-                                        'later time blocks.',
+                       'backtest_body': 'Expanding windows repeat model selection, calibration and '
+                                        'evaluation across later time blocks.',
                        'stability': 'Performance across later time windows',
                        'mean_pr': 'Average ranking quality',
                        'mean_lift': 'Average priority advantage',
@@ -197,33 +274,36 @@ TEXT: dict[str, dict[str, object]] = {'en': {'language': 'English',
                        'pr_over_prevalence': 'PR-AUC / prevalence',
                        'no_dominant_model': 'No model family dominated every temporal fold',
                        'benchmark': 'Which model ranked flights best?',
-                       'benchmark_caption': 'All seven candidates used the same chronological selection period. '
-                                            'Ranking quality is the main comparison; the final test was not used to '
-                                            'choose a winner.',
+                       'benchmark_caption': 'All seven candidates used the same chronological selection '
+                                            'period. Ranking quality is the main comparison; the final test '
+                                            'was not used to choose a winner.',
                        'calibration_candidates': 'Probability-adjustment methods',
                        'overview': 'What the final unseen test says',
-                       'overview_body': 'The model was frozen before this period. These values describe ranking '
-                                        'usefulness and probability reliability on later flights it had not seen.',
-                       'ranking_plain': 'PR-AUC {value:.3f} versus a {prevalence:.1%} delay rate ({ratio:.2f}× the '
-                                        'random baseline).',
-                       'lift_plain': 'The top 10% contains {extra:.0f}% more delayed flights than random selection.',
+                       'overview_body': 'The model was frozen before this period. These values describe '
+                                        'ranking usefulness and probability reliability on later flights it '
+                                        'had not seen.',
+                       'ranking_plain': 'PR-AUC {value:.3f} versus a {prevalence:.1%} delay rate '
+                                        '({ratio:.2f}× the random baseline).',
+                       'lift_plain': 'The top 10% contains {extra:.0f}% more delayed flights than random '
+                                     'selection.',
                        'calibration_plain': 'Predicted probabilities differ from observed outcomes by about '
                                             '{points:.1f} percentage points on average.',
-                       'comparison_caption': 'The deployed model should rank delayed flights higher and produce more '
-                                             'reliable probabilities than the simple logistic baseline.',
-                       'stability_intro': 'Each row is a different future period. Changes in the winning model show '
-                                          'that delay patterns evolve over time.',
+                       'comparison_caption': 'The deployed model should rank delayed flights higher and '
+                                             'produce more reliable probabilities than the simple logistic '
+                                             'baseline.',
+                       'stability_intro': 'Each row is a different future period. Changes in the winning '
+                                          'model show that delay patterns evolve over time.',
                        'metric_guide': 'How to read the metrics',
-                       'metric_guide_body': '**Ranking quality (PR-AUC):** puts delayed flights near the top; higher '
-                                            'is better.  \n'
-                                            '**Priority-list advantage (Lift@10%):** improvement over random review in '
-                                            'the top 10%; higher is better.  \n'
-                                            '**Probability error (Brier):** average squared probability error; lower '
-                                            'is better.  \n'
-                                            '**Reliability gap (ECE):** average mismatch between predicted and '
-                                            'observed risk; lower is better.  \n'
-                                            '**Delay rate / prevalence:** the random baseline for PR-AUC in that '
-                                            'period.',
+                       'metric_guide_body': '**Ranking quality (PR-AUC):** puts delayed flights near the '
+                                            'top; higher is better.  \n'
+                                            '**Priority-list advantage (Lift@10%):** improvement over random '
+                                            'review in the top 10%; higher is better.  \n'
+                                            '**Probability error (Brier):** average squared probability '
+                                            'error; lower is better.  \n'
+                                            '**Reliability gap (ECE):** average mismatch between predicted '
+                                            'and observed risk; lower is better.  \n'
+                                            '**Delay rate / prevalence:** the random baseline for PR-AUC in '
+                                            'that period.',
                        'advanced_diagnostics': 'Advanced validation diagnostics',
                        'advanced_fold_table': 'Full fold diagnostics',
                        'advanced_model_table': 'Full model benchmark diagnostics',
@@ -242,93 +322,177 @@ TEXT: dict[str, dict[str, object]] = {'en': {'language': 'English',
                        'average': 'Average logged probability',
                        'drift': 'Current PSI status',
                        'latest': 'Latest prediction',
-                       'no_traffic': 'No prediction traffic has been logged yet. The monitoring panel will populate as '
-                                     'the demo is used.',
+                       'no_traffic': 'No prediction traffic has been logged yet. The monitoring panel will '
+                                     'populate as the demo is used.',
                        'performance': 'Technical speed measurements',
                        'artifact_load': 'Artifact load',
                        'single_latency': 'Single prediction',
                        'batch_100': '100-flight batch',
                        'batch_1000': '1,000-flight batch',
-                       'environment': 'Measured locally on the release environment; cloud latency depends on hosting '
-                                      'and cold starts.',
+                       'environment': 'Measured locally on the release environment; cloud latency depends on '
+                                      'hosting and cold starts.',
                        'model_card': 'Model card',
                        'leakage': 'Pre-departure leakage contract',
                        'api': 'API surface',
                        'architecture': 'Repository architecture',
                        'deployment': 'Public deployment',
                        'deployment_body': 'The repository includes Docker, Docker Compose, Streamlit and '
-                                          'Render-compatible entry points. Add the deployed dashboard and API URLs to '
-                                          'the release links once hosting is provisioned.',
+                                          'Render-compatible entry points. Add the deployed dashboard and '
+                                          'API URLs to the release links once hosting is provisioned.',
                        'advanced_runtime': 'Advanced runtime and monitoring diagnostics',
                        'drift_plain_low': 'Recent inputs remain close to the training reference.',
-                       'drift_plain_medium': 'Recent inputs have changed moderately; watch calibration and ranking '
-                                             'quality.',
-                       'drift_plain_high': 'Recent inputs differ substantially from training; recalibration or '
-                                           'retraining should be considered.'},
-        'footer': 'Flight Delay Risk · Built by Oriol Martínez · Public portfolio ML system · Not for operational '
-                  'aviation decisions.',
+                       'drift_plain_medium': 'Recent inputs have changed moderately; watch calibration and '
+                                             'ranking quality.',
+                       'drift_plain_high': 'Recent inputs differ substantially from training; recalibration '
+                                           'or retraining should be considered.'},
+        'footer': 'Flight Delay Risk · Built by Oriol Martínez · Public portfolio ML system · Not for '
+                  'operational aviation decisions.',
         'metric_help': {'probability': 'Estimated chance of arriving at least 15 minutes late.',
-                        'route_rate': 'Share of earlier flights on this route that arrived at least 15 minutes late.',
+                        'route_rate': 'Share of earlier flights on this route that arrived at least 15 '
+                                      'minutes late.',
                         'relative_above': 'The estimate is {delta}% above the route’s historical baseline.',
                         'relative_below': 'The estimate is {delta}% below the route’s historical baseline.',
                         'relative_equal': 'The estimate is close to the route’s historical baseline.',
-                        'support': 'Based on {count} earlier route observations. More observations make the baseline '
-                                   'more dependable.',
+                        'support': 'Based on {count} earlier route observations. More observations make the '
+                                   'baseline more dependable.',
                         'valid_rows': 'Flights that passed all schema and value checks and can be ranked.',
                         'invalid_rows': 'Rows excluded from ranking until their input values are corrected.',
-                        'evidence_gaps': 'Valid flights whose route is unseen or has fewer than 100 historical '
-                                         'observations.',
-                        'priority_queue': 'The highest-risk 10% of this uploaded schedule, selected for first review.',
-                        'watch_queue': 'The next 20% of the schedule, worth monitoring after the priority group.',
+                        'evidence_gaps': 'Valid flights whose route is unseen or has fewer than 100 '
+                                         'historical observations.',
+                        'priority_queue': 'The highest-risk 10% of this uploaded schedule, selected for '
+                                          'first review.',
+                        'watch_queue': 'The next 20% of the schedule, worth monitoring after the priority '
+                                       'group.',
                         'highest': 'Largest estimated delay probability in this uploaded schedule.',
                         'average': 'Average estimated delay probability across all valid uploaded flights.',
-                        'ranking': 'Measures how well delayed flights rise toward the top of the ranking. Higher is '
-                                   'better.',
-                        'lift': 'Shows how much better the top 10% performs than selecting flights at random. Higher '
-                                'is better.',
+                        'ranking': 'Measures how well delayed flights rise toward the top of the ranking. '
+                                   'Higher is better.',
+                        'lift': 'Shows how much better the top 10% performs than selecting flights at '
+                                'random. Higher is better.',
                         'brier': 'Average squared probability error. Zero is perfect; lower is better.',
-                        'calibration': 'Average gap between predicted risk and observed outcomes. Lower is better.',
+                        'calibration': 'Average gap between predicted risk and observed outcomes. Lower is '
+                                       'better.',
                         'prevalence': 'The actual share of delayed flights in the evaluated period.',
-                        'training_rows': 'Flights used to fit the deployed model before the separate calibration and '
-                                         'test periods.',
+                        'training_rows': 'Flights used to fit the deployed model before the separate '
+                                         'calibration and test periods.',
                         'features': 'Schedule and historical inputs available before departure.',
                         'predictions': 'Predictions recorded by this local or deployed demo instance.',
-                        'drift': 'How much recent input patterns differ from the training reference. Lower is safer.'}},
+                        'drift': 'How much recent input patterns differ from the training reference. Lower '
+                                 'is safer.'},
+        'weather': {'title': 'Point-in-time weather context',
+                    'subtitle': 'The latest origin and destination observations known six hours before '
+                                'scheduled departure. Raw conditions are evidence; the model delta is a '
+                                'counterfactual comparison, not a causal claim.',
+                    'origin': 'Origin conditions',
+                    'destination': 'Destination conditions',
+                    'unavailable_endpoint': 'No eligible observation at the prediction cutoff.',
+                    'temperature': 'Temperature',
+                    'wind': 'Wind speed',
+                    'visibility': 'Visibility',
+                    'ceiling': 'Ceiling',
+                    'precipitation': 'Precipitation',
+                    'age': 'Observation age',
+                    'no_flags': 'No severe threshold flags',
+                    'cutoff': 'Prediction cutoff: {cutoff}',
+                    'model_unavailable': 'Weather observations are shown, but the paired weather artifacts '
+                                         'have not been built yet. Run `python -m '
+                                         'scripts.train_weather_release` to enable the paired '
+                                         'base-vs-weather probability delta.',
+                    'schedule_score': 'Paired schedule-only risk',
+                    'schedule_score_help': 'Probability from the paired Extra Trees schedule-only companion trained '
+                                           'on the same rows and chronological partitions.',
+                    'weather_score': 'Risk with weather',
+                    'weather_score_help': 'Probability from the frozen ExtraTrees weather artifact using the '
+                                          'same scheduled flight.',
+                    'contribution': 'Weather model delta',
+                    'contribution_help': 'Weather-model probability minus its paired schedule-only companion. This '
+                                         'is model behaviour, not causal attribution.',
+                    'drivers': 'Weather features influencing the enhanced estimate',
+                    'push_up': 'Pushes weather estimate up',
+                    'push_down': 'Pushes weather estimate down',
+                    'flags': {'low_visibility': 'Low visibility',
+                              'strong_wind': 'Strong wind',
+                              'low_ceiling': 'Low ceiling',
+                              'active_precipitation': 'Active precipitation',
+                              'freezing_conditions': 'Freezing conditions',
+                              'thunderstorm': 'Thunderstorm',
+                              'snow': 'Snow',
+                              'fog': 'Fog'},
+                    'snapshot_unavailable': 'No complete origin-and-destination weather snapshot exists at '
+                                            'this cutoff. Choose supported 2024 airports and date, or '
+                                            'interpret the score as schedule-only.'}},
  'es': {'language': 'Español',
         'tabs': ['Analizar vuelo', 'Priorizar horario', 'Validación', 'Modelo y operaciones'],
         'topbar': {'byline': 'Creado por Oriol Martínez · Ingeniería de producto ML',
-                   'source': 'Fuente BTS 2024 · 168.519 filas de ajuste',
+                   'source': 'Fuente de datos BTS 2024',
+                   'stats': '{airports} aeropuertos soportados · {rows} observaciones de vuelo limpias · frame enriquecido con weather NOAA point-in-time',
+                   'stats_fallback': '{airports} aeropuertos soportados en el artefacto actual',
                    'model_loaded': 'Modelo listo',
                    'model_unavailable': 'Modelo no disponible',
                    'public_release': 'Versión pública'},
         'hero_kicker': 'Riesgo antes de salida · priorización de horarios',
         'hero_title': 'Detecta qué vuelos merecen <em>atención antes de despegar.</em>',
-        'hero_sub': 'Flight Delay Risk ordena vuelos programados por exposición estimada a retraso usando solo '
-                    'información disponible antes de la salida. Combina probabilidades calibradas, evidencia de '
-                    'cohortes históricas, explicaciones nativas del modelo y validación temporal.',
-        'constraint': 'Estimación basada en horario · sin meteorología en vivo, rotación de aeronave ni estado ATC · '
-                      'no usar para despacho, decisiones de seguridad ni garantías al pasajero.',
+        'hero_sub': 'Flight Delay Risk ordena vuelos programados por exposición estimada a retraso usando '
+                    'solo información disponible antes de la salida. Combina probabilidades calibradas, '
+                    'evidencia de cohortes históricas, explicaciones nativas del modelo y validación '
+                    'temporal.',
+        'constraint': 'Estimación previa a salida · se usa meteorología histórica point-in-time solo cuando '
+                      'está disponible · sin datos ATC en vivo, rotación de aeronaves ni feed de incidencias '
+                      '· no usar para despacho, seguridad o garantías al pasajero.',
         'hero_map': {'eyebrow': 'COBERTURA DEL MODELO EN EE. UU.',
                      'count': '{count} aeropuertos compatibles',
                      'aria': 'Cobertura del modelo en EE. UU.: {count} aeropuertos compatibles',
                      'caption': 'Cada punto está disponible en los selectores de origen y destino.'},
         'heatmap': {'eyebrow': 'EVIDENCIA DE ENTRENAMIENTO · BTS 2024',
-                    'title': 'Mapa de presión histórica por aeropuerto',
-                    'caption': 'Explora cómo cambia la exposición histórica al retraso en la red estadounidense. '
-                               'El color muestra la tasa suavizada y el tamaño representa el volumen de vuelos. Pasa '
-                               'el cursor por un punto para ver su evidencia exacta.',
+                    'title': 'Explorador de red aeroportuaria y meteorología',
+                    'caption': 'Explora la red de EE. UU. desde la misma superficie de análisis. Cambia entre riesgo de retraso, severidad meteorológica y uplift meteorológico descriptivo; el tamaño del punto siempre representa soporte histórico.',
                     'disclaimer': 'Patrón histórico · no son incidencias en tiempo real',
                     'count': '{count} aeropuertos',
                     'target': 'Objetivo · ArrDel15',
                     'mode': 'Perspectiva del aeropuerto',
                     'origin': 'Vuelos que salen',
                     'destination': 'Vuelos que llegan',
-                    'aria_origin': 'Exposición histórica al retraso de los vuelos que salen de cada aeropuerto',
-                    'aria_destination': 'Exposición histórica al retraso de los vuelos que llegan a cada aeropuerto',
+                    'aria_origin': 'Exposición histórica al retraso de los vuelos que salen de cada '
+                                   'aeropuerto',
+                    'aria_destination': 'Exposición histórica al retraso de los vuelos que llegan a cada '
+                                        'aeropuerto',
                     'tooltip_rate': '{rate} con retraso de 15+ min',
                     'tooltip_support': '{support} vuelos históricos',
                     'legend_rate': 'Tasa histórica de retraso',
-                    'legend_support': 'Tamaño del círculo = volumen histórico de vuelos'},
+                    'legend_support': 'Tamaño del círculo = volumen histórico de vuelos',
+                    'layer': 'Capa del mapa',
+                    'delay_layer': 'Riesgo de retraso',
+                    'severity_layer': 'Severidad meteorológica',
+                    'uplift_layer': 'Uplift asociado al weather',
+                    'caption_delay': 'Exposición histórica a retrasos de llegada en la red de EE. UU. El '
+                                     'color muestra la tasa suavizada y el tamaño el volumen.',
+                    'caption_severity': 'Promedio de flags meteorológicos severos disponibles point-in-time '
+                                        'en cada aeropuerto. Describe condiciones observadas, no causalidad.',
+                    'caption_uplift': 'Diferencia observada de retraso entre cohortes con weather adverso y '
+                                      'despejado. Es asociación descriptiva, no atribución causal.',
+                    'aria_origin_delay': 'Exposición histórica de retrasos para vuelos que salen de cada '
+                                         'aeropuerto',
+                    'aria_destination_delay': 'Exposición histórica de retrasos para vuelos que llegan a '
+                                              'cada aeropuerto',
+                    'aria_origin_severity': 'Severidad meteorológica media previa a salida por aeropuerto de '
+                                            'origen',
+                    'aria_destination_severity': 'Severidad meteorológica media previa a salida por '
+                                                 'aeropuerto de destino',
+                    'aria_origin_uplift': 'Uplift de retraso asociado al weather para salidas por aeropuerto',
+                    'aria_destination_uplift': 'Uplift de retraso asociado al weather para llegadas por '
+                                               'aeropuerto',
+                    'tooltip_delay': '{value} con retraso de 15+ min',
+                    'tooltip_severity': '{value} de severidad media',
+                    'tooltip_uplift': '{value} de uplift asociado al weather',
+                    'legend_delay': 'Tasa histórica de retraso',
+                    'legend_severity': 'Media de flags severos',
+                    'legend_uplift': 'Tasa adversa menos despejada',
+                    'hourly_title': 'Matriz aeropuerto × hora',
+                    'hourly_caption': 'Una fila por aeropuerto para la perspectiva seleccionada. La cuadrícula cubre las 24 horas locales programadas y las celdas claras vacías indican poco o ningún soporte histórico.',
+                    'hourly_airports': 'Aeropuertos mostrados (una fila cada uno)',
+                    'hour': 'Hora programada',
+                    'airport': 'Aeropuerto',
+                    'support': 'Vuelos / observaciones históricas'},
         'workflow': ['Introduce o sube', 'Prioriza riesgo', 'Revisa evidencia', 'Exporta informe'],
         'hero_card': {'example': 'Demo pública · DL 418 · salida 18:30',
                       'probability': 'probabilidad estimada de llegar con 15+ min de retraso',
@@ -340,17 +504,17 @@ TEXT: dict[str, dict[str, object]] = {'en': {'language': 'English',
                       'watch': 'VIGILAR',
                       'priority': 'PRIORIDAD'},
         'analyze_title': 'Analizar un vuelo programado',
-        'analyze_sub': 'Introduce campos naturales del horario. Las variables de calendario y del modelo se derivan '
-                       'automáticamente.',
+        'analyze_sub': 'Introduce campos naturales del horario. Las variables de calendario y del modelo se '
+                       'derivan automáticamente.',
         'rank_title': 'Priorizar un horario de vuelos',
-        'rank_sub': 'Sube un horario natural, valida cada fila y convierte la salida del modelo en una cola de '
-                    'revisión.',
+        'rank_sub': 'Sube un horario natural, valida cada fila y convierte la salida del modelo en una cola '
+                    'de revisión.',
         'validation_title': 'Evidencia de validación',
-        'validation_sub': 'Evidencia en lenguaje claro sobre periodos futuros no vistos. Los diagnósticos técnicos '
-                          'siguen disponibles bajo demanda.',
+        'validation_sub': 'Evidencia en lenguaje claro sobre periodos futuros no vistos. Los diagnósticos '
+                          'técnicos siguen disponibles bajo demanda.',
         'operations_title': 'Modelo y operaciones',
-        'operations_sub': 'Primero un resumen comprensible; linaje, latencia, API y detalles de ingeniería quedan en '
-                          'desplegables.',
+        'operations_sub': 'Primero un resumen comprensible; linaje, latencia, API y detalles de ingeniería '
+                          'quedan en desplegables.',
         'form': {'carrier': 'Aerolínea',
                  'flight_number': 'Número de vuelo (opcional)',
                  'origin': 'Origen',
@@ -366,9 +530,10 @@ TEXT: dict[str, dict[str, object]] = {'en': {'language': 'English',
                      'low': ['REVISIÓN RUTINARIA',
                              'El perfil queda por debajo de las zonas de mayor exposición del artefacto.'],
                      'moderate': ['VIGILAR',
-                                  'Revisa el soporte histórico y las contribuciones antes de tratar el score como una '
-                                  'señal fuerte.'],
-                     'high': ['REVISIÓN PRIORITARIA', 'El modelo sitúa este vuelo en una zona de exposición elevada.']},
+                                  'Revisa el soporte histórico y las contribuciones antes de tratar el score '
+                                  'como una señal fuerte.'],
+                     'high': ['REVISIÓN PRIORITARIA',
+                              'El modelo sitúa este vuelo en una zona de exposición elevada.']},
         'metrics': {'probability': 'Riesgo estimado de retraso',
                     'route_cohort': 'Riesgo habitual de esta ruta',
                     'relative': 'Riesgo comparado con esta ruta',
@@ -389,20 +554,20 @@ TEXT: dict[str, dict[str, object]] = {'en': {'language': 'English',
                    'support_moderate': 'Moderado',
                    'support_high': 'Alto',
                    'explanation': 'Qué influyó en esta estimación',
-                   'explanation_note': 'Estos factores muestran qué movió la estimación hacia arriba o abajo. Son '
-                                       'asociaciones, no causas demostradas del retraso.',
+                   'explanation_note': 'Estos factores muestran qué movió la estimación hacia arriba o '
+                                       'abajo. Son asociaciones, no causas demostradas del retraso.',
                    'increase': 'Eleva el riesgo',
                    'decrease': 'Reduce el riesgo',
                    'download_pdf': 'Descargar informe de riesgo (PDF)',
-                   'idle': 'El formulario solicita únicamente información disponible antes de la salida. No utiliza '
-                           'tiempos reales ni campos posteriores al vuelo.',
+                   'idle': 'El formulario solicita únicamente información disponible antes de la salida. No '
+                           'utiliza tiempos reales ni campos posteriores al vuelo.',
                    'prediction_failed': 'La predicción ha fallado',
                    'technical_explanation': 'Valores técnicos de contribución',
                    'advanced_details': 'Detalles avanzados del modelo',
-                   'advanced_details_note': 'Estos campos sirven para inspeccionar el modelo, pero no son necesarios '
-                                            'para interpretar la recomendación del vuelo.',
-                   'route_summary': 'La referencia de la ruta es {route_rate}; la tasa global de entrenamiento es '
-                                    '{global_rate}.',
+                   'advanced_details_note': 'Estos campos sirven para inspeccionar el modelo, pero no son '
+                                            'necesarios para interpretar la recomendación del vuelo.',
+                   'route_summary': 'La referencia de la ruta es {route_rate}; la tasa global de '
+                                    'entrenamiento es {global_rate}.',
                    'support_summary': '{count} vuelos anteriores de la ruta · evidencia {quality}.'},
         'features': {'RouteDelayRate': 'Tasa histórica de la ruta',
                      'CarrierRouteDelayRate': 'Tasa histórica aerolínea-ruta',
@@ -428,9 +593,48 @@ TEXT: dict[str, dict[str, object]] = {'en': {'language': 'English',
                      'IsWeekend': 'Horario de fin de semana',
                      'IsEveningPeak': 'Pico de tarde',
                      'IsMorningPeak': 'Pico de mañana',
-                     'IsRedEye': 'Horario nocturno'},
+                     'IsRedEye': 'Horario nocturno',
+                     'origin_temperature_c': 'Origen temperatura',
+                     'origin_dew_point_c': 'Origen punto de rocío',
+                     'origin_visibility_m': 'Origen visibilidad',
+                     'origin_wind_speed_mps': 'Origen velocidad del viento',
+                     'origin_wind_gust_mps': 'Origen racha de viento',
+                     'origin_ceiling_m': 'Origen techo de nubes',
+                     'origin_precipitation_mm': 'Origen precipitación',
+                     'origin_thunderstorm_flag': 'Origen tormenta',
+                     'origin_snow_flag': 'Origen nieve',
+                     'origin_fog_flag': 'Origen niebla',
+                     'origin_observation_age_minutes': 'Origen antigüedad de observación',
+                     'origin_low_visibility': 'Origen baja visibilidad',
+                     'origin_strong_wind': 'Origen viento fuerte',
+                     'origin_low_ceiling': 'Origen baja techo de nubes',
+                     'origin_active_precipitation': 'Origen activa precipitación',
+                     'origin_freezing_conditions': 'Origen condiciones de congelación',
+                     'origin_weather_severity': 'Origen severidad meteorológica',
+                     'origin_weather_available': 'Origen weather disponible',
+                     'origin_weather_stale': 'Origen weather obsoleto',
+                     'destination_temperature_c': 'Destino temperatura',
+                     'destination_dew_point_c': 'Destino punto de rocío',
+                     'destination_visibility_m': 'Destino visibilidad',
+                     'destination_wind_speed_mps': 'Destino velocidad del viento',
+                     'destination_wind_gust_mps': 'Destino racha de viento',
+                     'destination_ceiling_m': 'Destino techo de nubes',
+                     'destination_precipitation_mm': 'Destino precipitación',
+                     'destination_thunderstorm_flag': 'Destino tormenta',
+                     'destination_snow_flag': 'Destino nieve',
+                     'destination_fog_flag': 'Destino niebla',
+                     'destination_observation_age_minutes': 'Destino antigüedad de observación',
+                     'destination_low_visibility': 'Destino baja visibilidad',
+                     'destination_strong_wind': 'Destino viento fuerte',
+                     'destination_low_ceiling': 'Destino baja techo de nubes',
+                     'destination_active_precipitation': 'Destino activa precipitación',
+                     'destination_freezing_conditions': 'Destino condiciones de congelación',
+                     'destination_weather_severity': 'Destino severidad meteorológica',
+                     'destination_weather_available': 'Destino weather disponible',
+                     'destination_weather_stale': 'Destino weather obsoleto'},
         'batch': {'intro': 'Plantilla recomendada: flight_number, airline, origin, destination, flight_date, '
-                           'scheduled_departure, scheduled_arrival, scheduled_duration_minutes, distance_miles.',
+                           'scheduled_departure, scheduled_arrival, scheduled_duration_minutes, '
+                           'distance_miles.',
                   'upload': 'Subir horario CSV',
                   'sample': 'Cargar horario de ejemplo',
                   'template': 'Descargar plantilla CSV',
@@ -444,23 +648,24 @@ TEXT: dict[str, dict[str, object]] = {'en': {'language': 'English',
                   'watch': 'Cola de vigilancia',
                   'average': 'Probabilidad media',
                   'validation_ok': 'Todas las filas han superado las comprobaciones de esquema y valores.',
-                  'validation_errors': 'Algunas filas se han excluido. Corrígelas y vuelve a subir el archivo.',
+                  'validation_errors': 'Algunas filas se han excluido. Corrígelas y vuelve a subir el '
+                                       'archivo.',
                   'error_row': 'Fila',
                   'error_reason': 'Motivo',
                   'ranked': 'Horario priorizado',
                   'distribution': 'Distribución de la cola de revisión',
                   'download_csv': 'Descargar horario priorizado (CSV)',
                   'download_pdf': 'Descargar informe del horario (PDF)',
-                  'caption': 'Los niveles de prioridad son relativos al horario subido; la probabilidad calibrada '
-                             'sigue siendo la estimación absoluta del modelo.',
+                  'caption': 'Los niveles de prioridad son relativos al horario subido; la probabilidad '
+                             'calibrada sigue siendo la estimación absoluta del modelo.',
                   'missing': 'Faltan columnas',
                   'no_valid': 'No quedan vuelos válidos después de la validación.',
                   'limit': 'El dashboard público acepta hasta 500 filas por archivo.',
                   'evidence_gaps': 'Vuelos con evidencia de ruta limitada',
-                  'summary_intro': 'La cola es relativa al horario subido. “Prioridad” significa revisar primero, no '
-                                   'retraso garantizado.',
-                  'table_help': 'La probabilidad es una estimación absoluta; cola y percentil son relativos al horario '
-                                'subido.',
+                  'summary_intro': 'La cola es relativa al horario subido. “Prioridad” significa revisar '
+                                   'primero, no retraso garantizado.',
+                  'table_help': 'La probabilidad es una estimación absoluta; cola y percentil son relativos '
+                                'al horario subido.',
                   'advanced_summary': 'Diagnóstico avanzado del lote'},
         'validation': {'heldout_pr': 'Calidad del ranking',
                        'lift': 'Ventaja de la lista prioritaria',
@@ -469,19 +674,21 @@ TEXT: dict[str, dict[str, object]] = {'en': {'language': 'English',
                        'honest': 'Resultado holdout honesto',
                        'comparison': 'Modelo desplegado frente a baseline simple',
                        'reliability': '¿Las probabilidades predichas coinciden con la realidad?',
-                       'reliability_caption': 'Un modelo fiable mantiene la línea observada cerca de la calibración '
-                                              'perfecta. Por ejemplo, los vuelos con 30% de riesgo deberían retrasarse '
-                                              'aproximadamente el 30% de las veces.',
+                       'reliability_caption': 'Un modelo fiable mantiene la línea observada cerca de la '
+                                              'calibración perfecta. Por ejemplo, los vuelos con 30% de '
+                                              'riesgo deberían retrasarse aproximadamente el 30% de las '
+                                              'veces.',
                        'encoding_title': 'Encoding con fechas estrictamente anteriores',
-                       'encoding_body': 'Cada fila de entrenamiento recibe tasas históricas construidas solo con '
-                                        'FlightDate anteriores. Las etiquetas del mismo día no pueden filtrarse.',
+                       'encoding_body': 'Cada fila de entrenamiento recibe tasas históricas construidas solo '
+                                        'con FlightDate anteriores. Las etiquetas del mismo día no pueden '
+                                        'filtrarse.',
                        'calibration_title': 'Calibración seleccionada por holdout',
-                       'calibration_body': 'Identity, sigmoid e isotonic se ajustan en un subbloque, se seleccionan en '
-                                           'otro posterior y el ganador se reajusta antes de una única evaluación '
-                                           'final.',
+                       'calibration_body': 'Identity, sigmoid e isotonic se ajustan en un subbloque, se '
+                                           'seleccionan en otro posterior y el ganador se reajusta antes de '
+                                           'una única evaluación final.',
                        'backtest_title': 'Backtest temporal de 3 folds',
-                       'backtest_body': 'Las ventanas expanding repiten selección, calibración y evaluación sobre '
-                                        'bloques temporales posteriores.',
+                       'backtest_body': 'Las ventanas expanding repiten selección, calibración y evaluación '
+                                        'sobre bloques temporales posteriores.',
                        'stability': 'Rendimiento en ventanas temporales posteriores',
                        'mean_pr': 'Calidad media del ranking',
                        'mean_lift': 'Ventaja prioritaria media',
@@ -493,35 +700,37 @@ TEXT: dict[str, dict[str, object]] = {'en': {'language': 'English',
                        'pr_over_prevalence': 'PR-AUC / prevalencia',
                        'no_dominant_model': 'Ninguna familia de modelos dominó todos los folds temporales',
                        'benchmark': '¿Qué modelo ordenó mejor los vuelos?',
-                       'benchmark_caption': 'Los siete candidatos usaron el mismo bloque cronológico de selección. La '
-                                            'calidad del ranking es la comparación principal; el test final no se '
-                                            'utilizó para elegir ganador.',
+                       'benchmark_caption': 'Los siete candidatos usaron el mismo bloque cronológico de '
+                                            'selección. La calidad del ranking es la comparación principal; '
+                                            'el test final no se utilizó para elegir ganador.',
                        'calibration_candidates': 'Métodos de ajuste de probabilidad',
                        'overview': 'Qué dice el test final no visto',
-                       'overview_body': 'El modelo quedó congelado antes de este periodo. Estos valores describen la '
-                                        'utilidad del ranking y la fiabilidad de las probabilidades en vuelos '
-                                        'posteriores no vistos.',
-                       'ranking_plain': 'PR-AUC {value:.3f} frente a una tasa de retraso del {prevalence:.1%} '
-                                        '({ratio:.2f}× la base aleatoria).',
-                       'lift_plain': 'El top 10% contiene un {extra:.0f}% más de vuelos retrasados que una selección '
-                                     'al azar.',
-                       'calibration_plain': 'Las probabilidades predichas difieren de los resultados observados en '
-                                            'unos {points:.1f} puntos porcentuales de media.',
-                       'comparison_caption': 'El modelo desplegado debería ordenar mejor los retrasos y producir '
-                                             'probabilidades más fiables que el baseline logístico simple.',
-                       'stability_intro': 'Cada fila corresponde a un periodo futuro distinto. Los cambios de modelo '
-                                          'ganador muestran que los patrones de retraso evolucionan.',
+                       'overview_body': 'El modelo quedó congelado antes de este periodo. Estos valores '
+                                        'describen la utilidad del ranking y la fiabilidad de las '
+                                        'probabilidades en vuelos posteriores no vistos.',
+                       'ranking_plain': 'PR-AUC {value:.3f} frente a una tasa de retraso del '
+                                        '{prevalence:.1%} ({ratio:.2f}× la base aleatoria).',
+                       'lift_plain': 'El top 10% contiene un {extra:.0f}% más de vuelos retrasados que una '
+                                     'selección al azar.',
+                       'calibration_plain': 'Las probabilidades predichas difieren de los resultados '
+                                            'observados en unos {points:.1f} puntos porcentuales de media.',
+                       'comparison_caption': 'El modelo desplegado debería ordenar mejor los retrasos y '
+                                             'producir probabilidades más fiables que el baseline logístico '
+                                             'simple.',
+                       'stability_intro': 'Cada fila corresponde a un periodo futuro distinto. Los cambios '
+                                          'de modelo ganador muestran que los patrones de retraso '
+                                          'evolucionan.',
                        'metric_guide': 'Cómo leer las métricas',
-                       'metric_guide_body': '**Calidad del ranking (PR-AUC):** coloca los retrasos arriba; cuanto '
-                                            'mayor, mejor.  \n'
-                                            '**Ventaja prioritaria (Lift@10%):** mejora del top 10% frente al azar; '
+                       'metric_guide_body': '**Calidad del ranking (PR-AUC):** coloca los retrasos arriba; '
                                             'cuanto mayor, mejor.  \n'
-                                            '**Error de probabilidad (Brier):** error cuadrático medio; cuanto menor, '
-                                            'mejor.  \n'
-                                            '**Diferencia de fiabilidad (ECE):** desajuste medio entre riesgo predicho '
-                                            'y observado; cuanto menor, mejor.  \n'
-                                            '**Tasa de retraso / prevalencia:** referencia aleatoria de PR-AUC en ese '
-                                            'periodo.',
+                                            '**Ventaja prioritaria (Lift@10%):** mejora del top 10% frente '
+                                            'al azar; cuanto mayor, mejor.  \n'
+                                            '**Error de probabilidad (Brier):** error cuadrático medio; '
+                                            'cuanto menor, mejor.  \n'
+                                            '**Diferencia de fiabilidad (ECE):** desajuste medio entre '
+                                            'riesgo predicho y observado; cuanto menor, mejor.  \n'
+                                            '**Tasa de retraso / prevalencia:** referencia aleatoria de '
+                                            'PR-AUC en ese periodo.',
                        'advanced_diagnostics': 'Diagnósticos avanzados de validación',
                        'advanced_fold_table': 'Diagnóstico completo por fold',
                        'advanced_model_table': 'Benchmark técnico completo',
@@ -540,60 +749,107 @@ TEXT: dict[str, dict[str, object]] = {'en': {'language': 'English',
                        'average': 'Probabilidad media registrada',
                        'drift': 'Estado PSI actual',
                        'latest': 'Última predicción',
-                       'no_traffic': 'Todavía no se ha registrado tráfico. El panel se completará a medida que se '
-                                     'utilice la demo.',
+                       'no_traffic': 'Todavía no se ha registrado tráfico. El panel se completará a medida '
+                                     'que se utilice la demo.',
                        'performance': 'Mediciones técnicas de velocidad',
                        'artifact_load': 'Carga del artefacto',
                        'single_latency': 'Predicción individual',
                        'batch_100': 'Batch de 100 vuelos',
                        'batch_1000': 'Batch de 1.000 vuelos',
-                       'environment': 'Medido localmente en el entorno de release; la latencia cloud depende del '
-                                      'hosting y los cold starts.',
+                       'environment': 'Medido localmente en el entorno de release; la latencia cloud depende '
+                                      'del hosting y los cold starts.',
                        'model_card': 'Model card',
                        'leakage': 'Contrato anti-leakage antes de salida',
                        'api': 'Superficie API',
                        'architecture': 'Arquitectura del repositorio',
                        'deployment': 'Despliegue público',
                        'deployment_body': 'El repositorio incluye Docker, Docker Compose y puntos de entrada '
-                                          'compatibles con Streamlit y Render. Añade las URLs del dashboard y la API '
-                                          'cuando se aprovisione el hosting.',
+                                          'compatibles con Streamlit y Render. Añade las URLs del dashboard '
+                                          'y la API cuando se aprovisione el hosting.',
                        'advanced_runtime': 'Diagnóstico avanzado de runtime y monitorización',
-                       'drift_plain_low': 'Las entradas recientes siguen cerca de la referencia de entrenamiento.',
-                       'drift_plain_medium': 'Las entradas recientes han cambiado moderadamente; conviene vigilar '
-                                             'calibración y ranking.',
+                       'drift_plain_low': 'Las entradas recientes siguen cerca de la referencia de '
+                                          'entrenamiento.',
+                       'drift_plain_medium': 'Las entradas recientes han cambiado moderadamente; conviene '
+                                             'vigilar calibración y ranking.',
                        'drift_plain_high': 'Las entradas recientes difieren mucho del entrenamiento; debería '
                                            'considerarse recalibrar o reentrenar.'},
-        'footer': 'Flight Delay Risk · Creado por Oriol Martínez · Sistema ML público de portfolio · No usar para '
-                  'decisiones operacionales de aviación.',
+        'footer': 'Flight Delay Risk · Creado por Oriol Martínez · Sistema ML público de portfolio · No usar '
+                  'para decisiones operacionales de aviación.',
         'metric_help': {'probability': 'Probabilidad estimada de llegar con al menos 15 minutos de retraso.',
-                        'route_rate': 'Porcentaje de vuelos anteriores de esta ruta que llegaron con al menos 15 '
-                                      'minutos de retraso.',
-                        'relative_above': 'La estimación está un {delta}% por encima de la referencia histórica de la '
-                                          'ruta.',
-                        'relative_below': 'La estimación está un {delta}% por debajo de la referencia histórica de la '
-                                          'ruta.',
+                        'route_rate': 'Porcentaje de vuelos anteriores de esta ruta que llegaron con al '
+                                      'menos 15 minutos de retraso.',
+                        'relative_above': 'La estimación está un {delta}% por encima de la referencia '
+                                          'histórica de la ruta.',
+                        'relative_below': 'La estimación está un {delta}% por debajo de la referencia '
+                                          'histórica de la ruta.',
                         'relative_equal': 'La estimación está cerca de la referencia histórica de la ruta.',
-                        'support': 'Basado en {count} observaciones anteriores de la ruta. Más observaciones hacen la '
-                                   'referencia más fiable.',
+                        'support': 'Basado en {count} observaciones anteriores de la ruta. Más observaciones '
+                                   'hacen la referencia más fiable.',
                         'valid_rows': 'Vuelos que superaron las validaciones y pueden priorizarse.',
                         'invalid_rows': 'Filas excluidas hasta corregir sus valores de entrada.',
-                        'evidence_gaps': 'Vuelos válidos cuya ruta no se vio o tiene menos de 100 observaciones '
-                                         'históricas.',
-                        'priority_queue': 'El 10% de mayor riesgo del horario subido, seleccionado para revisar '
-                                          'primero.',
-                        'watch_queue': 'El siguiente 20% del horario, para vigilar tras el grupo prioritario.',
+                        'evidence_gaps': 'Vuelos válidos cuya ruta no se vio o tiene menos de 100 '
+                                         'observaciones históricas.',
+                        'priority_queue': 'El 10% de mayor riesgo del horario subido, seleccionado para '
+                                          'revisar primero.',
+                        'watch_queue': 'El siguiente 20% del horario, para vigilar tras el grupo '
+                                       'prioritario.',
                         'highest': 'Mayor probabilidad estimada de retraso dentro del horario subido.',
                         'average': 'Probabilidad media estimada entre todos los vuelos válidos subidos.',
-                        'ranking': 'Mide si los vuelos retrasados suben a las primeras posiciones. Cuanto mayor, '
-                                   'mejor.',
-                        'lift': 'Indica cuánto mejora el top 10% frente a revisar vuelos al azar. Cuanto mayor, mejor.',
-                        'brier': 'Error cuadrático medio de las probabilidades. Cero es perfecto; cuanto menor, mejor.',
-                        'calibration': 'Diferencia media entre riesgo predicho y resultados observados. Cuanto menor, '
-                                       'mejor.',
+                        'ranking': 'Mide si los vuelos retrasados suben a las primeras posiciones. Cuanto '
+                                   'mayor, mejor.',
+                        'lift': 'Indica cuánto mejora el top 10% frente a revisar vuelos al azar. Cuanto '
+                                'mayor, mejor.',
+                        'brier': 'Error cuadrático medio de las probabilidades. Cero es perfecto; cuanto '
+                                 'menor, mejor.',
+                        'calibration': 'Diferencia media entre riesgo predicho y resultados observados. '
+                                       'Cuanto menor, mejor.',
                         'prevalence': 'Porcentaje real de vuelos retrasados en el periodo evaluado.',
-                        'training_rows': 'Vuelos usados para ajustar el modelo desplegado antes de los periodos '
-                                         'separados de calibración y test.',
+                        'training_rows': 'Vuelos usados para ajustar el modelo desplegado antes de los '
+                                         'periodos separados de calibración y test.',
                         'features': 'Variables de horario e historial disponibles antes de la salida.',
-                        'predictions': 'Predicciones registradas por esta instancia local o desplegada de la demo.',
-                        'drift': 'Cuánto difieren los patrones recientes respecto al entrenamiento. Menor es más '
-                                 'seguro.'}}}
+                        'predictions': 'Predicciones registradas por esta instancia local o desplegada de la '
+                                       'demo.',
+                        'drift': 'Cuánto difieren los patrones recientes respecto al entrenamiento. Menor es '
+                                 'más seguro.'},
+        'weather': {'title': 'Contexto meteorológico point-in-time',
+                    'subtitle': 'Últimas observaciones de origen y destino conocidas seis horas antes de la '
+                                'salida programada. Las condiciones son evidencia; el delta del modelo es '
+                                'una comparación contrafactual, no una afirmación causal.',
+                    'origin': 'Condiciones en origen',
+                    'destination': 'Condiciones en destino',
+                    'unavailable_endpoint': 'No hay una observación válida en el cutoff de predicción.',
+                    'temperature': 'Temperatura',
+                    'wind': 'Velocidad del viento',
+                    'visibility': 'Visibilidad',
+                    'ceiling': 'Techo de nubes',
+                    'precipitation': 'Precipitación',
+                    'age': 'Antigüedad de observación',
+                    'no_flags': 'Sin umbrales meteorológicos severos',
+                    'cutoff': 'Cutoff de predicción: {cutoff}',
+                    'model_unavailable': 'Se muestran las observaciones, pero aún no se han generado los '
+                                         'artefactos weather emparejados. Ejecuta `python -m '
+                                         'scripts.train_weather_release` para activar el delta '
+                                         'base-vs-weather.',
+                    'schedule_score': 'Riesgo emparejado sin weather',
+                    'schedule_score_help': 'Probabilidad del Extra Trees sin weather entrenado sobre las '
+                                           'mismas filas y particiones cronológicas.',
+                    'weather_score': 'Riesgo con weather',
+                    'weather_score_help': 'Probabilidad del ExtraTrees weather congelado para el mismo vuelo '
+                                          'programado.',
+                    'contribution': 'Delta del modelo weather',
+                    'contribution_help': 'Probabilidad weather menos probabilidad sin weather. Describe el '
+                                         'comportamiento del modelo, no causalidad.',
+                    'drivers': 'Variables meteorológicas que influyen en la estimación',
+                    'push_up': 'Eleva la estimación weather',
+                    'push_down': 'Reduce la estimación weather',
+                    'flags': {'low_visibility': 'Baja visibilidad',
+                              'strong_wind': 'Viento fuerte',
+                              'low_ceiling': 'Techo bajo',
+                              'active_precipitation': 'Precipitación activa',
+                              'freezing_conditions': 'Condiciones de congelación',
+                              'thunderstorm': 'Tormenta',
+                              'snow': 'Nieve',
+                              'fog': 'Niebla'},
+                    'snapshot_unavailable': 'No existe un snapshot completo de origen y destino en este '
+                                            'cutoff. Elige aeropuertos y fecha compatibles de 2024 o '
+                                            'interpreta el score como schedule-only.'}}}

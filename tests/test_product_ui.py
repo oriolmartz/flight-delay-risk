@@ -63,3 +63,16 @@ def test_primary_flight_summary_hides_raw_model_jargon():
     assert "advanced_details" in prediction_block
     assert "raw_score" in prediction_block
     assert prediction_block.index("advanced_details") < prediction_block.rindex("raw_score")
+
+
+def test_dashboard_exposes_weather_evidence_and_network_layers():
+    dashboard = Path("app/dashboard/streamlit_app.py").read_text(encoding="utf-8")
+    copy = Path("app/dashboard/i18n.py").read_text(encoding="utf-8")
+    assert "_render_weather_context" in dashboard
+    assert "weather_enhanced_prediction" in dashboard
+    assert "Airport × hour matrix" in copy
+    assert "Weather-associated uplift" in copy
+    assert "counterfactual comparison" in copy
+    assert "cleaned flight observations" in copy
+    assert "PROMINENT_AIRPORT_LABELS" in dashboard
+    assert "one row per airport" in copy.lower()
