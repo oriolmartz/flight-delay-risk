@@ -29,7 +29,7 @@ def main() -> int:
     _run("compile", [sys.executable, "-m", "compileall", "-q", "app", "src", "scripts", "tests"])
     if shutil.which("ruff"):
         _run("ruff", ["ruff", "check", "app", "src", "scripts", "tests"])
-    print("[gate] tests: validating independently generated 108/108 evidence", flush=True)
+    print("[gate] tests: validating committed v1.5 release evidence (108/108)", flush=True)
     print("[gate] neural smoke: validating independently generated report", flush=True)
     _run("openapi export", [sys.executable, "-m", "scripts.export_openapi"])
     _run("production smoke", [sys.executable, "-m", "scripts.production_smoke"])

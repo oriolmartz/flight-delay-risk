@@ -420,7 +420,7 @@ docker compose up --build
 
 ## Engineering evidence
 
-The public release ships with **108 passing tests** and committed evidence behind the artifact.
+The current suite contains **128 passing tests**. The committed v1.5 release-evidence snapshot records the original **108 / 108** release gate behind the frozen artifact.
 
 <details>
 <summary><strong>Evaluation, robustness and release reports</strong></summary>

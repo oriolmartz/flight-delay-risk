@@ -2,8 +2,8 @@
   "cohort_rows": 1406680,
   "train_rows": 944249,
   "test_rows": 286367,
-  "base_artifact": "D:\\PROJECTS\\flight-delay-risk\\models\\flightrisk_model_weather_base.joblib",
-  "weather_artifact": "D:\\PROJECTS\\flight-delay-risk\\models\\flightrisk_model_weather.joblib",
+  "base_artifact": "models/flightrisk_model_weather_base.joblib",
+  "weather_artifact": "models/flightrisk_model_weather.joblib",
   "base": {
     "name": "extra_trees_weather_paired_base",
     "feature_count": 112,

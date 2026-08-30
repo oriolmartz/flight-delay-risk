@@ -372,7 +372,7 @@ docker compose up --build
 
 ## Evidencia de ingeniería
 
-La release pública incluye **108 tests superados** y evidencia versionada detrás del artefacto.
+La suite actual contiene **128 tests superados**. El snapshot versionado de evidencia de la release v1.5 conserva el gate original de **108 / 108** asociado al artefacto congelado.
 
 <details>
 <summary><strong>Evaluación, robustez y release</strong></summary>
